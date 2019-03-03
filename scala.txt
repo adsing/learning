@@ -13,6 +13,8 @@ Allows concurrency.
 Domain specific language support (DSL)
 
 Closure − A closure is a function, whose return value depends on the value of one or more variables declared outside this function.
+var factor = 3
+val multiplier = (i:Int) => i * factor
 
 Traits − A trait encapsulates method and field definitions, which can then be reused by mixing them into classes. Traits are used to define object types by specifying the signature of the supported methods.
 
@@ -172,5 +174,220 @@ def functionName ([list of parameters]) : [return type] {  //return type can be 
 }
 
 
+String immutable
+val greeting: String = "Hello"
+println( greeting.length() )
+var hello_you : String = greeting.concat(" you!")
+var hello_you : String = greeting +  " you!"
+
+String formating with printf() or format()
+Interpolation:
+1. s interpolation - interpolates ${..}
+ println(s"Hello, $name")
+ println(s"1 + 1 = ${1 + 1}")
+
+2. f interpolation: formatted string
+ println(f"$name%s is $height%2.2f meters tall")
+ 
+ 3. raw interpolation: new lines remain 'raw' \n
+  println(raw"Result = \n a \n b")
+  
+  
+ Array - ordered collection of same type
+  var z:Array[String] = new Array[String](3)
+  // 2 D aRArray
+  // var myMatrix = ofDim[Int](3,3)
+  // vat intArray = Array[Int]
+  var z = new Array[String](3)
+  z(0) = "Hello"
+  z(1) = "there"
+  z(2) = "!!"
+  for (i <- z):
+    print(i)
+ var newArray = concat(z, zz, zzz)
+ var intArray = range(0, 10)
+//See import Array._ for all array operations. 
+// copy, empty, iterate, fill, ofDim, tabulate
 
 
+Collection :: Lists, Sets, Maps, Tuples, Options, Iterators
+ - lazy or strict
+ - mutable or not
+ 
+ //////////////
+ 
+ Trait - encapulsated method+fields that can be reused by mixing with other classes.
+ Defined like a class excep that is uses "trait" instead fo class and no constructor parameters.
+ // if trait method not defined then its like an interface (abstract class)
+trait Equal {
+   def isEqual(x: Any): Boolean
+   def isNotEqual(x: Any): Boolean = !isEqual(x)
+}
+//
+class Point(xc: Int, yc: Int) extends Equal {
+   var x: Int = xc
+   var y: Int = yc
+   
+   //def isEqual(obj: Any) = obj.isInstanceOf[Point] && obj.asInstanceOf[Point].x == y
+  def isEqual(obj: Any): Boolean = {
+    return obj.isInstanceOf[Point] && obj.asInstanceOf[Point].x == x && obj.asInstanceOf[Point].y == y
+  } 
+}
+//
+object Demo {
+   def main(args: Array[String]) {
+      val p1 = new Point(2, 3)
+      val p2 = new Point(2, 4)
+      val p3 = new Point(2, 3)
+      val p4 = new Point(2, 4)
+
+      println(p1.isNotEqual(p2))
+      println(p1.isEqual(p3))
+      println(p1.isNotEqual(2))
+      println(".....")
+      println(p3.isEqual(p1))
+      println(p3.isEqual(p2))
+      println(p4.isEqual(p1))
+      println(p4.isEqual(p2))
+   }
+}
+ 
+ 
+Value class (read more on this)
+ - to avoid allocating run time objects
+ - contains only methods
+ - can't be extended further
+//
+trait Printable extends Any {
+   def print(): Unit = println(this)
+}
+class Wrapper(val underlying: Int) extends AnyVal with Printable
+object Demo {
+   def main(args: Array[String]) {
+      val w = new Wrapper(3)
+      w.print() // actually requires instantiating a Wrapper instance ... prints Wrapper@3
+   }
+}
+
+
+Pattern matching - case <check> => result
+ println(matchTest("two"))
+ println(matchTest(1))
+ //
+ def matchTest(x: Any): Any = x match {
+      case 1 => "one"
+      case "two" => 2
+      case y: Int => "scala.Int"
+      case _ => "many"
+   }
+   
+
+Regex: 
+ pattern = string.r() to convert to RichString
+    e.g. val pattern = "MyPattern".r 
+ import scala.util.matching.Regex
+ pattern findFirstIn inputStr
+ (pattern findAll inputStr).mkString(",")
+ 
+ 
+Exceptions : try {...} catch {...} finally {...}
+//
+import java.io.FileReader
+import java.io.FileNotFoundException
+import java.io.IOException
+//
+object Demo {
+   def main(args: Array[String]) {
+      try {
+         val f = new FileReader("input.txt")
+      } catch {
+         case ex: FileNotFoundException => {
+            println("Missing file exception")
+         }
+         
+         case ex: IOException => {
+            println("IO Exception")
+         }
+      } finally {
+         println("Exiting finally...")
+      }
+   }
+}
+
+
+Extractor - object that has a method called unapply (to match a value and take it apart). 
+  apply() is sued for building values .. optional method
+//
+object Demo {
+   def main(args: Array[String]) {
+      println ("Apply method : " + apply("Zara", "gmail.com"));
+      println ("Unapply method : " + unapply("Zara@gmail.com"));
+      println ("Unapply method : " + unapply("Zara Ali"));
+   }  
+   // The injection method (optional)
+   def apply(user: String, domain: String) = {
+      user +"@"+ domain
+   }
+   // The extraction method (mandatory)
+   def unapply(str: String): Option[(String, String)] = {
+      val parts = str split "@"
+      
+      if (parts.length == 2){
+         Some(parts(0), parts(1)) 
+      } else {
+         None
+      }
+   }
+}
+
+Automatic apply/unapply
+If an instance of class/object is followed by () then apply is applied automatically.
+When comparing an extractor obkect with match stmt, unapply will be executed.
+object Demo {
+   def main(args: Array[String]) {
+      val x = Demo(5)
+      println(x)
+
+      x match {
+         case Demo(num) => println(x+" is bigger two times than "+num)
+         
+         //unapply is invoked
+         case _ => println("i cannot calculate")
+      }
+   }
+   def apply(x: Int) = x*2
+   def unapply(z: Int): Option[Int] = if (z%2==0) Some(z/2) else None
+}
+//output
+//10
+//10 is bigger two times than 5
+
+File IO:
+ // write to file
+import java.io._
+object Demo {
+   def main(args: Array[String]) {
+      val writer = new PrintWriter(new File("test.txt" ))  ///
+      writer.write("Hello Scala")
+      writer.close()
+   }
+}
+ //read from console
+ object Demo {
+   def main(args: Array[String]) {
+      print("Please enter your input : " )
+      val line = Console.readLine                      ///
+      println("Thanks, you just typed: " + line)
+   }
+}
+ //read from file
+ import scala.io.Source
+object Demo {
+   def main(args: Array[String]) {
+      println("Following is the content read:" )
+
+      Source.fromFile("Demo.txt" ).foreach { 
+         print 
+      }
+   }
+}
