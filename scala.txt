@@ -143,3 +143,34 @@ package society {
       }
    }
 }
+
+Loops:
+if() {...} else {...}
+do-while & while
+for (a <-1 to 10; b <- 2 to 20) {...}   #for( var x <- List if condition; if condition2 ) {  yield a+b }
+
+break in a loop (is a bigger deal in scala):
+//
+import scala.util.control._
+// create a Breaks object as follows
+val loop = new Breaks;
+// Keep the loop inside breakable as follows
+loop.breakable {
+   // Loop will go here
+   for(...){
+      ....
+      // Break will go here
+      loop.break;
+   }
+}
+
+
+Functions:
+def functionName ([list of parameters]) : [return type] {  //return type can be Unit (same as void)
+   .. 
+   return [expr]
+}
+
+
+
+
