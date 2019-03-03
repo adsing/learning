@@ -68,4 +68,78 @@ val myVal = "Hello, Scala!";   //Type inference; no need to define data type
 val (myVar1: Int, myVar2: String) = Pair(40, "Foo")   //tuple
 
 
- 
+Sample class with main:
+#
+import java.io._
+
+class Point(val xc: Int, val yc: Int) {
+   var x: Int = xc
+   var y: Int = yc
+   
+   def move(dx: Int, dy: Int) {
+      x = x + dx
+      y = y + dy
+      println ("Point x location : " + x);
+      println ("Point y location : " + y);
+   }
+}
+
+object Demo {
+   def main(args: Array[String]) {
+      val pt = new Point(10, 20);
+
+      // Move to a new location
+      pt.move(10, 10);
+   }
+}
+#
+
+Inheritance/Extension of a class:
+- use extends key word
+- inherit from one class only
+Two restrictions: 
+1. method overriding requires the "override" keyword, 
+2. only the constructor can pass parameters to the base constructor
+
+class Location(override val xc: Int, override val yc: Int, val zc :Int) extends Point(xc, yc){
+   var z: Int = zc
+
+   def move(dx: Int, dy: Int, dz: Int) {
+      x = x + dx
+      y = y + dy
+      z = z + dz
+      println ("Point x location : " + x);
+      println ("Point y location : " + y);
+      println ("Point z location : " + z);
+   }
+}
+
+Implicit class : whose methods can be called as such classes can't be top-level class.
+They are defined inside other class/trait/object
+They take only one argument
+#
+object <object name> {
+   implicit class <class name>(<Variable>: Data type) {
+      def <method>(): Unit =
+   }
+}
+
+Can not have singleton members; only objects e.g. see example with main.
+
+Access modifier - private, protected, public (default)
+Scope protection - limit to this, outer class or outermost class. private[scope] var x = Int 10;
+#
+package society {
+   package professional {
+      class Executive {
+         private[professional] var workDetails = null
+         private[society] var friends = null
+         private[this] var secrets = null
+
+         def help(another : Executive) {
+            println(another.workDetails)
+            println(another.secrets) //ERROR
+         }
+      }
+   }
+}
