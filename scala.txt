@@ -1,0 +1,71 @@
+Online - https://scastie.scala-lang.org/
+
+ScaLa - scalable lang. (At time of writing March 2019, Scala 2.12 is available)
+Functional + OO (everythin is an object)
+
+Every fn is a value
+A value an object
+and hence, a function an object
+
+Runs on JVM (same run time platform a Java so both can co-exist)
+
+Allows concurrency.
+Domain specific language support (DSL)
+
+Closure − A closure is a function, whose return value depends on the value of one or more variables declared outside this function.
+
+Traits − A trait encapsulates method and field definitions, which can then be reused by mixing them into classes. Traits are used to define object types by specifying the signature of the supported methods.
+
+Scala - runs in interactive mode or script mode
+
+Interactive:
+> println("Hello world!")
+
+Script-mode:
+# HelloWorld.scala
+object HelloWorld{
+  def main(args: Array[String]){
+    println("hello")    
+  }
+}
+
+$ scalac HelloWorld.scala    #gemerates a new class HellowWorld.class
+$ scala  HellowWorld
+
+Operators: +, ++, <?>, :::, 
+Mixed Identifiers: unary_+ or myvar_= (operator overloading)
+Identifier: ok if in `abc`
+
+Semicolon line delimit optional
+
+Packaage:  com.site.packagename
+import com.site.packagename
+import scala.xml._           //import everything in scala.xml package
+import scala.collection.mutable.HashMap
+import scala.collection.immutable.{TreeMap, TreeSet}  //import 2 objects
+
+
+applyDynamic is a trait that enabkes dynamic innvocations for any methods/args.
+method/args are re-written:
+foo.method(x = "blah") ~~> foo.applyDynamicNamed("method")(("x", "blah"))
+foo.method(x = 1, 2) ~~> foo.applyDynamicNamed("method")(("x", 1), ("", 2))
+foo.field ~~> foo.selectDynamic("field")
+foo.varia = 10 ~~> foo.updateDynamic("varia")(10)
+foo.arr(10) = 13 ~~> foo.selectDynamic("arr").update(10, 13)
+foo.arr(10) ~~> foo.applyDynamic("arr")(10)
+
+Types: Byte/Short/Long/Int/Float/Double/Char/String/Boolean/Null/Unit(no value)/Any/AnyRef
+String in double quotes("...."); char in single quotes.
+Multi-line : """...."""
+
+Symbol literal:
+'x = scala.Symbol("x")
+
+Variable declaration:
+var or val VariableName : DataType = [Initial Value]    //var is variable (mutable) while val is a constant(immutable)
+e.g.
+val myVal = "Hello, Scala!";   //Type inference; no need to define data type
+val (myVar1: Int, myVar2: String) = Pair(40, "Foo")   //tuple
+
+
+ 
