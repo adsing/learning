@@ -3,11 +3,56 @@ $ git init   #create a git project under VC
 Git has 3 stages/parts:: working dir -> staging area -> repo
 
 1. working dir :: create/eidt/delete files  (possible to have untracked files)
-2. staging area :: list changes made to working dir  "$ git add"
+2. staging area :: list changes made to working dir   $ git add            #add file to staging area
                                                       $ git status
                                                       $ git diff <filename>
-3. repo :: store the changes as different versions by "$ git commit"
+3. repo :: store the changes as different versions by  $ git commit
                                                        $ git log      # 40 char SHA hash
                                                        
 Current commit is called HEAD
-$ git show HEAD
+$ git show HEAD        #show log for all file changed in head
+
+Discard current changes and pull from HEAD
+$ git checkout HEAD [filename]
+
+Unstage a file (so that it is not committed but still in working dir)
+$ git reset HEAD [filename]
+
+
+Reset (reverting back) to a previous git commit log history (discarding some recent commits and going back to a prior good state):
+$ git reset [commit_SHA 7 char atleast]    ****
+# "$ git log" to see history & to find which version you want to revert to 
+
+
+Branching
+$ git branch                  #shows current branch as * and other branches as well
+$ git branch new_branch       # creates new branch
+$ git checkout new_branch     # switch branch  (switch = checkout)
+#...do edits/adds/commits to branch
+$ git branch master           # switch back to master
+$ git merge new_branch        # merge to master (Fast-forward merge type in this case...commits from branch now show up in merge)
+$ git branch -d new_branch    # delete branch
+
+
+Clone
+$ git clone remote_location clone_name   # origin = remote_location
+$ git fetch                              # update clone from origin to origin/master (branch) and not your master branch 
+#(does not merge, just get latest from remote branch)
+$ git merge origin/master
+...
+$ git push origin my_branch    # my_branch can be master   ... now remote repo owner can view your my_branch for changes made and decide to merge with those or not
+
+
+$ git remote -v
+origin  <path> (fetch/push)
+
+A remote is a Git repository that lives outside your Git project folder. Remotes can live on the web, on a shared network or even in a separate folder on your local computer.
+The Git Collaborative Workflow are steps that enable smooth project development when multiple collaborators are working on the same Git project.
+
+We also learned the following commands
+    git clone: Creates a local copy of a remote.
+    git remote -v: Lists a Git project’s remotes.
+    git fetch: Fetches work from the remote into the local copy.
+    git merge origin/master: Merges origin/master into your local branch.
+    git push origin <branch_name>: Pushes a local branch to the origin remote.
+
