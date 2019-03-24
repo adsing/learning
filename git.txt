@@ -1,0 +1,13 @@
+$ git init   #create a git project under VC
+
+Git has 3 stages/parts:: working dir -> staging area -> repo
+
+1. working dir :: create/eidt/delete files  (possible to have untracked files)
+2. staging area :: list changes made to working dir  "$ git add"
+                                                      $ git status
+                                                      $ git diff <filename>
+3. repo :: store the changes as different versions by "$ git commit"
+                                                       $ git log      # 40 char SHA hash
+                                                       
+Current commit is called HEAD
+$ git show HEAD
