@@ -1,0 +1,374 @@
+https://redis.io/documentation
+https://redis.io/commands#string
+
+On dev host (ld-chces16):
+$ cd ~/docs/temp/redis-5.0.4
+$ src/redis-server --protected-mode no
+
+# Test:
+$ src/redis-cli -h ld-chces16 ping
+PONG
+
+# on any host:
+$ cd ~/docs/temp/redis-5.0.4
+$ src/redis-cli -h ld-chces16
+ld-chces16:6379> get SomeValue
+"125"
+ld-chces16:6379> ping
+PONG
+ld-chces16:6379> save
+OK
+ld-chces16:6379> shutdown
+not connected>
+
+ld-chces16:6379> get y
+(nil)
+ld-chces16:6379> set y 1 xx
+(nil)
+ld-chces16:6379> set x 1 nx
+OK
+ld-chces16:6379> get x
+"1"
+ld-chces16:6379> incr x
+(integer) 2
+ld-chces16:6379> incr x
+(integer) 3
+ld-chces16:6379> incrby x 7
+(integer) 10
+#decr, decrby - thread safe
+ld-chces16:6379> getset x 1
+"10"
+ld-chces16:6379> get x
+"1"
+
+
+ld-chces16:6379> mget x y SomeValue   #returns array
+1) "1"
+2) (nil)
+3) "125"
+ld-chces16:6379> mset x 1 y 1
+OK
+ld-chces16:6379> get y
+"1"
+
+ld-chces16:6379> exists x
+(integer) 1
+ld-chces16:6379> del x
+(integer) 1
+ld-chces16:6379> del zzz
+(integer) 0     #not exists
+
+# expire / ttl
+ld-chces16:6379> set tkey 123
+OK
+ld-chces16:6379> expire tkey 5
+(integer) 1
+ld-chces16:6379> ttl tkey
+(integer) 3
+ld-chces16:6379> get tkey
+"123"
+ld-chces16:6379> ttl tkey
+(integer) 1
+ld-chces16:6379> ttl tkey
+(integer) -2                     # -1 live forever
+ld-chces16:6379> get tkey
+(nil)
+
+ld-chces16:6379> set k 1 ex 10   #set and expire
+OK
+ld-chces16:6379> get k
+"1"
+ld-chces16:6379> ttl k
+(integer) 7
+
+#pexpire/pttl for time in milliseconds
+
+# lists -- are linked list (constant add time to begin/end) but large seek times (no indexing of Arrays)
+# lpush, rpush, lpop, rpop, lrange <list> <begin> <end>
+#
+ld-chces16:6379> rpush MyList 1 2 3 4 'more elements'
+(integer) 5
+ld-chces16:6379> lpush MyList 0
+(integer) 6
+ld-chces16:6379> lrange MyList 0 -1
+1) "0"
+2) "1"
+3) "2"
+4) "3"
+5) "4"
+6) "more elements"
+ld-chces16:6379> rpop MyList
+"more elements"
+ld-chces16:6379> rpop SomeValue   # key:value
+(error) WRONGTYPE Operation against a key holding the wrong kind of value
+
+
+ld-chces16:6379> lpush MyList "new value"
+(integer) 4
+ld-chces16:6379> ltrim MyList 0 2                         # Trim list to contain only recent history
+OK
+ld-chces16:6379> lrange MyList 0 -1
+1) "new value"
+2) "0"
+3) "1"
+ld-chces16:6379> llen MyList
+(integer) 3
+
+#blocking wait for clients on list with blpop & brpop
+## client session consuming data
+ld-chces16:6379> brpop Q 5    # block for 5 seconds (0 mean wait forever) and get data
+1) "Q"                        # Return Array (list/key name + value)  
+2) "1"
+ld-chces16:6379> brpop Q 5    # block and timeout
+(nil)
+(5.01s)
+## server session generating data
+ld-chces16:6379> lrange Q 0 -1
+(empty list or set)
+ld-chces16:6379> lpush Q 1
+(integer) 1
+
+# block on multiple list
+ld-chces16:6379> brpop Q 5 P 5
+1) "Q"
+2) "1"
+(1.18s)
+ld-chces16:6379> brpop Q 5 P 5
+1) "P"
+2) "2"
+
+
+# hash
+ld-chces16:6379> hset MyHash key value
+(integer) 1
+ld-chces16:6379> hget MyHash key
+"value"
+ld-chces16:6379> hmset MyHash NewKey NewValue ID 1000 Type XA Verified 1
+OK
+ld-chces16:6379> hget MyHash key
+"value"
+ld-chces16:6379> hget MyHash NewKey
+"NewValue"
+ld-chces16:6379> hmget MyHash key NewKey ID Verified
+1) "value"
+2) "NewValue"
+3) "1000"
+4) "1"
+ld-chces16:6379> hincrby MyHash ID 2     # incrby hash key value
+(integer) 1002
+ld-chces16:6379> hincr MyHash ID         # hincr does not exists
+(error) ERR unknown command `hincr`, with args beginning with: `MyHash`, `ID`,
+
+ld-chces16:6379> hkeys MyHash
+1) "key"
+2) "NewKey"
+3) "ID"
+4) "Type"
+5) "Verified"
+ld-chces16:6379> hvals MyHash
+1) "value"
+2) "NewValue"
+3) "1002"
+4) "XA"
+5) "1"
+
+
+# sets - unordered collection of strings (representing an object)
+ld-chces16:6379> sadd MySet 1 2 3
+(integer) 3
+ld-chces16:6379> sadd MySet 3 4 5  #only 4,5 added to set
+(integer) 2
+ld-chces16:6379> smembers MySet
+1) "1"
+2) "2"
+3) "3"
+4) "4"
+5) "5"
+ld-chces16:6379> sismember MySet 3
+(integer) 1
+ld-chces16:6379> sismember MySet 23
+(integer) 0
+
+ld-chces16:6379> sadd NewSet 1 2 4 8 3
+(integer) 5
+ld-chces16:6379> sinter MySet NewSet            #intersection
+1) "1"
+2) "2"
+3) "3"
+4) "4"
+ld-chces16:6379> sunion MySet NewSet            #union
+1) "1"
+2) "2"
+3) "3"
+4) "4"
+5) "5"
+6) "8"
+ld-chces16:6379> sdiff MySet NewSet
+1) "5"
+ld-chces16:6379> sunionstore backup NewSet    # copy NewSet -> backup
+(integer) 5
+ld-chces16:6379> spop NewSet                  # spop randomly removes an element
+"1"
+ld-chces16:6379> spop NewSet
+"2"
+ld-chces16:6379> spop NewSet
+"4"
+ld-chces16:6379> smembers NewSet
+1) "3"
+2) "8"
+ld-chces16:6379> srandmember NewSet           # srandmember - return a member randomly; doesn't remove
+"8"
+ld-chces16:6379> smembers NewSet
+1) "3"
+2) "8"
+ld-chces16:6379> scard NewSet           #cardinality
+(integer) 2
+
+# sorted set - mix of set + hash - good when lot of updates happen to set
+# set element is associated with a score (like hash-value)#
+# ordered according to the following rule:
+# If A and B are two elements with a different score, then A > B if A.score is > B.score.
+# If A and B have exactly the same score, then A > B if the A string is lexicographically greater than the B string. A and B strings can't be equal since sorted sets only have unique elements.
+#
+ld-chces16:6379> zadd marks 86 adi
+(integer) 1
+ld-chces16:6379> zadd marks 78 sam
+(integer) 1
+ld-chces16:6379> zadd marks 92 dee
+(integer) 1
+ld-chces16:6379> zrange marks 0 -1         #order per score
+1) "sam"
+2) "adi"
+3) "dee"
+
+ld-chces16:6379> zadd marks 78 another78
+(integer) 1
+ld-chces16:6379> zrange marks 0 -1
+1) "another78"                            # lexical since scores are same
+2) "sam"
+3) "adi"
+4) "dee"
+ld-chces16:6379> zrange marks 0 -1 withscores  #show scores as well
+1) "another78"
+2) "78"
+3) "sam"
+4) "78"
+5) "adi"
+6) "86"
+7) "dee"
+8) "92"
+ld-chces16:6379> zrangebyscore marks 70 90   #select elements by score range
+1) "another78"
+2) "sam"
+3) "adi"
+ld-chces16:6379> zrank marks sam               #rank
+(integer) 1
+ld-chces16:6379> zrank marks another78
+(integer) 0
+ld-chces16:6379> zrevrange marks 0 -1     # zrevrange -- reverse range
+1) "dee"
+2) "adi"
+3) "sam"
+4) "another78"
+ld-chces16:6379> zrangebyscore marks -inf 80    #inf, -inf
+1) "another78"
+2) "sam"
+ld-chces16:6379> zremrangebyscore marks 70 80   # remove based on score range
+(integer) 2                                     # elements removed 2 (another78, sam)
+ld-chces16:6379> zrange marks 0 -1
+1) "adi"
+2) "dee"
+
+# if same score for all elements then you can do lexicographical scores
+ld-chces16:6379> zadd eq 0 a 0 b 0 d 0 f 0 z
+(integer) 5
+ld-chces16:6379> zrange eq 0 -1
+1) "a"
+2) "b"
+3) "d"
+4) "f"
+5) "z"
+ld-chces16:6379> zrangebylex eq [a (d            # ( exclusive, [ inclusive
+1) "a"
+2) "b"
+ld-chces16:6379> zrangebylex eq [a [d
+1) "a"
+2) "b"
+3) "d"
+
+
+# Bitmaps - set of bit oriented operations on string type (max len 512MB or 2^32bits)
+# Space saving
+# constant time ops : set/get bit or group ops like # of bits set in a range
+# setbit/getbit
+ld-chces16:6379> setbit b 2 1                   # set 2nd bit to 1
+(integer) 0
+ld-chces16:6379> get b
+" "
+ld-chces16:6379> getbit b 2
+(integer) 1
+ld-chces16:6379> getbit b 1
+(integer) 0
+ld-chces16:6379> getbit b 3
+(integer) 0
+ld-chces16:6379> setbit b 4 1
+(integer) 0
+ld-chces16:6379> bitcount b              # bits set 
+(integer) 2
+
+ld-chces16:6379> setbit b1 1 1
+(integer) 0
+ld-chces16:6379> setbit b1 2 1
+(integer) 0
+ld-chces16:6379> bitcount b1
+(integer) 2
+ld-chces16:6379> setbit b2 2 1
+(integer) 0
+ld-chces16:6379> setbit b2 4 1
+(integer) 0
+ld-chces16:6379> bitop AND ba b1 b2          #bitop AND/OR/XOR/NOT dest src1 src2..
+(integer) 1
+ld-chces16:6379> bitcount b1
+(integer) 2
+ld-chces16:6379> bitcount b2
+(integer) 2
+ld-chces16:6379> bitcount ba
+(integer) 1
+ld-chces16:6379> getbit ba 2
+(integer) 1
+ld-chces16:6379> getbit ba 1
+(integer) 0
+ld-chces16:6379> getbit ba 4
+(integer) 0
+ld-chces16:6379> bitop OR bo b1 b2
+(integer) 1
+ld-chces16:6379> bitcount bo
+(integer) 3
+ld-chces16:6379> bitop XOR bx b1 b2
+(integer) 1
+ld-chces16:6379> bitcount bx
+(integer) 2
+ld-chces16:6379> bitop NOT bn b1
+(integer) 1
+ld-chces16:6379> bitcount bn
+(integer) 6
+
+# HLL or HyperLogLog 
+# HyperLogLog is a probabilistic data structure used in order to count unique things 
+# technically this is referred to estimating the cardinality of a set - with 1% error (constant memory use)
+# encoded as string so use get/set
+# HLL API:
+# Every time you see a new element, you add it to the count with PFADD.
+# Every time you want to retrieve the current approximation of the unique elements added with PFADD so far, you 
+use the PFCOUNT.
+
+ld-chces16:6379> pfadd hll a b c d
+(integer) 1
+ld-chces16:6379> pfcount hll
+(integer) 4
+ld-chces16:6379> get hll
+"HYLL\x01\x00\x00\x00\x04\x00\x00\x00\x00\x00\x00\x00\\{\x80Dv\x80P\xb1\x84K\xfb\x80BZ"
+
+
+# SCAN - iterate over keys in current redis DB
+# SSCAN/HSCAN/ZSCAN for set/hash/sorted-set
