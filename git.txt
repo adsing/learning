@@ -33,6 +33,13 @@ $ git branch master           # switch back to master
 $ git merge new_branch        # merge to master (Fast-forward merge type in this case...commits from branch now show up in merge)
 $ git branch -d new_branch    # delete branch
 
+Amend your commits - ability to change history
+$ git commit -a  --amend
+
+Rebase:
+Move branch into main (cleaner history)
+$ git rebase master   #on branch
+$ git rebase bugFix   #on master ... move master to bugFix
 
 Clone
 $ git clone remote_location clone_name   # origin = remote_location
