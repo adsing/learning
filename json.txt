@@ -1,12 +1,44 @@
+JSON data - unstructured so more flexible
+  Predictable structure makes it easier to query JSON
+
 Postgres types:
 - json (preserves whitespace and dups in keys)
 - jsonb (binary representation of parsed JSON and does not preserve whitespace/dups in keys); limit to mapped postgres type e.g numeric limits
 
 JSON -> Postgres type
 ====    =============
-string  - text
+string  - text     (as single quote '...'  and not "...")   #double quote string refers to column name in postgres? TBD
 numeric - numeric
-boolean - boolean  (true/false)
+boolean - boolean  (as true/false)
 null    - (none)   (not NULL)
++ Arrays and objects/dicts (which have keys as strings) 
 
+select '5':json;
+select '[1, 2.0, true, null]'::jsonb;
+select '{"k1":1,"k2":2.0,"k3":[true,false],"k4":null}'::jsonb;
 
+Containment (@>) - nested!
+select '[1,2,3]'::jsonb @> '3'::jsonb;
+-- array on right is contained in array on left (ordering/dups insignificant)
+select '[1,2,3]'::jsonb @> '[3,1,1]'::jsonb;
+--nested array not checked unless right array is also nested 
+select '[1,[2,3]]'::jsonb @> '[2,3]'::jsonb;   --false
+select '[1,[2,3]]'::jsonb @> '[[2,3]]'::jsonb;
+--same with nested objects
+select '{"foo":{"a":"b"}}'::jsonb @> '{"a":"b"}'::jsonb;
+select '{"foo":{"a":"b"}}'::jsonb @> '{"foo":{}}'::jsonb;   --top level key and empty object is contained
+
+The general principle is that the contained object must match the containing object as to structure and data contents, possibly after discarding some non-matching array elements or object key/value pairs from the containing object. But remember that the order of array elements is not significant when doing a containment match, and duplicate array elements are effectively considered only once.
+An array may contain primitives like string/numeric.
+
+Existence (?)
+Check if given string appears as object key or array element or primitive. Does not consider object values! So not nested.
+--operator for integer ? does not exists
+--select '[1,2,3,4]'::jsonb ? 2;
+--select '[1,2,3,4]'::jsonb ? '2';
+select '"foo"'::jsonb ? 'foo';
+select '["foo","bar"]'::jsonb ? 'bar';
+select '{"foo":"f","bar":"b"}'::jsonb ? 'bar';
+select '{"foo":"f","bar":"b"}'::jsonb ? 'b';  --fail
+
+JSON objects are better optimized for containment/existence than arrays.
