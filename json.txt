@@ -1,0 +1,12 @@
+Postgres types:
+- json (preserves whitespace and dups in keys)
+- jsonb (binary representation of parsed JSON and does not preserve whitespace/dups in keys); limit to mapped postgres type e.g numeric limits
+
+JSON -> Postgres type
+====    =============
+string  - text
+numeric - numeric
+boolean - boolean  (true/false)
+null    - (none)   (not NULL)
+
+
