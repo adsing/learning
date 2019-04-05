@@ -42,3 +42,18 @@ select '{"foo":"f","bar":"b"}'::jsonb ? 'bar';
 select '{"foo":"f","bar":"b"}'::jsonb ? 'b';  --fail
 
 JSON objects are better optimized for containment/existence than arrays.
+
+-- example:
+-- In json column docs, objects have "tags" key; search for tags key whose array values contain the objects {"term":"paris"} AND {"term":"food"}
+SELECT doc->'site_name' FROM websites
+  WHERE doc @> '{"tags":[{"term":"paris"}, {"term":"food"}]}';
+OR
+SELECT doc->'site_name' FROM websites
+  WHERE doc->'tags' @> '[{"term":"paris"}, {"term":"food"}]';
+
+GIN index:
+CREATE INDEX idxgin ON Table USING GIN (column);      -- default : eff top level key search + existence (?,?&,?|) and path/value exists operator @>
+CREATE INDEX idxgin ON Table USING GIN (column jsonb_path_ops);  --only @> but very performant & smaller sized (hash of keyys & values)
+Also: BTREE and HASH index (used to check equality of JSON docs)
+
+CREATE INDEX idxgin ON Table USING GIN ( (column->'tag') );  -- where column->'tag' ? 'someValue'; uses this index
