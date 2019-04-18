@@ -1,15 +1,10 @@
 
+#from http://learnyouahaskell.com/starting-out
 Functions - no state so no side effects
 Haskell is lazy; won't compute till it has to show results. Hence, infinite data structs
 Statically types with type inference
 Higher level concepts - ?
 
-Negative numbers to be surrounded in (-x)
-True/False (&&, ||, not
-4 == 5 or "str1" == "str2"
-4 + 5.0   #4 becomes 4.0 (implicit 
-functionFoo arg1 arg2     # succ 3 gives 4, min 3 4 gives 4, div 91 9 gives 10 (int division) ... functions have prefix notion i.e. fn arg1 arg2. Infix notion by `foo` e.g arg1 `foo` arg2  #clearer
-(succ 3) * (min 3 4) + 1  #=10 ... function application (foo arg1 arg2)
 
 #compiler : Haskell Platform
 GHC myscript.hs
@@ -17,23 +12,61 @@ GHC myscript.hs
 $ ghci
 > :set prompt "ghci>"
 ghci> :l myfunctions   #loads myfunctions.hs
+ghci> foo 2 3
+..
+ghci> let myList = [1,2,3]
+# GHC
+myList = [1,2,3]
+main = print $ 4 * 3
 
+-- comment
+{- ... -} multiline comment
+Negative numbers to be surrounded in (-x)
+True/False (&&, ||, not
+4 == 5 or "str1" == "str2"
+4 + 5.0   #4 becomes 4.0 (implicit 
+functionFoo arg1 arg2     # succ 3 gives 4, min 3 4 gives 4, div 91 9 gives 10 (int division) ... functions have prefix notion i.e. fn arg1 arg2. Infix notion by `foo` e.g arg1 `foo` arg2  #clearer
+(succ 3) * (min 3 4) + 1  #=10 ... *function application* (foo arg1 arg2)
+foo arg1 arg2 = arg1 + arg2 + 200   # definition
+bar argX = foo argX argX+1  #using fn to define new fn
+nonLazyFn' args = (bar args) + 1   -- denotes a non-lazy fn due to () in implementation, ' is a valid fn character. fn can't begin with upper case!
 
-{-
-multi
-line 
-comment
--}
+-- if stmt is an expression
+if x > 100
+then 100
+else x    --else is mandatory since fn must return something
 
-msg = "hello there"
-lst = [1..10]
-main = do print $msg
-          print lst
-          print $ 5 + 4.0
-          print $ succ 5
-          print $ min 4.1 3.1
-          print $ (succ 3) * (min 3 4) + 1   -- prefix notion
-          print $ (succ 3) * (3 `min` 4) + 1 -- infix notion
-          print $ 91 `div` 9    -- integer divison
-          print $ 91 / 9
+https://rextester.com/l/haskell_online_compiler
+        --main = print $ 4 * (-3)
+        {-
+        multi
+        line 
+        comment
+        -}
 
+        msg = "hello there"
+        lst = [1..10]
+
+        doubleMe x = x + x
+        doubleMeAdd x y = doubleMe x + doubleMe y+1
+        doubleMeAddConditional x y = if x+y > 100 then x+y else doubleMe x + doubleMe y+1
+        main = do print $msg
+                  print lst
+                  print $ 5 + 4.0
+                  print $ succ 5
+                  print $ min 4.1 3.1
+                  print $ (succ 3) * (min 3 4) + 1   -- prefix notion
+                  print $ (succ 3) * (3 `min` 4) + 1 -- infix notion
+                  print $ 91 `div` 9    -- integer divison
+                  print $ 91 / 9
+                  print $ succ (succ 9)
+                  print $ doubleMe 10
+                  print $ doubleMeAdd 2 3
+                  print $ doubleMeAdd 2.1 3.2
+                  print $ doubleMeAddConditional 2.1 3.2
+                  print $ doubleMeAddConditional 20.1 30.2
+                  print $ doubleMeAddConditional 50 50
+                  print $ doubleMeAddConditional 200.1 300.2
+                  --print $ doubleMeAdd (doubleMe 2) (doubleMe 3)  -- 4+6=10
+                  --print $ doubleMe (doubleMe 2) + (doubleMe 3)  -- 4+6=10 .. 20
+                  --print $ add "xx" "yy"
