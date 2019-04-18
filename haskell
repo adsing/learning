@@ -70,3 +70,56 @@ https://rextester.com/l/haskell_online_compiler
                   --print $ doubleMeAdd (doubleMe 2) (doubleMe 3)  -- 4+6=10
                   --print $ doubleMe (doubleMe 2) + (doubleMe 3)  -- 4+6=10 .. 20
                   --print $ add "xx" "yy"
+
+
+lists - homogenous (same type)
+"strings" are lists ['s','t','r','i','n','g','s']
+Add lists with ++ but this creates a new list each time
+'A':" cat"  -- : is 'cons operator' adds the element to beginning without new list overhead
+0:[1,2,3]   -- same as 0:1:2:3:[]
+!! for indexing (start as 0, no concept of -1)
+"OK"!!1  -- gives 'K'
+odd 121   --True
+even 121  --False  
+
+list of lists -- (sublists of same type)   #see https://repl.it/repls/SimilarIckyExecutables for examples tested
+let b = [ [1,2,3],[4,5,6],[7,8,9]]
+b!!1  -- [4,5,6]
+b++[[10,11,12]]
+[(-2),(-1),0]:b
+head b         -- first element
+tail b         -- everything other than head
+last b         -- last element
+init b         -- everything other than last
+
+length b
+null b          -- if b==[] then True else False
+reverse b
+take 2 "HELLO"  -- first 2 char/elements as new list "HE
+take 10 "HELLO" -- OK to exceed bounds gives "HELLO"
+drop "2" "HELLO" -- give "LLO". drop 0 "HELLO" gives "HELLO", drop 1000 "HELLO" gives []
+minimum [1,2,3]  -- 1
+maximum [1,2,3]  -- 3
+sum [1,2,3]      -- 6
+product[1,2,3]      -- 6
+2 `elem` [1,2,3]  -- True (element in list)
+[1..10]         -- enumeration [start, next .. end] 
+                -- [10,9..1] for reverse decreasing list (not [10..1] gives []) and [10,8,1]  gives [10, 8,6,4,2]
+['a'..'z']   "abc..xyz"    -- can use range on float also but avoid
+-- if end not specified then list to infinity
+take 24 [13,26..]
+take 10 cycle([1,2,3])        --repeat this list in cycle [1,2,3,1,2,3,1,2,3,1]
+take 10 (repeat 5)
+replicate 3 10   -- [10,10,10]  replicate Ntime Number
+
+
+list comprehensions :: [ output_fn | input set, conditions or predicate ]
+[ 2*x | x <- [1..10] ]              -- [2,4,6,8,10,12,14,16,18,20]
+[ 2*x | x <- [1..100], x `mod` 7 == 3 ]
+
+boomBang ls = [ if x < 10 then "BANG!" else "BOOM!" | x <- ls, odd x ] -- a comprehension that replaces odd number greater than 10 with "BANG!" and odd number that's less than 10 with "BOOM!". If a number isn't odd, we throw it out of our list. 
+boomBang [7..13]
+
+
+If we wanted all numbers from 10 to 20 that are not 13, 15 or 19, we'd do:
+[x | x <- [10..20], x/=13, x/15]
