@@ -1,4 +1,3 @@
-
 # from https://codewords.recurse.com/issues/one/an-introduction-to-functional-programming
 Pure functions - take a value and return a value (same value for same args)
 Immutability - data is not mutated. E.g. loop has increment indexer + sum to save result instead use recursion until empty collection
@@ -50,9 +49,9 @@ main = print $ 4 * 3
 -- comment
 {- ... -} multiline comment
 Negative numbers to be surrounded in (-x)
-True/False (&&, ||, not
-4 == 5 or "str1" == "str2"
-4 /= 5   -- not equal
+True/False (&&, ||, not -- boolean operators). Contributed to wikibooks.org/wiki/Haskell/Truth_values
+4 == 5 or "str1" == "str2"    #(==) 4 5  in prefix format
+4 /= 5   -- not equal   definition:: x /= y = not (x==y)
 4 + 5.0   #4 becomes 4.0 (implicit)
 
 r = 5        #variables are immutable or "invariable" within a scope i.e. defined once & can't be changed later
@@ -60,6 +59,21 @@ r = 5        #variables are immutable or "invariable" within a scope i.e. define
 
 y = x+2 #variable can be defined later or externally from a file
 x=3
+
+:type or :t
+:t True  
+True :: Bool
+:t 123
+123 :: Num p=>p
+:t 'A'  
+'A' :: Char       -- A :: (is of type) Char
+:t "ABC"  
+"ABC" :: [Char]       -- [Char] (list) or String
+:t not
+not :: Bool -> Bool
+:t absolute            -- function that takes one arg
+absolute :: (ord p, Num p) => p->p
+
 
 functionFoo arg1 arg2 = arg1 * arg2    #fnname args = definition using args and others already defined
 functionFoo(2, 3) or functionFoo 2 3              #fn call .. fn(x) . Fn call takes precedence over other operators like + *
@@ -71,6 +85,13 @@ nonLazyFn' args = (bar args) + 1   -- denotes a non-lazy fn due to () in impleme
 triangleArea a b c = sqrt(s * (s-a) * (s-b) * (s-c)) 
     where s = (a+b+c)/2                              #use where to save intermediate results. Note: where is indented
 
+Guards - give function different definition based on predicates (boolean conditions)
+absolute x
+    | x < 0 = 0 - x   
+    | where_example = 0
+    | otherwise = x    --catch all "otherwise"
+        where
+        where_example = False
 
 -- if stmt is an expression
 if x > 100
