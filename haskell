@@ -53,12 +53,24 @@ Negative numbers to be surrounded in (-x)
 True/False (&&, ||, not
 4 == 5 or "str1" == "str2"
 4 /= 5   -- not equal
-4 + 5.0   #4 becomes 4.0 (implicit 
-functionFoo arg1 arg2     # succ 3 gives 4, min 3 4 gives 4, div 91 9 gives 10 (int division) ... functions have prefix notion i.e. fn arg1 arg2. Infix notion by `foo` e.g arg1 `foo` arg2  #clearer
-(succ 3) * (min 3 4) + 1  #=10 ... *function application* (foo arg1 arg2)
+4 + 5.0   #4 becomes 4.0 (implicit)
+
+r = 5        #variables are immutable or "invariable" within a scope i.e. defined once & can't be changed later
+#variable begin with lowercase and contains letter/numbers/_ or '   (' suffix to indicate non-lazy fn)
+
+y = x+2 #variable can be defined later or externally from a file
+x=3
+
+functionFoo arg1 arg2 = arg1 * arg2    #fnname args = definition using args and others already defined
+functionFoo(2, 3) or functionFoo 2 3              #fn call .. fn(x) . Fn call takes precedence over other operators like + *
 foo arg1 arg2 = arg1 + arg2 + 200   # definition
 bar argX = foo argX argX+1  #using fn to define new fn
 nonLazyFn' args = (bar args) + 1   -- denotes a non-lazy fn due to () in implementation, ' is a valid fn character. fn can't begin with upper case!
+# succ 3 gives 4, min 3 4 gives 4, div 91 9 gives 10 (int division) ... functions have prefix notion i.e. fn arg1 arg2. Infix notion by `foo` e.g arg1 `foo` arg2  #clearer
+(succ 3) * (min 3 4) + 1  #=10 ... *function application* (foo arg1 arg2)
+triangleArea a b c = sqrt(s * (s-a) * (s-b) * (s-c)) 
+    where s = (a+b+c)/2                              #use where to save intermediate results. Note: where is indented
+
 
 -- if stmt is an expression
 if x > 100
