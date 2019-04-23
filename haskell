@@ -60,6 +60,10 @@ r = 5        #variables are immutable or "invariable" within a scope i.e. define
 y = x+2 #variable can be defined later or externally from a file
 x=3
 
+'c' -- Char
+"string" -- [Char] or String  
+"hello" ++ "world"   -- concatenation ++ (also list add)
+
 :type or :t
 :t True  
 True :: Bool
@@ -73,7 +77,9 @@ True :: Bool
 not :: Bool -> Bool
 :t absolute            -- function that takes one arg
 absolute :: (ord p, Num p) => p->p
-
+-- sometimes type can not be inffered so helpful if type info is annotated in fn + also helps with compile type checks
+foo :: String -> Bool    --
+foo s  = if s == 'Hello' then True else False
 
 functionFoo arg1 arg2 = arg1 * arg2    #fnname args = definition using args and others already defined
 functionFoo(2, 3) or functionFoo 2 3              #fn call .. fn(x) . Fn call takes precedence over other operators like + *
@@ -136,7 +142,7 @@ https://rextester.com/l/haskell_online_compiler
 lists - homogenous (same type)
 "strings" are lists ['s','t','r','i','n','g','s']
 Add lists with ++ but this creates a new list each time
-'A':" cat"  -- : is 'cons operator' adds the element to beginning without new list overhead
+'A':" cat"  -- : is 'cons operator' adds the element to beginning without new list overhead (consing - building a list this way with : cons)
 0:[1,2,3]   -- same as 0:1:2:3:[]
 !! for indexing (start as 0, no concept of -1)
 "OK"!!1  -- gives 'K'
