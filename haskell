@@ -28,16 +28,33 @@ Composition : f(g(x))
 
 #from http://learnyouahaskell.com/starting-out
 Functions - no state so no side effects
-Haskell is lazy; won't compute till it has to show results. Hence, infinite data structs
+Haskell is lazy; won't compute till it has to show results. Hence, easy to have infinite data structs. e.g. let allnumbers = [0,1,...]
+        let squareNum = map (^2) allnumbers
+        take 5 squareNum        
+     Hard to predict memory usage but big compiler optimizations.
 Statically types with type inference
 Higher level concepts - ?
 
+Everything is a function.
+Everything is immutable. Can't do this: a = a+1; nor have loops (instead recursion); data is deep-copied if any edits are made
+Everything is an expression.  If must have else. 
+No side effects (unless explicity stated!)  e.g. readFile :: String -> IO String  (read file and return its content). IO String is IO of string...all side effects in IO.
+       So functions without IO are "pure" functions (no side effects so easy to test and refactor).
+
+Haskell performance comparable/closer to C++ than Pytnon.
+
+    -- case/switch expression
+    let offset = case color of 
+                 Red -> 0
+                 Grene -> 8
+                 Blue -> 16
+          in baseValue + offset
 
 #compiler : Haskell Platform
 GHC myscript.hs
 #REPL
-$ ghci
-> :set prompt "ghci>"
+$ ghci             #loads Prelude module by default
+Prelude> :set prompt "ghci>"
 ghci> :l myfunctions   #loads myfunctions.hs
 ghci> foo 2 3
 ..
