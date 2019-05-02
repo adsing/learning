@@ -41,9 +41,22 @@ Everything is an expression.  If must have else.
 No side effects (unless explicity stated!)  e.g. readFile :: String -> IO String  (read file and return its content). IO String is IO of string...all side effects in IO.
        So functions without IO are "pure" functions (no side effects so easy to test and refactor).
 
-Haskell performance comparable/closer to C++ than Pytnon.
+Haskell performance comparable/closer to C++ than Python.
 
-    -- case/switch expression
+let a = fn $ x + y   -- same as let x = fn(x+y) ...$ lets us avoid the () by computing right side and applying to left side.
+let x = f $ g $ x+y --clean chains
+-- operator definition  ... ($) :: (a->b) -> a -> b
+
+map :: (a->b) -> [a] -> [b]    --fn args are fn applied, takes a list and returns a list
+filter :: (a->Bool) -> [a] -> b
+reduce :: (a->b->a) -> a -> [b] -> a
+(.) :: (b->c) -> (a->b) -> (a->c) --composition f(g(x)) i.e f o g (x) = f(g(x))
+let notFilter = filter . not
+
+Building pipelines with $ and .
+Note - $ and - are right-associative i.e. go right to left.
+
+-- case/switch expression
     let offset = case color of 
                  Red -> 0
                  Grene -> 8
@@ -97,6 +110,9 @@ absolute :: (ord p, Num p) => p->p
 -- sometimes type can not be inffered so helpful if type info is annotated in fn + also helps with compile type checks
 foo :: String -> Bool    --
 foo s  = if s == 'Hello' then True else False
+
+type Point = (int, int)  --tuple ... weak typedef
+type Polygon = [Point]
 
 functionFoo arg1 arg2 = arg1 * arg2    #fnname args = definition using args and others already defined
 functionFoo(2, 3) or functionFoo 2 3              #fn call .. fn(x) . Fn call takes precedence over other operators like + *
