@@ -1,0 +1,8 @@
+F1 - help
+Cntrl+B - side explorer bar
+Cntrl+, - settings (JSON)
+Cntrl+` - terminal
+F5 - debug
+ - tasks (compile/build)
+
+Remote Dev - connect to remote hosts for environment
