@@ -1,0 +1,8 @@
+See https://gist.github.com/jboner/2841832
+
+L1    :  1 ns
+L2    : 10 ns
+RAM   :100 ns   or    0.1  us
+N/W (1K on 1Gbs)       10-100   us (Network congestion often delivers slower speed and 2019 network is slower than SSD)
+SSD (1GB/s)          100-1000   us (SATA now have speeds of 6GB/s) 
+Disk seek            10,000 us = 10ms
