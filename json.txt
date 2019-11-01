@@ -57,3 +57,98 @@ CREATE INDEX idxgin ON Table USING GIN (column jsonb_path_ops);  --only @> but v
 Also: BTREE and HASH index (used to check equality of JSON docs)
 
 CREATE INDEX idxgin ON Table USING GIN ( (column->'tag') );  -- where column->'tag' ? 'someValue'; uses this index
+
+
+
+
+
+https://docs.python.org/3/library/json.html 19.2
+
+JSON lint (format check) - https://jsonlint.com/
+
+Pretty print jason:: cat my.json | python3 -m json.tool  | pygmentize -l json    <https://stackoverflow.com/questions/12943819/how-to-prettyprint-a-json-file> 
+
+
+Java Script Object Notation
+Is subset of YAML 1.2
+Data Interchange format that is language independent
+Easy to read/write for humans & machines
+
+Good for representing sparse data (e.g. hobbies of employees - DB support of JSON as column).
+
+JSON built on 2 structures - object/dictionary (key:value) and arrays
+Object: { key1 : value1 , key2 :  value2 }  #keys are stringified so json.loads( json.dumps(x) ) != x if non-string keys are present. Note: last element should not have a comma (python allows)
+Array : [ val1, val2, … ]
+
+Value is a "string", 'a', 123, true/false or null or object or array.
+Numbers can't be hexadecimal or octal representation.
+", \ are escaped.
+Lose tuple read-only information (converted to array and back to list).
+
+Watch for size & nesting levels of JSON files.
+Large numbers may be represented in IEEE754 format causing loss of precision.
+
+Conversion table:
+Python	JSON
+dict	object
+list, tuple	array
+str, unicode	string "…"
+int, long, float	number
+True	true
+False	false
+None	null
+Non-JSON compliant changes	(allow_nan = True)
+nan	NaN
+Inf/-Inf	Infinity/-Infinity
+Repeated object names	
+
+From <https://docs.python.org/2/library/json.html#py-to-json-table> 
+
+
+
+Python:
+>>> import json
+>>> json.dumps(['foo', {'bar': ('baz', None, 1.0, 2)}])
+'["foo", {"bar": ["baz", null, 1.0, 2]}]'
+>>> print(json.dumps({"c": 0, "b": 0, "a": 0}, sort_keys=True))
+{"a": 0, "b": 0, "c": 0}
+>>> json.dumps("\"foo\bar")
+'"\\"foo\\bar"'
+>>> 
+From <https://docs.python.org/2/library/json.html> 
+
+Specialized object -> dictionary -> binary with hooks to convert binary <=> object 
+
+Specialized object decoding:
+>>> import json
+>>> def as_complex(dct):
+...     if '__complex__' in dct:
+...         return complex(dct['real'], dct['imag'])
+...     return dct
+...
+>>> json.loads('{"__complex__": true, "real": 1, "imag": 2}', object_hook=as_complex)
+(1+2j)
+From <https://docs.python.org/2/library/json.html> 
+
+Specialized object encoding:
+>>> import json
+>>> def encode_complex(obj):
+...     if isinstance(obj, complex):
+...         return [obj.real, obj.imag]
+...     raise TypeError(repr(obj) + " is not JSON serializable")
+>>> json.dumps(2 + 1j, default=encode_complex)
+'[2.0, 1.0]'
+
+
+SERIALIZE
+json.dumps(obj)    #to string                separators = (',' , ':') for item and key sep.
+json.dump(obj, fp) #to file pointer
+DE-SERIALIZE
+json.loads(str)  #to python object  from string              object_book=function that takes obj as dict …for custom decoders
+json.load(fp)      #from file                                                  parse_int|float|constants like Infinity/NaN
+                                                                                                supply a class (cls=myclass) that is subclass of json.Decoder
+
+Use Decoder/Encoder to extend functionality for JSON to support user-defined class.
+
+JSON.TOOL - pretty print + validate
+$ echo " … " | python -m json.tool  --outfile /tmp/a --sort_keys
