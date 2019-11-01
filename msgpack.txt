@@ -1,0 +1,77 @@
+MessagePack - binary serialization format.
+Exchange multiple languages like JSON.
+
+[App object] ---> MsgPack Type system --> [MsgPack Format : representation as byte array]
+
+MsgPack Type system:
+nil
+boolean (true/false)
+int
+floats
+Raw - string (utf-8)/binary
+Array
+Map (key-value)
+Extension type (application specific :: (int, byte-array) where int 0-127 decides the type of representation)...
+Timestamp can't be serialized in JSON or MsgPack (Convert to string and serialize that)
+
+$ conda install msgpack  #install
+import msgpack   #object serialization/deserialization
+
+#packb or dumps ... unpackb or loads  
+#pack or dump   ... unpack or load      (file-like object)
+#unpacks to listl; for tuple, set use_list=False
+
+msgpack.packb([1,2,3])
+'\x93\x01\x02\x03'
+msgpack.unpackb(_)
+[1,2,3]
+msgpack.unpackb(_, use_list=False)  #tuple
+(1,2,3)
+#strings treated as byte arrays (dict keys become byte string
+s = msgpack.packb('abc')    # b'\xa3abc'
+msgpack.unpackb(s)          # b'abc' (not 'abc')
+msgpack.unpackb(s, encoding='utf-8') # 'abc'
+msgpack.unpackb(s, raw=False)        # 'abc'
+
+with open('/tmp/a','wb') as fh:
+  msgpack.pack( [1,2,3], fh)
+with open('/tmp/a','rb') as fh:
+  msgpack.unpack(fh)
+
+
+d = {'1':1, '2':2 }
+d
+dd = msgpack.packb(d)
+msgpack.unpack(dd)
+
+#Unpacker stream
+import msgpack
+from io import BytesIO
+
+buf = BytesIO()
+for i in range(1, 100):
+   buf.write(msgpack.packb( list( range(i) ), use_bin_type=True))
+
+buf.seek(0)
+
+unpacker = msgpack.Unpacker(buf, raw=False)
+for unpacked in unpacker:
+    print(unpacked)
+
+#Custom data like datetime
+import datetime
+import msgpack
+data_dict = { 'id':1, 'created':datetime.datetime.now() }
+
+##fn for coding/decoding
+def decode_datetime(obj): 
+  if b'__datetime__' in obj:
+    obj = datetime.datetime.strptime(obj["as_str"], "%Y%m%dT%H:%M:%S.%f")
+  return obj
+def encode_datetime(obj):
+  if isinstance(obj, datetime.datetime):
+    return {'__datetime__': True, 'as_str': obj.strftime("%Y%m%dT%H:%M:%S.%f")}
+  return obj
+
+packed_dict = msgpack.packb(data_dict, default=encode_datetime, use_bin_type=True)
+this_dict_again = msgpack.unpackb(packed_dict, object_hook=decode_datetime, raw=False)
