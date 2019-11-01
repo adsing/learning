@@ -1,0 +1,97 @@
+XML escape
+===========
+<![CDATA[
+    Since this is a CDATA section
+    I can use all sorts of reserved characters
+    like > < " and &
+    or write things like
+    <foo></bar>
+    but my document is still well formed!
+]]>
+
+From <http://stackoverflow.com/questions/2784183/what-does-cdata-in-xml-mean> 
+
+
+Symbol (name)	Escape Sequence
+< (less-than)	&#60; or &lt;
+> (greater-than)	&#62; or  &gt;
+& (ampersand)	&#38; &amp;
+' (apostrophe or single quote)	&#39; &apos;
+" (double-quote)	&#34; &quot;
+
+From <https://docs.oracle.com/cd/A97335_02/apps.102/bc4j/developing_bc_projects/obcCustomXml.htm> 
+
+
+XML file check
+==============
+http://www.xmlvalidation.com/
+
+$ xmllint --noout Zap.dailyreports.xml
+Zap.dailyreports.xml:137: parser error : Opening and ending tag mismatch: Dependency line 134 and Job
+      </Job>
+            ^
+
+XQuery
+=======
+From <https://www.mssqltips.com/sqlservertip/2738/examples-of-using-xquery-to-update-xml-data-in-sql-server/> 
+
+/Salaries/Accounting
+/Salaries/Marketing/Employee[@ID=("2")]/Projects
+{(/Salaries/Marketing/Employee[@ID=("1")]/Salary/text())}  #text
+/Salaries/Marketing/Employee[@ID=("2")]/@tier      #attribute value
+
+
+MARKDOWN
+=========
+Markdown
+Can make italicized, bold, and monospaced text:
+Can make *italicized*, **bold**, and ``monospaced text``
+Headers:
+# H1
+## H2
+### H3
+Lists:
+* First item
+* Second item
+Code:
+If you indent by four spaces you have code:
+def add(x, y):
+        return x + yt
+
+
+YAML
+======
+From <https://github.com/ansible/ansible/blob/devel/docsite/rst/YAMLSyntax.rst> 
+YAML because it is easier for humans to read and write than other common data formats like XML or JSON.
+
+All YAML files (regardless of their association with Ansible or not) can optionally begin with --- (separator) and end with ....
+
+Every YAML file starts with a list. Each item in the list is a list of key/value pairs (dict)
+
+All members of a list are lines beginning at the same indentation level starting with a "- " (a dash and a space):
+A dictionary is represented in a simple key: value form (the colon must be followed by a space).
+Boolean values true/FALSE/yes/No.
+Values can span multiple lines using | or >. Spanning multiple lines using a | will include the newlines. (| is literal, while > is folded)
+YAML special characters `` [] {} : > | `` 
+Comment " #" ..space then #
+
+---
+# An employee record
+name: Martin D'vloper
+job: Developer
+skill: Elite
+employed: True
+foods:
+    - Apple
+    - Orange
+    - Strawberry
+    - Mango
+languages:
+    perl: Elite
+    python: Elite
+    pascal: Lame
+education: |
+    4 GCSEs
+    3 A-Levels
+    BSc in the Internet of Things
+…
