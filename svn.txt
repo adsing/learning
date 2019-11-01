@@ -1,0 +1,36 @@
+Centralized version control system - users do local checkouts (private copy).
+Access via file system, SSH or HTTP(S).
+SVN server hosts the repositories.
+
+Trunck & branches.
+Tags - label a certain point in history (e.g. releases) & are easier to find than commits.
+HEAD is the latest revision.
+Revision # increments with each commit.
+
+$ svn checkout https://svn_server/project/MYPROJECT/repositories/subversion
+$ svn info   #gets Revision #, current dir, svn dir/URL
+
+$svn add <files>
+$ svn status    #files added/modified
+$svn commit -m 'first checking' <files>
+
+$svn update        #update local files from repo HEAD (new/updated) 
+$svn log <file>    #history
+
+$svn diff <file>    #diff between repo and local file
+$svn diff -r 34:35 <file>      #between repo revisions
+
+### rollbacks   ###
+$svn revert   <file>            #remove local file and get file from repo (HEAD).
+$svn merge -c -<revision_number> .  #…followed by a commit   
+#(reverse merging) merge called with cherry-pick merge option for a specific version from SOURCE(. means use URL of repo) to TARGET(defaults to .)
+
+#branch - merge to trunck the dev branch
+$svn merge ^/dev_branch 
+
+#resolving conflicts while merging
+$svn update <file>   #reports conflict with <<<<<< file1  and followed by >>>>>>> file2 .
+After removing conflicts manually, 
+$svn resolve --accept=working <file>
+
+(above is from https://deveo.com/svn-tutorial/#what-is-version-control)
