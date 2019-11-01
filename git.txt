@@ -83,3 +83,134 @@ We also learned the following commands
     git merge origin/master: Merges origin/master into your local branch.
     git push origin <branch_name>: Pushes a local branch to the origin remote.
 
+
+
+
+
+
+Distributed version control system
+
+source /opt/citsec/cs-1/enable #CDRG step to get "git"
+
+$ git init     #intialize current dir for git tracking as master branch …duplicate repo with $ git clone <git@HOSTNAME:USERNAME/REPONAME.git>
+$ git add 1.py
+$ git commit -m 'hello'
+#edit 1.py
+$ git commit -m 'world' 1.py
+$ git log 1.py  #show history
+$ rm 1.py
+$ git checkout 1.py  #get latest version
+$ git log 1.py
+$ git diff 1.py
+
+$ git status  #untracked files, tracked files (changed, pushed), current branch (master)
+
+$git --version   #2.11
+
+# get latest changes
+$ git fetch # to get the latest changes from master
+$ git pull # to merge with latest changes your branch
+$ git pull --all
+
+#push latest changes
+$ get push origin master
+$ git push origin master (push local master to remote origin)
+$ get push origin CQSD-branch
+
+#Files changed in a specific commit
+$ git diff-tree --no-commit-id --name-only -r <revision_SHA>
+
+$ git clone https://asingh5@cqs-bitbucket.citadelgroup.com/scm/cesdb/rpt.git
+$ git clone git@github.com:<user>/<repo>.git 
+
+#branching
+$ git branch bugfix  #pointer only (files are not recreated)
+$ git checkout bugfix   #in a new directory
+
+#delete branch
+$ git branch -d <branch>   #use -D to force
+
+#merge
+$ git checkout master
+$ git merge --no-ff bugfix  #no-fastforward - keep history of branch/feature
+$ git branch -d bugfix  #delete old branch
+
+#stash -save local branch changes temporarily
+##say you are working in DEV-branch with new files and modification to some…and want to switch to master to do a small commit of a different change
+$ git stash   #save snapshot of git locally (doesn't save untracked/new files not added to git index … use $git stash -u)
+	# $ git stash list
+	# $ git show  stash@{2} #files in the stash
+$ git checkout master # commit whatever file
+$ git checkout dev-branch  
+$ git stash pop   # or $git stash apply (changes still stashed for reusing this stash)
+..
+$ git stash drop stash@{1}
+$ git stash clear        #removes all stashes
+
+
+#refresh with changes 
+$ git rebase master (or git up master if using alias up)
+$ git pull --rebase origin master
+From <https://stackoverflow.com/questions/36540645/updating-local-master-with-remote-master> 
+
+
+#squash your branch changes to one commit (applied on top of HEAD)
+$ git rebase -i
+
+# undo commit already pushed (assuming no one has pulled)
+$ git checkout HEAD^ htmlMail.py
+--
+$ git commit --amend
+or
+$ git reset HEAD^   #go to prior version
+Or
+$ git revert HEAD  #New version is version just prior to head (revert is safer than reset)
+--
+$ git push -f               #force push your file
+
+#reset-hard (remove staged/uncommitted changes and get latest from repo HEAD) ..back to square one
+$ git reset --hard HEAD
+$ git reset --hard HEAD~2   #remove last 2 commits
+$ git reset HEAD       #keep the files changed but
+
+#GPG sign
+From <https://confluence.atlassian.com/bitbucketserver0515/using-gpg-keys-961275262.html?utm_campaign=in-app-help&utm_medium=in-app-help&utm_source=stash#UsingGPGkeys-add> 
+$ gpg --list-secret-keys --keyid-format LONG
+$ git config --global user.signingkey A89A6BE28DAEC912  #configure git to sign with my GPG key
+$ git commit -S -m "…" <file>$ git tag -S <mytag>
+
+
+#remote repo
+$ git init --bare  #empty repo with no remote repo
+    #in local repo dir
+$ git remote add main_repo git@ld-chces16:asingh5/~/main_repo.git
+$ git push -u main_repo master   #push to remove from master branch
+
+#changes on certain dates
+$ git whatchanged --since="7 day ago" --until="2 day ago" -p
+$ git whatchanged --since="2019-01-20" --until="2019-01-30" -p
+
+#config  local & global
+<repo>/.git/config is local
+~/.gitconfig is global
+$ git config --global user.name  #stored in global
+$ git config --global --list
+
+git config --global user.name "Aditya Singh"
+git config --global user.email aditya.singh@citadelsecurities.com
+
+
+#shortcuts
+git config --global alias.ci commit  #ci -> commit
+From <https://www.atlassian.com/git/tutorials/setting-up-a-repository> 
+
+
+git config --global alias.st status 
+git config --global alias.co checkout 
+git config --global alias.br branch 
+git config --global alias.up rebase 
+git config --global alias.ci commit
+git config --local alias.lg "log --oneline --decorate"c
+
+
+http://ohshitgit.com/ -- foobars and solutions to commonly occuring issues like make a small tweak to last commit.
