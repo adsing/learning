@@ -1,0 +1,125 @@
+Why protobufs?
+1. Language neutral
+2. encoder/decoder (as a class)
+3. compact         (" = 1", " = 2" markers on each element identify the unique "tag" that field (common/repeated)uses in the binary encoding.  Leave tags 16 and higher for less-commonly used optional elements.)
+4. extensible schema
+
+Package you define in your .proto file will have no effect on the generated code
+A message is just an aggregate containing a set of typed fields :
+    - bool, int32, float, double, string
+    - enum as your type
+    - other/nested message type
+
+Field modifiers:
+   - Required : must provide else structure uninitialized (can't encode/decode).  e.g. required string number = 1;
+                Can't change later to optional. So best to start optional/repeated and let app check if required field is populated or not.
+   - Optional : may not be provided (default to 0, '' or false or user provided). e.g. optional PhoneType type = 2 [default = HOME];
+   - Repeated : repeated 0 or more times (order preserved). Add with .add()
+
+Use protoc to compile the .proto to class
+
+Standard Message Methods: e.g. newobj.ParseFromString( obj.SerializeToString() )
+   See https://developers.google.com/protocol-buffers/docs/reference/python/google.protobuf.message.Message-class
+
+
+Parsing and Serialization to binary string:
+  - obj.SerializeToString()
+  - newobj = ParseFromString('...')
+
+Extending a proto buffer:
+  For compatibility's sake:
+    - not change the tag numbers of existing fields.
+    - not add or delete any required fields. *** (so essentially you can add {or delete} optional/repeated fields with fresh tag #s)
+    - may delete optional or repeated fields.
+    - may add new optional or repeated fields but you must use fresh tag numbers (i.e. tag numbers that were never used in this protocol buffer, not even by deleted fields).
+
+    New fields code can read old message (but not vice-versa).
+    New optional fields not in old messages so either check if field exists in object or add default for new fields(proto resort to default based on type).
+    New repeated fields can't be detected with HasField (because can't determine if empty in new code or never set in old code).
+
+Reflection (generic code): iterate over fields of message and change their values w/o writing code specific to any message type! 
+   Examples:
+    - convert proto msg to/from other formats (XML/JSON)
+    - diff between 2 msgs of same type
+
+  
+
+API reference : https://developers.google.com/protocol-buffers/docs/reference/python/
+
+Compiling:
+$ cd /auto/mm_scratch/asingh5/code/protobuf
+$ protoc -I=. --python_out=. addressbook.proto    #creates addressbook_pb2.py    ... protoc came with anaconda
+
+Ignored....Warning in OMAR cesdd.proto compilation (omar.proto) for C#: cesdd.proto:1575:9: warning: When enum name is stripped and label is PascalCased (Unknown), this value label conflicts with ExchangeID_Unknown. This will make the proto fail to compile for some languages, such as C#.
+
+addressbook_pb2.py are Python metaclasses ...like a template for creating classes. 
+
+
+  1 import addressbook_pb2 as abook
+  2 p = abook.Person()
+  3 p.name = 'Adi Singh'
+  4 p.id = 1234
+  5 p.email = 'asingh5@citadel.com'
+  6
+  7 ph = p.phones.add()                 # .add() for repeated groups
+  8 ph.number = '123-456-7890'
+  9 ph.type = abook.Person.WORK
+ 10
+ 11 ph2 = p.phones.add()
+ 12 ph2.number = '111-222-3333'
+ 13 ph2.type  = abook.Person.HOME
+ 14
+ 15 #p.id = 'aaa'  #TypeError
+ 16 #p.random = 123  #AttributeError
+ 17
+ 18
+ 19 p2 = abook.Person()
+ 20 p2.CopyFrom(p)
+ 21 p2.id = 2222  #change id
+ 22 print(p2.__str__())
+ 23
+ 24 print("-----------HasField set email---------------")
+ 25 if p2.HasField('email'):
+ 26     p2.email = 'aditya.singh@citadelsecurities.com'
+ 27
+ 28 print("-----------ListFields---------------")
+ 29 for k,v in p2.ListFields():
+ 30     print("{K} :: {V}".format(K=k,V=v))
+ 31
+ 32 print("---------- isIntialized -----------")
+ 33 if p.IsInitialized():
+ 34     print(p)
+ 35 else:
+ 36     print('Not initialized')
+ 37
+ 38 print("---------- SerializeToString -----------")
+ 39 s = p2.SerializeToString()
+ 40 p3 = abook.Person()
+ 41 p3.ParseFromString(s)
+ 42 print(s)
+ 43 print(p3)
+ 44 print("---------- ParseFromString -----------")
+ 45
+ 46
+ 47
+ 48
+ 49 #address book read/write from file
+ 50 print("---------- Address Book write -----------")
+ 51 a = abook.AddressBook()
+ 52 for ppl in (p,p2,p3):
+ 53     p = a.people.add()
+ 54     p.CopyFrom(ppl)
+ 55 print(a)
+ 56
+ 57 file_a='/tmp/addressbook.dat'
+ 58 with open(file_a,'wb') as fh:
+ 59     fh.write(a.SerializeToString())
+ 60
+ 61 print("Saved to {FILE}".format(FILE=file_a))
+ 62
+ 63 print("---------- Address Book read -----------")
+ 64 ab = abook.AddressBook()
+ 65 with open(file_a,'rb') as fhr:
+ 66     ab.ParseFromString(fhr.read())
+ 67     for p in ab.people:
+ 68         print(p)
