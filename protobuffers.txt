@@ -123,3 +123,377 @@ addressbook_pb2.py are Python metaclasses ...like a template for creating classe
  66     ab.ParseFromString(fhr.read())
  67     for p in ab.people:
  68         print(p)
+
+
+
+
+ language-neutral, platform-neutral, extensible mechanism for serializing structured data – think XML, but smaller, faster, and simpler. 
+From <https://developers.google.com/protocol-buffers/> 
+
+
+
+$ conda install protobuf   #for google.protobuf
+
+$ cat /tmp/book.proto
+message Book {
+  required string isbn = 1;
+  optional string title = 2;
+}
+
+$ protoc -I=/tmp --python_out=/tmp/a /tmp/book.proto
+
+import sys
+sys.path.append('/tmp/a')
+import book_pb2
+book = book_pb2.Book()
+book.id = '9780262510875'
+book.title = 'Structure and Interpretation of Computer Programs - 2nd Edition'
+book.SerializeToString()
+
+book2 = book_pb2.Book()
+book2.ParseFromString( book.SerializeToString() )
+
+book2.isbn
+book2.title
+
+book3 = book_pb2.Book()
+book3.IsInitialized() #False
+book3.CopyFrom (book2)
+book3.HasField('title') #true
+
+>>> book3.
+book3.ByteSize(                  book3.ClearField(                book3.DiscardUnknownFields(      book3.FromString(                book3.ISBN_FIELD_NUMBER          book3.MergeFrom(                 book3.RegisterExtension(         book3.SetInParent(
+book3.Clear(                     book3.CopyFrom(                  book3.Extensions                 book3.HasExtension(              book3.IsInitialized(             book3.MergeFromString(           book3.SerializePartialToString(  book3.TITLE_FIELD_NUMBER
+book3.ClearExtension(            book3.DESCRIPTOR                 book3.FindInitializationErrors(  book3.HasField(                  book3.ListFields(                book3.ParseFromString(           book3.SerializeToString(         book3.WhichOneof(
+
+
+
+To serialize structured data (binary) and hence faster (no field-name but tags #)
+Language/platform neutral + is extendible.
+
+Supports IDL (Interface description Language).
+Comes with code generators to work with C++/Java/Python and others. Others Apache Thrift, MS Bond.
+
+The message format is simple – 
+each message type has one or more uniquely numbered fields, 
+each field has a name and a value type, 
+where value types can be numbers (integer or floating-point), booleans, strings, raw bytes, or even (as in the example above) other protocol buffer message types, allowing you to structure your data hierarchically.
+From <https://developers.google.com/protocol-buffers/docs/overview> 
+
+
+
+Define a proto:: polyline.proto
+Code generators will create polyline.pb.cc and polyline.pb.h.
+This gives you accessor fn + serialize/deserialize.
+
+A protocol buffer is only meaningful if you have the message definition (the .proto file).
+Datatypes : bool, int32, float, double, string and other message types.
+Field modifier: required (forever!), optional (defaults to 0 or ''), repeated (0 or more…and order maintained..optional as well)
+$ protoc -I=$SRC_DIR --python-out=$DEST_DIR $SRC_DIR/protoFile  #generates protoFile_pb2.py
+
+Standard message methods:
+	1. IsInitialized()  #check all fields are setup
+	2. __str__()  #print(msg)
+	3. CopyFrom(other_msg)
+	4. Clear()  #all fields are empty
+	
+	#Parsing/Serialization
+	5. Object.SerializeToString(    )  #to bytes
+	6. ParseFromString( f.read() )  #
+	
+	
+Compatibility rules:
+• you must not change the tag numbers of any existing fields.
+• you must not add or delete any required fields.
+• you may delete optional or repeated fields.
+• you may add new optional or repeated fields but you must use fresh tag numbers (i.e. tag numbers that were never used in this protocol buffer, not even by deleted fields).
+From <https://developers.google.com/protocol-buffers/docs/pythontutorial> 
+
+Protocol Buffer wire format is not self-delimiting, so protocol buffer parsers cannot determine where a message ends on their own.  Put size of msg & then msg.
+
+
+#############################################################################
+# proto with required/optional fields and optional/repeated msg
+# 
+$ cat > book.proto
+package book;
+
+message Cover {
+    optional string heading = 10;               
+}
+
+message Page { 
+   optional string txt=11;
+   optional int32 number=12;
+}
+
+message Book {
+  required string isbn = 1;
+  optional string title = 2;
+  optional Cover cover=3;
+  repeated Page page=4;
+}
+
+$ protoc --version 
+# 3.5.1 (prod uses 2.6.1)
+$ protoc -I=/tmp --python_out=/tmp/ /tmp/book.proto
+
+
+
+
+
+>>> import book_pb2
+>>> dir(book_pb2)
+['Book', 'Cover', 'DESCRIPTOR', 'Page', '_BOOK', '_COVER', '_PAGE', '__builtins__', '__cached__', '__doc__', '__file__', '__loader__', '__name__', '__package__', '__spec__', '_b', '_descriptor', '_message', '_reflection', '_sym_db', '_symbol_database', 'descriptor_pb2', 'sys']
+
+>>> b = book_pb2.Book()
+>>> b.isbn = 'ISBN'           # set attributes directly
+
+>>> b.title= 'Title'
+>>> print(b)
+isbn: "ISBN"
+title: "Title"
+
+#serialize/deserialize whole object
+>>> b2 = book_pb2.Book()
+>>> b2.ParseFromString( b.SerializeToString() )
+13
+>>> if b.isbn ==  b2.isbn:
+...   print('same')
+...
+same
+>>> if b is b2:
+...   print('same var')
+…
+
+# optional, required, repeated fields… look at FieldDescriptor's label
+>>> from google.protobuf.descriptor import FieldDescriptor
+>>> FieldDescriptor.LABEL_OPTIONAL
+1
+>>> FieldDescriptor.LABEL_REQUIRED
+2
+>>> FieldDescriptor.LABEL_REPEATED
+3
+
+for f,value in protoObject.ListFields():  #where f is field descriptor
+ print(f.name, f.type, f.cpp_type, f.label, f.has_default_value, f.containing_type, f.message_type)  #message_type is message descriptor
+ m = f.message_tye
+ #dir(m)
+ if m:
+  print("M",m.name, m.containing_type, m.has_options)
+  for ff in m.fields:
+   print("FF", ff.name, ff.type, ff.cpp_type, ff.label, ff.has_default_value, ff.containing_type, ff.message_type)
+
+Message Descriptor:
+['CopyToProto', 'EnumValueName', 'GetOptions', '__class__', '__delattr__', '__dir__', '__doc__', '__eq__', '__format__', '__ge__', '__getattribute__', '__gt__', '__hash__', '__init__', '__init_subclass__', '__le__', '__lt__', '__ne__',
+'__new__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__sizeof__', '__str__', '__subclasshook__', '_concrete_class', '_options', 'containing_type', 'enum_types', 'enum_types_by_name', 'enum_values_by_name', 'extension_ra
+nges', 'extensions', 'extensions_by_name', 'fields', 'fields_by_camelcase_name', 'fields_by_name', 'fields_by_number', 'file', 'full_name', 'has_options', 'is_extendable', 'name', 'nested_types', 'nested_types_by_name', 'oneofs', 'oneof
+s_by_name', 'syntax']
+
+Field Descriptor:
+['CPPTYPE_BOOL', 'CPPTYPE_DOUBLE', 'CPPTYPE_ENUM', 'CPPTYPE_FLOAT', 'CPPTYPE_INT32', 'CPPTYPE_INT64', 'CPPTYPE_MESSAGE', 'CPPTYPE_STRING', 'CPPTYPE_UINT32', 'CPPTYPE_UINT64', 'GetOptions', 'LABEL_OPTIONAL', 'LABEL_REPEATED', 'LABEL_REQUIRED', 'TYPE_BOOL', 'TYPE_BYTES', 'TYPE_DOUB
+LE', 'TYPE_ENUM', 'TYPE_FIXED32', 'TYPE_FIXED64', 'TYPE_FLOAT', 'TYPE_GROUP', 'TYPE_INT32', 'TYPE_INT64', 'TYPE_MESSAGE', 'TYPE_SFIXED32', 'TYPE_SFIXED64', 'TYPE_SINT32', 'TYPE_SINT64', 'TYPE_STRING', 'TYPE_UINT32', 'TYPE_UINT64', '__cl
+ass__', '__delattr__', '__dir__', '__doc__', '__eq__', '__format__', '__ge__', '__getattribute__', '__gt__', '__hash__', '__init__', '__init_subclass__', '__le__', '__lt__', '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__'
+, '__setattr__', '__sizeof__', '__str__', '__subclasshook__', '_cdescriptor', '_options', 'camelcase_name', 'containing_oneof', 'containing_type', 'cpp_type', 'default_value', 'enum_type', 'extension_scope', 'file', 'full_name', 'has_de
+fault_value', 'has_options', 'id', 'index', 'is_extension', 'json_name', 'label', 'message_type', 'name', 'number', 'type']
+
+
+from google.protobuf.descriptor_pb2 import FieldDescriptorProto as fdp
+if hasattr(protoMsg, 'DESCRIPTOR'):
+    for field in protoMsg.DESCRIPTOR.fields:
+        newProtoMsg = getattr(protoMsg, field.name)
+        if fdp.LABEL_REQUIRED == field.label:
+
+
+
+#HasField - doesn't work for repeated fields
+>>> b.HasField('title')
+True
+>>> b.HasField('cover')  
+False
+>>> b.cover.HasField('heading')
+True
+>>> b.HasField('page')
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+ValueError: Protocol message has no singular "page" field.
+
+
+#Clear Field
+>>> b.cover.ClearField('heading')
+>>> b
+isbn: "ISBN"
+title: "Title"
+cover {
+}
+page {
+  txt: "Some page text..."
+  number: 1
+}
+page {
+  txt: "Another page text..."
+  number: 2
+}
+page {
+  txt: "More Text"
+  number: 3
+}
+
+>>> b.ClearField('cover')
+>>> b
+isbn: "ISBN"
+title: "Title"
+page {
+  txt: "Some page text..."
+  number: 1
+}
+page {
+  txt: "Another page text..."
+  number: 2
+}
+page {
+  txt: "More Text"
+  number: 3
+}
+
+
+
+#repeated & composite message field
+>>> p = b.page.add()
+>>> p.txt = 'Some page text...'
+>>> p.number=1
+>>> print(b)
+isbn: "ISBN"
+title: "Title"
+page {
+  txt: "Some page text..."
+  number: 1
+}
+>>> b.page.extend( [book_pb2.Page(txt='Another page text...', number=2), book_pb2.Page(txt='More Text', number=3)] )
+>>> b
+isbn: "ISBN"
+title: "Title"
+cover {
+  heading: "New Heading"
+}
+page {
+  txt: "Some page text..."
+  number: 1
+}
+page {
+  txt: "Another page text..."
+  number: 2
+}
+page {
+  txt: "More Text"
+  number: 3
+}
+
+
+
+#optional& singular composite message
+>>> b.cover.heading = 'Heading'
+or
+>>> c = book_pb2.Cover()
+>>> c.heading  = 'Heading'
+>>> b.cover.CopyFrom(c)
+# or
+#>>> b.cover.MergeFromString(c.SerializeToString())
+#9
+>>>
+>>> print(b)
+isbn: "ISBN"
+title: "Title"
+cover {
+  heading: "Heading"
+}
+page {
+  txt: "Some page text..."
+  number: 1
+}
+page {
+  txt: "Another page text..."
+  number: 2
+}
+
+
+#############################################################################
+
+Reflection - allows you to iterate/manipulate messages without writing code for specific msg types. Useful for encoding/decoding with various formats like JSON/XML.
+
+
+$ cat message.proto
+pacakge limit_namespace;
+
+message Person {
+ required string name = 1;
+ required int32 age = 2;
+
+ enum SexType {
+  NONE = 0;
+  M = 1;
+  F = 2;
+  }
+ required SexType sex=3;
+ optional string comments=4 [default='NA'];
+}
+
+$ /tp64/protobuf/2.6.0/bin/protoc --python_out='/auto/cesrpt/temp/asingh5' message.proto
+#generates message_pb2.py
+
+$cat > test.py
+import sys
+sys.path.append('…this dir…')
+import message_pb2
+
+p1 = message_pb2.Person()
+p1.name='Joe'
+print(p1.name)
+
+$ /tp64/python/2.7.2/bin/python test.py
+
+
+
+//polyline.proto
+message Point {
+  required int32 x = 1;
+  required int32 y = 2;
+  optional string label = 3;
+}
+message Line {
+  required Point start = 1;
+  required Point end = 2;
+  optional string label = 3;
+}
+message Polyline {
+  repeated Point point = 1;
+  optional string label = 2;
+}
+From <https://en.wikipedia.org/wiki/Protocol_Buffers> 
+
+
+// polyline.cpp
+#include "polyline.pb.h"  // generated by calling "protoc polyline.proto"
+Line* createNewLine(const std::string& name) {
+  // create a line from (10, 20) to (30, 40)
+  Line* line = new Line;
+  line->mutable_start()->set_x(10);
+  line->mutable_start()->set_y(20);
+  line->mutable_end()->set_x(30);
+  line->mutable_end()->set_y(40);
+  line->set_label(name);
+  return line;
+}
+Polyline* createNewPolyline() {
+  // create a polyline with points at (10,10) and (20,20)
+  Polyline* polyline = new Polyline;
+  Point* point1 = polyline->add_point();
+  point1->set_x(10);
+  point1->set_y(10);
+  Point* point2 = polyline->add_point();
+  point2->set_x(20);
+  point2->set_y(20);
+  return polyline;
+}
+
+From <https://en.wikipedia.org/wiki/Protocol_Buffers> 
