@@ -1,0 +1,275 @@
+Can represent hierarchical data in a flat binary buffer.
+Access to serialized data without parsing/unpacking while supporting data structure evolution.
+Memory efficient - no extra mem required; ideal of mmap/streaming where only part of data is kept in memory.
+Easy to integrate - just one line of header
+
+https://google.github.io/flatbuffers/
+
+Serializer/Deserializer for hierarchical data in flat binary buffer that can be access without parsing/unpacking while supporting data structure evolution.
+
+No additional memory required so good for streaming; only part of buffer needs to be in memory.
+
+Access to fields is based on offsets and tables have one level of redirection (vTable for evolution/optional fields). vTables are small and shared for same table-type & tables fields not stored when not set or = default value. Structs when schema doesn't change i.e. all fields required e.g. co-ordinates, time, date etc.
+
+Tiny footprint of generated code.
+Strongly typed.
+Cross-platform.
+
+Compared to protobuffers, doesn’t need unpacking step which is tied to per object memory requirements + code is terse.
+FB edge over protos:
+	1. ID assignment optional (no need to hunt for ID when new fields to be added) + easy to deprecate fields.
+	2. Tables vs Structs instead of grouping fields by optional/required.
+	3. Union type instead of series of optional fields which need to be iterated over.
+	4. Vector type instead of repeated. You can get length w/o iterating over collection + adjacency guarantee.
+	5. Defaults for all scalars
+	6. Parser deals with both schema and data definition
+	
+
+Flat buffers can also be schema-less (self-describing).
+
+
+Usage:
+	1. Define schema file for data structure. 
+	Field types:
+		a. scalar (int/float/string) 
+		b. array of type
+		c. reference to another object
+		d. Set of possible objects (unions) i.e. one of many objects
+	2. flatc - compiler to build helper classes in C++/Java/Python/Go. Core functionality in flatbuffers.h + generated mydata_generaed.h.
+	3. Construct binary buffer with FlatBufferBuilder class.
+	4. Reading binary buffer means get pointer to root object and traverse it with object->field()
+	
+
+FlatBuffers can be used for transferring data on wire, for storage, in-memory. Same model used by UI so no data transformation.
+
+Schema fields default to 0 or NULL. e.g. fieldname:type = default;
+# short = int16, float = float32
+
+Schema defines the root_type = root type for serialized data.
+
+Compile the code/schema into helper classes:
+$ flatc --python schema.fbs
+
+FlatBuffer Builder instance creates the buffer which auto-grows.
+ builder = flatbuffers.Builder(1024)
+ attribute_string = builder.CreateString('Sword')      #strings
+
+Table called Weapon: (Table: Start, Add…, End)
+Weapon.WeaponStart(builder)
+Weapon.WeaponAddAttributeInteger(builder, 123)
+Weapon.WeaponAddAttributeString(builder, attribute_string )  #string created above
+sword = Weapon.WeaponEnd(builder)
+
+
+Build contained objects first. 
+For a vector of nested objects, create objects first and then create vector.
+For vector of simple types, vectors are created in reverse order!
+Default values are not saved/transmitted (space saving).
+Union objects have a hidden type (so need to specify type and object).
+
+
+E.g. Contained attribute is list of table: (List of table: StartInvetoryVector, PrependByte.., EndVector)
+ Monster.MonsterStartAttributeIntegerVector(builder, 10)
+ for i in reversed(range(10)):
+    builder.PrependByte(i)     #simple type vector created in reverse
+ attribute_list_tbl = builder.EndVector(10)
+
+#vector of table
+ Monster.MonsterStartAttributeTableVector(builder,2)
+ #composite objects created earlier, put their offset into the vector
+ builder.PrependUOffsetTRelative(sword)   
+ builder.PrependUOffsetTRelative(axe)
+ attribute_table = builder.EndVector(2)
+
+#vector of struct (of ints)
+ Monster.MonsterStartStructIntVector(builder, 2)
+ Vec3.CreateVec3(builder, 1,2,3)
+ Vec3.CreateVec3(builder, 4,5,6)
+ struct_int = builder.EndVector(2)
+
+#objects made of composite objects
+ Monster.MonsterStart(builder)
+ Monster.MonsterAddInt(builder, 123)
+ Monster.MonsterAddIntStruct(builder, Vec3.CreateVec3(builder,9,9,9) ) #simple struct stored inline
+ Monster.MonsterAddObject1(builder, obj)
+ Monster.MonsterAddEnum1(builder, Color.Color().Red)
+ #union has a hidden type!
+ Monster.MonsterAddUnion1Type(builder, Equipment.Equipment().Weapon)
+ Monster.MonsterAddUnion1(builder, axe)
+ monster = Monster.MonsterEnd(builder)  #point monster to offset of root of data
+ builder.Finish(moncster)             #done with builder; no more adds
+ buffer = builder.Output()  #bytearray
+
+#read FB bytes into object (read from file into buffer
+ buffer = bytearray(buffer)   #convert to bytearray which is mutable list of bytes (int values)
+ myMonster = Monster.Monster.GetRootAtMonster(buffer, 0)
+ atttribute1Int = myMonster.Attribute1() atttribute2Str = myMonster.Attribute2()
+ atttribute3Struct = myMonster.Attribute3() #atttribute3Struct.X(), atttribute3Struct.Y()
+ #vector of Ints (or scalars) .. Alternative AsNumpy method is faster
+ int_len = monster.IntListLength()
+ myInt = monster.IntList(2)
+ #vector of Ints (or scalars) .. AsNumpy (only for scalars; not even for structs)
+ myIntNumpy = monster.ListAsNumpy
+
+
+ #vector of tables
+ tbl_len = monster.TableLength()
+ myTable = monster.Table(1)
+ name = myTable.Name()
+ age = myTable.Age()
+ #union type
+ myType = myMonster.SomeUnionType()
+ if myType  == SomeUnion.SomeUnion().SomeType:
+    someType = SomeType.SomeType()
+    someType.Init(myMonster.SomeUnion().Bytes, myMonster.SomeUnion().Pos)
+    name = someType.Name()
+    age = someType.Age()
+
+
+Mutating Flatbuffers: typically read-only unless mutated in-place.
+Need to compile with "--gen-mutable" flag. 
+API for mutating FB in Python is not available.
+Attempt to mutate fields = default value return false since they were not saved to buffer (so can't be modified). Option - set ForceDefaults on FlatBufferBuilder to save all fields to buffer (drawback is larger buffer size; but fields are mutable).
+Possible to mutate FB through reflection or object API (gen-object-api)
+
+JSON <-> FlatBuffers
+$ flatc --binary monster.fbs somedata.json   #gives somedata.bin  --binary or -b
+$ flatc --raw-binary --json monster.fbs -- monster.bin   #creates monster.json
+#if schema file has 'file_extension "ext"' then output file will be monster.ext
+
+Flatbuffers can also be converted to proto (--proto)
+FB binary -> JSON -> binary (size is larger than original binary?)
+
+
+Writing schema/Interface definition language (IDL):
+Table: Has a name & list of fields (field name, type, optional default value 0/NULL). Used to create objects. 
+New fields added at end of schema or define ids for each field.
+Deleted fields are marked deprecated.
+Changing of field/table names will require code changes but no impact on data structs which use ids.
+table Weapon {
+  name:string;
+  damage:short;
+  misc:otherTableType;
+}
+
+Structs: like table but all fields required (no defaults). Use less memory & faster (no vTable)
+Can contains scalars or other structs.
+struct Vec3 {
+  x:float;
+  y:float;
+  z:float;
+}
+
+Types: 
+Built-in scalar types are [type(alias)]:
+8 bit: byte (int8), ubyte (uint8), bool
+16 bit: short (int16), ushort (uint16)
+32 bit: int (int32), uint (uint32), float (float32)
+64 bit: long (int64), ulong (uint64), double (float64)
+string: utf-8 or [byte]
+[vector]  … can't have vector of vectors but can do vectors of structs/tables
+
+Enum: named constant with each given value increasing by one 0,1,2.. Typical underlying type is byte (any int type will do).
+Never replace enum values; only add or remove (no deprecation for enums)
+enum Color:byte { Unknown, Red=1, Green, Blue }
+
+Union: like enum but tables instead of constants. 
+Has a hidden "_type" to hold the corresponding enum value so that we can cast at runtime. Also, has a NONE marker if no value stored in union. 
+Good option to send multiple msg types.
+Can't be root to FB itself so must be a composite field.
+Union name is optional.
+e.g. union MyUnion Any { Monster, Weapon, Pickup }
+
+Namespaces namespace Outer.Inner;    //all calls now in Outer.Inner.MonsterStart(builder)
+Comments // …. Or ///document for the following object
+
+Include other fbs schema files: ensure each file parsed once and defined in one place.
+inclue "other_def.fbs"   
+
+File identification and extension:
+FB binary buffer not self-describing; requires schema to parse.
+To use FB as a file format, use 'magic number' to see if file is the type you're expecting to parse. Identifier built into FB (file_identifier 4-char at byte offset 4-7) similar to root_type. You can define the file_identifier in FB schema and any binary buffer created will have this file identifier -or- specify when Finishing the buffer (not supported in Python).
+When you load a buffer, check if BufferHasIdentifier and check the identifier.
+Alternatively, use union to send one of the many types of msg.
+
+RPC:
+RPC calls in a schema that define fn that take request argument as a FB and return a FB as response.
+rpc_service MonsterStorage {
+  Store(Monster):StoreResponse;
+  Retrieve(MonsterId):Monster;
+}
+From <https://google.github.io/flatbuffers/flatbuffers_guide_writing_schema.html> 
+
+JSON:
+Unions have x_type and x fields.
+Some built in functions like rad, deg, cos, sin, tan, acos, asin, atan
+Numbers 01 is 1, 0xa, 2.3, 2.3e5, -inf, nan
+
+
+Efficient data structures 
+	- use tables to store data (whenever you think dictionary).
+	- use strings when absolutely required else use enum (int value)
+	- No inheritance in FB so use union (but overhead of union type) instead table of all possible set of fields (optional fields are cheap)
+	- Use small ints instead of long
+	- Factor out repeating data in a common data structure
+
+Watch-out:
+Add new fields at end & mark fields deprecated instead of delete.
+Data stored as ids/values (so you can rename but code needs to change to account for new name).
+Scalars with no value or default value not serialized so don't know if set - as a hack, put the scalar in a struct (same size taken) and will know if the struct exists or not (or) force_defaults in FB to force defaults to be serialized.
+
+
+Python:
+$ bash 
+source ~/.bashrc
+source ~/.profile
+
+$ conda info --env
+#flatbuffer -- /auto/mm_scratch/asingh5/bin/AnacondaPy35/envs/flatbuffer
+
+$ conda create --prefix /auto/mm_scratch/asingh5/bin/AnacondaPy35/envs/flatbuffer 
+$ conda install -n flatbuffer flatbuffers
+$ conda activate flatbuffer 
+$ python  #import flatbuffers did not work
+$ pip install flatbuffers    #now it works
+
+$ conda deactivate flatbuffers
+
+N
+
+$ flatc --python schema.fbs
+
+From <https://google.github.io/flatbuffers/flatbuffers_guide_tutorial.html> 
+import flatbuffers   
+# Generated by `flatc`.
+import MyGame.Sample.Color
+import MyGame.Sample.Equipment
+import MyGame.Sample.Monster
+import MyGame.Sample.Vec3
+import MyGame.Sample.Weapon
+builder = flatbuffers.Builder(1024)  #Builder contains the buffer which auto-grows if required
+
+
+
+
+
+>>> import flatbuffers
+>>> dir(flatbuffers)
+['Builder', 'Table', '__builtins__', '__cached__', '__doc__', '__file__', '__loader__', '__name__', '__package__',
+ '__path__', '__spec__', 'builder', 'compat', 'compat_range', 'encode', 'number_types', 'packer', 'table']
+
+>>> dir(flatbuffers.Builder)
+['Bytes', 'CreateByteVector', 'CreateNumpyVector', 'CreateString', 'EndObject', 'EndVector', 'Finish', 'FinishSizePrefixed', 'Head', 'MAX_BUFFER_SIZE', 'Offset', 'Output', 'Pad', 'Place', 'PlaceSOffsetT', 'PlaceUOffsetT', 'PlaceVOffsetT', 'Prep', 'Prepend', 'PrependBool', 'PrependBoolSlot', 'PrependByte', 'PrependByteSlot', 'PrependFloat32', 'PrependFloat32Slot', 'PrependFloat64', 'PrependFloat64Slot', 'PrependInt16', 'PrependInt16Slot', 'PrependInt32','PrependInt32Slot', 'PrependInt64', 'PrependInt64Slot', 'PrependInt8', 'PrependInt8Slot', 'PrependSOffsetTRelative', 'PrependSlot', 'PrependStructSlot', 'PrependUOffsetTRelative', 'PrependUOffsetTRelativeSlot', 'PrependUint16', 'PrependUint16Slot', 'PrependUint32', 'PrependUint32Slot', 'PrependUint64', 'PrependUint64Slot', 'PrependUint8', 'PrependUint8Slot', 'PrependVOffsetT', 'Slot', 'StartObject', 'StartVector', 'WriteVtable', '_Builder__Finish', '__class__', '__delattr__', '__dir__', '__doc__', '__eq__', '__format__', '__ge__', '__getattribute__', '__gt__', '__hash__', '__init__', '__init_subclass__', '__le__', '__lt__', '__module__', '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__sizeof__', '__slots__', '__str__', '__subclasshook__', 'assertNested', 'assertNotNested', 'assertStructIsInline', 'current_vtable', 'finished', 'growByteBuffer', 'head', 'minalign','nested', 'objectEnd', 'vtables']
+
+>>> dir(flatbuffers.Table)
+['Bytes', 'Get', 'GetSlot', 'GetVOffsetTSlot', 'GetVectorAsNumpy', 'Indirect', 'Offset', 'Pos', 'String', 'Union', 'Vector', 'VectorLen', '__class__', '__delattr__', '__dir__', '__doc__', '__eq__', '__format__', '__ge__', '__get
+attribute__', '__gt__', '__hash__', '__init__', '__init_subclass__', '__le__', '__lt__', '__module__', '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__sizeof__', '__slots__', '__str__', '__subcl
+asshook__']
+
+
+>>> dir(flatbuffers.builder)
+['Builder', 'BuilderNotFinishedError', 'BuilderSizeError', 'IsNestedError', 'IsNotNestedError', 'N', 'NumpyRequiredForThisFeature', 'OffsetArithmeticError', 'SOffsetTFlags', 'StructIsNotInlineError', 'UOffsetTFlags', 'VOffsetTFlags', 'VtableMetadataFields', '__builtins__', '__cached__', '__doc__', '__file__', '__loader__', '__name__', '__package__', '__spec__', 'compat', 'encode', 'import_numpy', 'memoryview_type', 'np', 'packer', 'range_func', 'vtable
+Equal']
+
+
+$ flatc --cpp myschema.fbs
