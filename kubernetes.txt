@@ -15,7 +15,28 @@ o Velocity :: feature release quickly (hourly) & reliably.
             Opposed to imperative config where state = series of instructions/actions. E.g. run A; run B; run C.
             Declarative config defines "state". E.g. replicas = 3.
             Store declarative config in source control is "infra as code"            
-  - online self-healing systems - 
-o Scalability
-o Abstracting your infra
-o Efficiency
+  - online self-healing systems - continously monitor your current state to ensure it matches desired/config state. E.g. ensure replicas=3
+            Less time spent on operations and maintenance.
+            "Operator" application runs a software like SQL DBW with wrapper code to detect health + healing.
+o Scalability with "decoupled" architecture
+  - Decoupling of components through well-defined APIs (implementer/consumer balance with low communication overhead) and
+    service load balancer (demand/supply balance).
+  - Easy scaling for applications & clusters
+            Due to immutability+declarative nature, scale to more replicas (or auto-scale)
+            For cluster, add new machine with same image or using declarative config
+  - Scaling teams with micro-services: Ideal team size=2 pizza (6-8 people for knowledge sharing, decision making and sense of purpose)
+            Each team builds one micro-service, combination of teams/microservices.
+            K8s abtractions for building decoupled microservice architecture:
+              = pods (group container of different images i.e. micro-services into single deployable unit)
+              = service (load balancing, naming, discovery to isolate one service from another)
+              = namespaces (isolation, access control)
+              = ingress obejcts (combine multiple microsserices into single external API)
+  - Separation of concerns for consistency & scaling
+            Decoupling of OS/machine and app.
+            Small teams required for maintaining apps/OS/machines
+            KaaS - K8s-as-a-service on cloud for very small teams
+o Abstracting your infra - Separates developer from machine (portability across machine/clouds)
+o Efficiency 
+  - Abtraction aids thought-process
+  - Mchine used optimally (better utilization)
+  - Cheap to create test/development environments with namespace (test/dev)
