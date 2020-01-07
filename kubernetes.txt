@@ -1,0 +1,21 @@
+Kubernetes up & running book 2nd edition
+=========================================
+
+Need to know docker. 
+
+K8s started in 2014, open-source infrastructure (container deployment/orchestration) for cloud deployment (any sized compute node). 
+Distributes system, microservices that are scalable & reliable.
+
+Benefits:
+o Velocity :: feature release quickly (hourly) & reliably. 
+  - Immutability - containers/k8s provide immutable infra through artifact. Example of mutable infra is apt-get (get binaries and 
+            install on top of existing binaries) so infra is not a single artifact but collection of incremental updates over time.
+            Immutable infra = new/complete/immutable image... with update replacing the image (rollack easy to older image).
+  - Declarative config - eberything in K8s is a declarative config object that represents the desired state of system.
+            Opposed to imperative config where state = series of instructions/actions. E.g. run A; run B; run C.
+            Declarative config defines "state". E.g. replicas = 3.
+            Store declarative config in source control is "infra as code"            
+  - online self-healing systems - 
+o Scalability
+o Abstracting your infra
+o Efficiency
