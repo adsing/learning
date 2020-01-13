@@ -40,3 +40,71 @@ o Efficiency
   - Abtraction aids thought-process
   - Mchine used optimally (better utilization)
   - Cheap to create test/development environments with namespace (test/dev)
+
+
+Creating and running containers:
+================================
+K8s platform for managing distributes applications. First, need to know how to put applications in container images.
+Application = source code + library (perhaps shared e.g. libc) + language runtime. Potential issue with shared library (not installed on a host; or different version).
+So image & infrastructure should be immutable.
+Container - creation & register/upload of image; services/infra to run these. Container apps run inside an OS container
+K8s supports Docker imagesand other OCI-compatible images (Open Contaner Initiative).
+Docker - each layer add/removes/modifies preceding layers. Each config line adds a layer.
+Containers :: (a) System contains like OS - full boot cycle with serive like ssh. (b) Application container - run a single program (preferred method).
+
+Building with Docker: 
+1. ".dockerignore" - do not copy these files into image.
+2. Dockerfile is recipe for how to build the container image. 
+
+Example:
+FROM node:10          # Start from a Node.js 10 (LTS) image 1
+WORKDIR /usr/src/app  # Specify the current working directory inside the image in which all commands will run 2
+COPY package*.json ./ # Copy package files and install dependencies 3
+RUN npm install
+COPY . .               # Copy all of the app files into the image 4
+CMD [ "npm", "start" ] # The default command to run when starting the container 5
+
+# create simple-node Docker image
+$ docker build -t simple-node .
+#run it on locahost:3000
+$ docker run --rm -p 3000:3000 simple-node
+$ docker build -t simple-node .
+
+Pitfalls of Docker file:
+1. files removed by subsequent layer are still present in parent image and thus making the container image bulky.
+2. changes made to in-between layers require all subsequent layers to be rebuilt. So try to make changes to last lines of Dockerfile.
+3. Don't do compilation on docker image - leaves all the build/link tools in image. That is unless you can do multi-stage builds (build in one stage and then use the binary build image in deployment build).
+4. Security - dont built images with passwords baked in.
+
+Multi-state builds in docker produces multiple images; each is a stage from which artifacts from preceding stages can be copied to current stage.
+
+# STAGE 1: Build
+FROM golang:1.11-alpine AS build
+RUN apk update && apk upgrade && apk add --no-cache git nodejs bash npm   # Install Node and NPM
+RUN go get -u github.com/jteeuwen/go-bindata/...  # Get dependencies for Go part of build
+RUN go get github.com/tools/godep
+WORKDIR /go/src/github.com/kubernetes-up-and-running/kuard
+COPY . .  # Copy all sources in
+# This is a set of variables that the build script expects
+ENV VERBOSE=0
+ENV PKG=github.com/kubernetes-up-and-running/kuard
+ENV ARCH=amd64
+ENV VERSION=test
+RUN build/build.sh   # Do the build. Script is part of incoming sources.
+
+# STAGE 2: Deployment
+FROM alpine
+USER nobody:nobody
+COPY --from=build /go/bin/kuard /kuard    #copy from build image
+CMD [ "/kuard" ]
+
+$ docker build -t kuard .
+$ docker run --rm -p 8080:8080 kuard
+
+Storing images in remote repository (like Artifactory) :
+$ docker login  #authenticate   dockerhub.com - public repo
+$ docker tag myapp dockerhub.com/myaccount/myapp:v2
+$ docker push dockerhub.com/myaccount/myapp:v2
+
+Docker runtime
+$ docker run -d --name myapp --publish 8080:80  dockerhub.com/myaccount/myapp:v2
