@@ -107,4 +107,16 @@ $ docker tag myapp dockerhub.com/myaccount/myapp:v2
 $ docker push dockerhub.com/myaccount/myapp:v2
 
 Docker runtime
-$ docker run -d --name myapp --publish 8080:80  dockerhub.com/myaccount/myapp:v2
+$ docker run -d --name myapp --publish 8080:80  dockerhub.com/myaccount/myapp:v2  # -d as daemon in background
+$ curl http://localhost:8080  # test
+
+#stop and remove container
+$ docker stop
+$ docker rm myapp  # otherwise when new image is tagged with myapp its associted with new image while old image still exists.
+$ docker images    # list images on computer
+$ docker prune     # remove stopped images/untagged images/unused image layers
+
+Limiting resources used by container by exposing underlying Linux cgroup.
+$ docker run -d --name myapp --publish 8080:80  --memory 200m --memory_swap 1G --cpu-shares 1024 dockerhub.com/myaccount/myapp:v2
+
+$ docker rmi <tag or image>  #remove/delete image
