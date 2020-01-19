@@ -1,0 +1,18 @@
+AirFlow - Job scheduler
+
+< https://www.youtube.com/watch?v=cHATHSB_450 >
+2015 - AirBnB
+2016 - Apache Incubator
+
+Pipelines - series of task with job dependecies (DAG)
+UI - DAG name, turn DAG on/off, schedule, job status (passed, run, fail, wait) + additional views (Gantt),
+     history of jobs (forget old history if required to rerun; task logs on S3)
+
+Deployment 
+  - Metadata (SQL DB - SQL Server/Postgres)
+  - WebServer (Flask - talks to Metadata DB)   
+  - Scheduler (Python DAGs + queue)
+  - Worker Queue (Celery - distributed task queue with Redis/RabbitMQ)
+  - Nodes
+
+ALternative - Luigi
