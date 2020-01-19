@@ -14,5 +14,16 @@ Deployment
   - Scheduler (Python DAGs + queue)
   - Worker Queue (Celery - distributed task queue with Redis/RabbitMQ)
   - Nodes
+  
+Building pipeline
+     - Build DAG (unique name)
+     - start date (will run for hist dates)
+     - schedule interval (min start time in minute)
+     - default_args (for all tasks in pipeline)
+     - max_active_runs (# of parallel runs - safe=1)
+     - concurrency (# of tasks within pipeline that run in parallel)
+
+
+Holiday calendar
 
 ALternative - Luigi
