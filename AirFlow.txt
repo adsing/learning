@@ -4,6 +4,8 @@ AirFlow - Job scheduler
 2015 - AirBnB
 2016 - Apache Incubator
 
+Written in python; python as config; programmatic pipeline construction
+
 Pipelines - series of task with job dependecies (DAG)
 UI - DAG name, turn DAG on/off, schedule, job status (passed, run, fail, wait) + additional views (Gantt),
      history of jobs (forget old history if required to rerun; task logs on S3)
@@ -22,8 +24,36 @@ Building pipeline
      - default_args (for all tasks in pipeline)
      - max_active_runs (# of parallel runs - safe=1)
      - concurrency (# of tasks within pipeline that run in parallel)
+     - timeouts (task/pipeline)
+     
+  Task (operator)
+     - python_callable - somemodule.function (or SQL/bash)
+     - dag=DAG
+     - dependency: second_task.set_upstream(first_task)
+     - retries
+     - pool of 10 workers (how many workers can run tasks in pipeline)
+     - queue (for Celery-specific queue for specific workers)     
+     - trigger_rule (default - all upsteam tasks sucessful...changed to fail or done)
+     - context (dictionary about tasks/running env e.g. execution date)
+     - env, jinja templating
+      
+Executor Types (run your tasks): 
+     - CeleryExecutor (has queue); 
+     - SequentialExecutor (task runs with scheduler; good for debugging as task blocks scheduler); 
+          import pdb; pdb.set_trace() #break point in code
+          airflow test <dag> <task> <date>  #CLI to run one task independently
+          #Dev env - everyone should have a local instance of Airflow & schedule_interval='@once'          
+     - LocalExecutor(task runs with scheduler; task as separate process)
+     - MesosExecuter
+
+AirFlow Time (Execution Date) - provided to task in context
+     - gives date of previous task's start date.
+
+Be able to test & run without Airflow
+Don't mix logic and Airflow
+Challenge deploying new code (when is scheduler/tasks done) - allow for some downtime.
 
 
-Holiday calendar
+Holiday calendar ?
 
-ALternative - Luigi
+ALternative - Luigi (sub-classing as programatic pipeline)
