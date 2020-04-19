@@ -1,0 +1,24 @@
+pytest -x --pdb # fail on first error and start pdb session on failure
+# exception information in sys.last_value, s.last_traceback (.type/.value/.traceback)
+
+
+pytest -trace # drop into pdb at start of each test
+
+# set break points
+import pdb;pdb.set_trace() 
+
+# call pytest from python
+pytest.main()
+
+with pytest.raises(RuntimeError) as excinfo:
+  def f():
+    f() # infinite recursion
+  f()
+  assert "maximum recursion" in str(excinfo.value)
+
+# test failing in a specific way e.g. documenting unfixed bugs
+@pytest.mark.xfail(raises=IndexError)
+def test_f():
+    f()
+
+pytest has special (detailed) comparision for strings, sets, dicts
