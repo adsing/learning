@@ -1,3 +1,6 @@
+pytest <test_script> -s  # show stdout
+pytest <test_script> -v  # verbose details per test, for more verbosity do -vv
+
 pytest -x --pdb # fail on first error and start pdb session on failure
 # exception information in sys.last_value, s.last_traceback (.type/.value/.traceback)
 
