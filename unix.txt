@@ -1035,3 +1035,11 @@ while true {
 } 
 
 From <https://www.ibm.com/developerworks/community/blogs/brian/entry/when_to_use_expect_scripting_and_when_to_avoid_it10?lang=en> 
+
+
+Named pipe 
+# (dump data from one process and load into another)
+$ mknod /tmp/my_named_pipe p
+$ echo "Test" > /tmp/my_named_pipe
+# in another session
+$ cat /tmp/my_named_pipe
