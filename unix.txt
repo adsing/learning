@@ -525,6 +525,19 @@ udp        0      0 0.0.0.0:12352               0.0.0.0:*                       
 udp        0      0 0.0.0.0:708                 0.0.0.0:*                               -
 
 
+Network Card capacity
+====================
+$ ifconfig    # shows 2 network card bonded to single interface (backup n/w card)
+bond0 ..
+eth 4 ..
+eth 5 ...
+lo  (loopback)
+
+$ ethtool bond0
+# Speed = 10000Mb/s = 10Gb/s
+$ ethtool eth4
+# Speed 10000Mb/s = 10Gb/s
+# Supported Link modes: 100baseT/Full, 1000baseT/Full (1Gb capacity) so real capacity is limited to eth card of 1GB (end-of-life 2020)
 
 AWK
 ===
