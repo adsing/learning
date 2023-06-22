@@ -1,0 +1,102 @@
+Postgres learning
+----------------
+$ systemctl restart postgresql
+$ systemctl status postgresql
+$ systemctl start postgresql
+
+$ psql -d Adventureworks
+postgres=# \l       # list databases
+postgres=# \q       # quit
+postgres=# \dt      # list tables
+
+postgres=# \conninfo #You are connected to database "postgres" as user "postgres" via socket in "/var/run/postgresql" at port "5432".
+
+postgres demo db setup
+Postgres installation of AdventureWorks database
+See https://github.com/lorint/AdventureWorks-for-Postgres
+
+#user# $ sudo -u postgres bash
+$ psql -d Adventureworks
+
+
+# if a cleanup is required:
+    1. drop database Adventureworks
+    2. create database Adventureworks
+    3. Get compressed file from git (AdventureWorks-oltp-install-script.zip) & uncompress to be owned/readable by postgres (/tmp/postgress + chmod 0777 *)
+    4. As postgres user:
+        a. ruby ruby update_csvs.rb
+        b. cd /tmp/postgres && psql -d Adventureworks < install.sql
+    5. In .bashrc, add a line "alias psql_demo='sudo -u postgres psql -d Adventureworks'"
+
+                             List of relations
+     Schema     |                 Name                  | Type  |  Owner   
+----------------+---------------------------------------+-------+----------
+ humanresources | department                            | table | postgres
+ humanresources | employee                              | table | postgres
+ humanresources | employeedepartmenthistory             | table | postgres
+ humanresources | employeepayhistory                    | table | postgres
+ humanresources | jobcandidate                          | table | postgres
+ humanresources | shift                                 | table | postgres
+ person         | address                               | table | postgres
+ person         | addresstype                           | table | postgres
+ person         | businessentity                        | table | postgres
+ person         | businessentityaddress                 | table | postgres
+ person         | businessentitycontact                 | table | postgres
+ person         | contacttype                           | table | postgres
+ person         | countryregion                         | table | postgres
+ person         | emailaddress                          | table | postgres
+ person         | password                              | table | postgres
+ person         | person                                | table | postgres
+ person         | personphone                           | table | postgres
+ person         | phonenumbertype                       | table | postgres
+ person         | stateprovince                         | table | postgres
+ production     | billofmaterials                       | table | postgres
+ production     | culture                               | table | postgres
+ production     | document                              | table | postgres
+ production     | illustration                          | table | postgres
+ production     | location                              | table | postgres
+ production     | product                               | table | postgres
+ production     | productcategory                       | table | postgres
+ production     | productcosthistory                    | table | postgres
+ production     | productdescription                    | table | postgres
+ production     | productdocument                       | table | postgres
+ production     | productinventory                      | table | postgres
+ production     | productlistpricehistory               | table | postgres
+ production     | productmodel                          | table | postgres
+ production     | productmodelillustration              | table | postgres
+ production     | productmodelproductdescriptionculture | table | postgres
+ production     | productphoto                          | table | postgres
+ production     | productproductphoto                   | table | postgres
+ production     | productreview                         | table | postgres
+ production     | productsubcategory                    | table | postgres
+ production     | scrapreason                           | table | postgres
+ production     | transactionhistory                    | table | postgres
+ production     | transactionhistoryarchive             | table | postgres
+ production     | unitmeasure                           | table | postgres
+ production     | workorder                             | table | postgres
+ production     | workorderrouting                      | table | postgres
+ purchasing     | productvendor                         | table | postgres
+ purchasing     | purchaseorderdetail                   | table | postgres
+ purchasing     | purchaseorderheader                   | table | postgres
+ purchasing     | shipmethod                            | table | postgres
+ purchasing     | vendor                                | table | postgres
+ sales          | countryregioncurrency                 | table | postgres
+ sales          | creditcard                            | table | postgres
+ sales          | currency                              | table | postgres
+ sales          | currencyrate                          | table | postgres
+ sales          | customer                              | table | postgres
+ sales          | personcreditcard                      | table | postgres
+ sales          | salesorderdetail                      | table | postgres
+ sales          | salesorderheader                      | table | postgres
+ sales          | salesorderheadersalesreason           | table | postgres
+ sales          | salesperson                           | table | postgres
+ sales          | salespersonquotahistory               | table | postgres
+ sales          | salesreason                           | table | postgres
+ sales          | salestaxrate                          | table | postgres
+ sales          | salesterritory                        | table | postgres
+ sales          | salesterritoryhistory                 | table | postgres
+ sales          | shoppingcartitem                      | table | postgres
+ sales          | specialoffer                          | table | postgres
+ sales          | specialofferproduct                   | table | postgres
+ sales          | store                                 | table | postgres
+(68 rows)
