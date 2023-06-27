@@ -6,3 +6,58 @@ F5 - debug
  - tasks (compile/build)
 
 Remote Dev - connect to remote hosts for environment
+
+Setup python env: Create Environment (venv)
+$ python3 -m vevn .venv
+$ python3 -m pip install --upgrade pip
+$ python3 -m pip install -r requirements.txt
+$ 
+
+Code refactor: given code as variable; chunks of code as method or just renaming.
+
+Organize Imports (Ctrl+Shift+P). Shift+Alt+O
+Go over problems reported in code (e.g. missing semi-colon; linting errors). F8.
+
+Debugging: https://code.visualstudio.com/docs/python/debugging
+Run & Debug :: debug options managed through a launch.json file (not visible as defaults being used).
+Can run/debug as python script/module (including attaching debugger to a running process).
+Debugger process/module is called 'debugpy' - uses TCP/IP server/client model to access current/remote/docker host. 
+
+launch.json - configs for run/debug. Can have multiple one e.g. for dev/prod.
+parameters
+ - name (display)
+ - program (change $file to ${workspaceFolder}/src/mycode.py) to always debug the main code instead of classes/modules.
+ - env (setup environment for debugger)
+ - envFile (file containing VAR=VALUE for env setup)
+ - args (cmd-line args as list of strings e.g. ["--port","8080"]
+ - justMyCode (only debug my code; not stdlib/3rd party modules)
+ - request ("launch" typically but can be "attach" with "processId". For existing host process, see ${command:pickProcess}. For remote host/docker, see "connect" with "host"/"port" options.
+ 
+ 
+Testing (unit test with pytest)
+TDD - build tests before code
+Run unit tests before merging.
+CI systems run tests after each build.
+Issues faced: (1) project structure/folder had a "src" folder for source code + "test" folder. Needed __init__.py in test folder. Source code needed reference to modules as "from src.grid import Grid".
+(2) Installed pytest-env and setup pytest.ini to specify environment variables like ENVIRONMENT. Alternatively, .env in workspaceFolder should have worked as well.
+
+ 
+ .vscode/settings.json
+ {
+    "python.analysis.typeCheckingMode": "basic",
+    "python.envFile": "${workspaceFolder}/.env",
+    "[python]": {
+        "editor.defaultFormatter": "ms-python.autopep8"
+    },
+    "python.formatting.provider": "autopep8",
+    "python.testing.pytestArgs": [
+        "."
+    ],
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestEnabled": true,
+    "python.testing.autoTestDiscoverOnSaveEnabled": true
+}
+ 
+ TODO: Attach process to debugger + process on remote box
+ 
+ 
