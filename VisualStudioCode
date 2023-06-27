@@ -58,6 +58,82 @@ Issues faced: (1) project structure/folder had a "src" folder for source code + 
     "python.testing.autoTestDiscoverOnSaveEnabled": true
 }
  
- TODO: Attach process to debugger + process on remote box
+TODO: Attach process to debugger + process on remote box
+
+
+
+launch.json - having config for TEST vs PROD; running pytest only; attaching debugger on localhost to existing running process; attaching to process running on remote host (requires SSH port tunnelling "ssh -v -2 -L port:current_host:port user@remote_host")
+See https://code.visualstudio.com/docs/python/debugging
+
+
+```
+"configurations": [
+        {
+            "name": "Python: Tetris (Debug)",
+            "type": "python",
+            "request": "launch", // or "attach" running process
+            "program": "${workspaceFolder}/src/tetris.py", // "${file}",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "env": {"ENVIRONMENT":"TEST","PYTHONPATH":"/home/user/Desktop/job/drw/src"},
+
+            "args": [
+                "--debug",
+                "--port",
+                "8081"
+            ],
+            //"python.envFile": "${workspaceFolder}/.env"
+        },
+        {
+            "name": "Python: Tetris (Prod)",
+            "type": "python",
+            "request": "launch", // or "attach" running process
+            "program": "${workspaceFolder}/src/tetris.py", // "${file}",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "env": {"ENVIRONMENT":"PROD","PYTHONPATH":"/home/user/Desktop/job/drw/src"},
+            "args": [
+                "--port",
+                "8080"
+            ],
+            //"python.envFile": "${workspaceFolder}/.env.prod"
+        },
+        {
+            "name": "Python: Debug Tests",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "purpose": ["debug-test"],
+            "console": "integratedTerminal",
+            "justMyCode": false,
+            "env": {"ENVIRONMENT":"TEST","PYTHONPATH":"/home/user/Desktop/job/drw/src"},
+            "args": [
+                "--port",
+                "8081"
+            ],
+          },
+          {
+            "name": "Python: Attach Localhost",
+            "type": "python",
+            "request": "attach",
+            "connect": {
+              "host": "localhost",
+              "port": 5678
+            }
+          },
+          {
+            "name": "Python: Attach RemoteHost",
+            "type": "python",
+            "request": "attach",
+            "host": "localhost",
+            "port": 5678,
+            "pathMappings": [
+                {"localRoot": "${workspaceFolder}", "remoteRoot": "."}
+            ]
+          }
+          
+    ]
+}
+```
  
  
