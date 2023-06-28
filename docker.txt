@@ -1,0 +1,129 @@
+Docker
+
+Container vs Image (part of container run-time) - has application, env.config, file system, n/w port. 
+Container abstraction of OS with its own env/files/port (compared with VM where each instance has it's own OS).
+
+
+$ docker pull <image_name_from_hub/registry>  	# docker pull redis:latest
+$ docker images 		# show images (name, tag, image_id, size, created on)
+
+$ docker run <image name/id> 			# docker run redis (will pull from repo if not locally available)
+$ docker run -d --name ima<image>				# run in detached mode, returns container id
+$ docker run -d -p 63790:6379 redis		# publish container port 6379 to localhost 63790
+$ docker start|stop|restart <container_id>	# to debug a stopped container
+
+#debug
+$ docker logs <container id/name>			# 
+$ docker exec -it <container id/name> /bin/bash		# gives you a bash shell into container as root user
+$ docker ps -a			# show all containers (running or exited -- which can be restarted) 
+# lists container_id/name, image, command, created on, status, port
+
+Out layer of image should be what changes (Copy code & run).
+
+# Dockerfile
+FROM IMAGE
+WORKDIR /app
+
+RUN groupadd -r temp_group && useradd -g temp_group temp_uer # add temp group & user
+RUN chown -R temp_group:temp_user /app
+USER temp_user
+
+ENV PYTHONPATH=/app
+COPY myapp /app
+# RUN python3 /app/app.py			# Instead of RUN, use CMD or
+CMD ["python3", "/app/app.py"]			# Entry point command (just one CMD vs many RUN; where RUN is used to do 
+
+# Jenkins CI can build the image like so
+$ dockerfile build -t py-app:1.0 .
+$ docker images		# push to repo for others to use (e.g. QA team/deployment)
+$ docker run py-app:1.0
+$ docker rm <container_name>	# remove container ("stop" it first)
+$ docker rmi <image_name>	# remove image
+# rebuild Dockerfile if there were any errors in Dockerfile or code was updated
+$ docker exec -it <container_id> /bin/bash	# to look into running container
+
+
+Multiple stage build (when build-tools etc not required in final container)
+FROM IMAGE as build
+WORKDIR /app
+COPY myapp /app
+RUN build_system
+
+FROM IMAGE
+COPY --from=build /app/target/module.zip /use/local/modules/
+# "build" image left and not part of final image
+..
+
+Run image as non-root.
+Run image for vulnerabilities (connect to docker hub) with "docker scan image:version"
+
+
+Docker network: 
+Docker has it's own network. Containers can talk to each other without needing the localhost network (e.g. DB like mongo can talk to mongo-express UI within the docker network; similarly app can talk to mongo db within container network as well).
+$ docker network ls		# 
+
+$ docker network create mongo-network
+# specify the network when running the image
+$ docker run -d -p 27017:27017 \
+-e MONGO_INITDB_ROOT_USERNAME=user \
+-e MONGO_INITDB_ROOT_PASSWORD=password \
+--name mongodb \
+--network mongo-network \		# <<< specify network
+mongo 
+# hostname of mongodb server is the container name
+$ docker logs mongodb		# verify it's ready to accept connections
+
+
+Docker Compose (YAML): Command structured as a YAML to run containers
+# mongo-docker-compose.yaml - all container services on same network
+version:'3'		# docker compose version 3
+services:		# list of services that run in the containers
+  mongodb:		# container name
+    image: mongo
+    ports:		# open ports
+      - 27017:27017
+    environment:		# open ports
+      - MONGO_INITDB_ROOT_USERNAME=user
+      - MONGO_INITDB_ROOT_PASSWORD=password
+      
+  mongo-express:		# container name
+    image: mongo-express
+    ports:		# open ports
+      - 8081:8081
+    environment:		# open ports
+      - MONGODB_USERNAME=user
+      - MONGODB_PASSWORD=password
+      
+$ docker-compose -f mongo-docker-compose.yaml up 	# run the container services on default network "myapp_default". Container names (myapp_mongodb_1). Logs of both containers mixed. Mongodb-express shows errors until MongoDB is up (need to setup dependency or force restart-always). Any initial setup e.g. DB setup (volumes).
+$ docker ps
+# Network specified while running
+$ docker run -d --network mongo-network
+
+# stop & remove all containers & network from the manifest
+$ docker-compose -f mongo-docker-compose.yaml down
+
+
+Docker volumes
+For data persistence (DB data or app state).
+Point/Mount hosts file system onto container's virtual file-system.
+
+$ docker run -v /host/mount/data:/data/db	# Host volumes
+$ docker run -v /data/db			# Anonymous volumes (on host as /data/docker/volume/HASH/_data - managed by Docker)
+$ docker run -v name:/data/db		# Named volumes (most commonly used)
+	# Like anonymous but have a logical name associated with it
+
+On host, location of volumes depeds on OS.
+Windows - c:/programData/docker/volumes
+Unix/Mac - /var/lib/docker/volumes/{HASH}/_data  (volume name is hashed)
+
+Compose (named volume):
+services:
+  mongodb:
+    ...
+    volumes:
+      - mongo_data:/data/db
+volumes:
+  mongo_data:
+    driver: local
+    
+See https://gitlab.com/nanuchi/techworld-js-docker-demo-app/-/blob/master/docker-compose.yaml
