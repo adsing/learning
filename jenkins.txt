@@ -1,0 +1,8 @@
+Jenkins
+
+Automate building, testing, deploying to facilitate CI/CD delivery.
+
+Jobs via UI or file
+
+sudo apt-get update
+sudo apt-get install jenkins
