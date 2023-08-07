@@ -1,6 +1,11 @@
 Jenkins
 
-Automate building, testing, deploying to facilitate CI/CD delivery.
+setup instructions - https://www.digitalocean.com/community/tutorials/how-to-install-jenkins-on-ubuntu-22-04
+Local setup:
+ - URL : http://localhost:8080
+ - admin: jenkins_admin/jenkins_admin123$
+
+Tool to Automate building, testing, deploying to facilitate CI/CD delivery.
 
 Jobs via UI or file
 

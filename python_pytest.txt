@@ -1,11 +1,20 @@
+Pytest- https://docs.pytest.org/
+
+1. auto-discover test cases (test_*.py)
+2. just "assert" stmt
+3. modular fixture (parameterizeing args)
+4. Can run unittest as-is
+
+python3 -m pip install pytest
+
 pytest <test_script> -s  # show stdout
 pytest <test_script> -v  # verbose details per test, for more verbosity do -vv
 
-pytest -x --pdb # fail on first error and start pdb session on failure
+pytest -x --pdb 	# fail on first error and start pdb session on failure
 # exception information in sys.last_value, s.last_traceback (.type/.value/.traceback)
 
 
-pytest -trace # drop into pdb at start of each test
+pytest -trace 		# drop into pdb at start of each test
 
 # set break points
 import pdb;pdb.set_trace() 
@@ -25,3 +34,8 @@ def test_f():
     f()
 
 pytest has special (detailed) comparision for strings, sets, dicts
+
+
+Group test-cases in class (name must start with Test e.g. TestClass) with methods as test_cases.
+With "Test" classes, you can share fixture to that cass only and apply marks.
+

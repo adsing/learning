@@ -1,0 +1,71 @@
+Code in /Desktop/github/code/rust
+
+$ cargo new --bin hello --vcs git
+     Created binary (application) `hello` package
+     
+$ tree hello/
+hello/
+├── Cargo.toml
+└── src
+    └── main.rs
+
+1 directory, 2 files
+
+$ ll hello/
+total 24
+drwxrwxr-x 4 user user 4096 Aug  5 21:52 ./
+drwxrwxr-x 3 user user 4096 Aug  5 21:52 ../
+-rw-rw-r-- 1 user user  174 Aug  5 21:52 Cargo.toml
+drwxrwxr-x 6 user user 4096 Aug  5 21:52 .git/
+-rw-rw-r-- 1 user user    8 Aug  5 21:52 .gitignore
+drwxrwxr-x 2 user user 4096 Aug  5 21:52 src/
+
+$ cd hello
+
+
+$ cargo run
+   Compiling hello v0.1.0 (/home/user/Desktop/github/code/rust/hello)
+    Finished dev [unoptimized + debuginfo] target(s) in 0.28s
+     Running `target/debug/hello`
+Hello, world!
+
+
+$ tree
+.
+├── Cargo.lock
+├── Cargo.toml
+├── src
+│   └── main.rs
+└── target
+    ├── CACHEDIR.TAG
+    └── debug
+        ├── build
+        ├── deps
+        │   ├── hello-d05b7befbbac835b
+        │   └── hello-d05b7befbbac835b.d
+        ├── examples
+        ├── hello
+        ├── hello.d
+        └── incremental
+            └── hello-1o51jik9wfhbk
+                ├── s-gnig39yffx-17ldmq6-llmkkliaq2jpnek1qh57s6xz
+                │   ├── 14ry2bwiy49bg235.o
+                │   ├── 1g8gtodx3goa5er1.o
+                │   ├── 2fcxicak2xl3m6q3.o
+                │   ├── 2ztquemw1wer6o9x.o
+                │   ├── dep-graph.bin
+                │   ├── hnwoghqcdtnuzqv.o
+                │   ├── query-cache.bin
+                │   ├── qxkexfu97f5vg70.o
+                │   └── work-products.bin
+                └── s-gnig39yffx-17ldmq6.lock
+                
+$ target/debug/hello
+Hello, World!
+
+$ cat src/main.rs 
+fn main() {
+    println!("Hello, world!");
+}
+
+$ cargo clean
