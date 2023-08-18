@@ -307,6 +307,7 @@ Ctrl-b c Create new window
 Ctrl-b & Kill the current window
 Ctrl-b , Rename the current window
 Ctrl-b ? List all keybindings
+Ctrl-b w Tree of all windows and each pane in those windows
 
 
 # moving between windows
@@ -319,8 +320,12 @@ default bindings are from 0 -- 9)
 
 # Tiling commands
 Ctrl-b % (Split the window vertically)  Ctrl-b + |
-CTRL-b " (Split window horizontally)  Ctrl-b + -
+Ctrl-b " (Split window horizontally)  Ctrl-b + -
+Ctrl-b x (close pane)
+Ctrl-b ! (make pane into a new window)
+Ctrl-b z zoom into pane (full window now; toggle with z)
 Ctrl-b q (Show pane numbers, when the numbers show up type the key to go to that pane)
+Ctrl-b (arrow-key)  Move between panes
 Ctrl-b o Switch to the next pane (or Ctrl+B and arrow keys)
 Ctrl+b O -- move all panes clock-wise
 Ctrl-b { (Move the current pane left)
@@ -337,9 +342,21 @@ Ctrl-b : "break-pane"
 Enter copy mode with (Ctrl-b + [). Cntrl+Space to start highlight and Alt+W to end highlight.
 Cntrl-b + ] to paste
 
-# add to ~/.tmux.conf
-bind | split-window -h
-bind - split-window -v
+# ~/.tmux.conf
+  bind | split-window -h -c "#{pane_current_path}"
+  bind _ split-window -v -c "#{pane_current_path}"
+  set -g mouse on
+  # List of plugins
+  set -g @plugin 'tmux-plugins/tpm'
+  set -g @plugin 'tmux-plugins/tmux-sensible'
+  # Other examples:
+  # set -g @plugin 'github_username/plugin_name'
+  # set -g @plugin 'github_username/plugin_name#branch'
+  # set -g @plugin 'git@github.com:user/plugin'
+  # set -g @plugin 'git@bitbucket.com:user/plugin'
+  # Initialize TMUX plugin manager (keep this line at the very bottom of tmux.conf)
+  run '~/.tmux/plugins/tpm/tpm'
+
 
 From <https://www.youtube.com/watch?v=BHhA_ZKjyxo> 
 
