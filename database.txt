@@ -1,0 +1,19 @@
+Database basic
+
+Normal forms
+------------
+First NF: 
+	1. Must have primary key
+	2. Repeating groups not allowed (e.g. "4 banana, 3 apples")
+	3. Relying on row order for information (e.g. data sorted by height but height is not a first class column)
+	4. Mixed data type in a column (DB won't allow it anyway unless your datatype is char/varchar)
+	
+Second NF: Non-key attribute dependent only on entire primary key
+
+Third  NF/Boyce-Codd normal form: Each attribute depend only on entire primary key and nothing else.
+
+Fourth NF: Any multivalued dependency is only on the key
+Fifth  NF: Should not be possible to describe table as join of 2 separate tables (i.e. data can not be denormalized any more).
+
+
+Why have denormalised data? For avoiding joins to speed up query in single table. Rish of inconsistent delete/update/insert.

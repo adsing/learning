@@ -1,0 +1,39 @@
+Map: Key-value ordered pair. Also has unordered_map.
+
+if (obj[key])  	# inserts element key into map obj. Instead use obj.at(key) that is const read-only and will not modify map object
+
+
+Map with structured binding usage:
+for(const auto & [key, value]: map_obj) { cout << key << value << '\n';} # using structured binding 
+instead of 
+for(const auto & item : map_obj) { cout << item.first << item.second << '\n';} # 
+
+
+Do not modify container (vector, map etc) while looping over it as it may get resized with insert (or delete) and m.end() may be updated
+
+
+Base destructor should be virtual so that if a pointer to base class is destroyed, it used v-table to determine it's tru destructor as well.
+void complete_base( unique_ptr<BaseClass> ptr) { do something with ptr->fn() and auto delete ptr when out of scope }  # Note ptr is ptr to DerivedClass passed to a fn that expects BaseClass Ptr (interface).
+
+
+Use override in inherited class to indicate which method is over-ridden to avoid creating a new method with a typo in name.
+class Derived: public Base {
+   public:
+   	~ Derived() override {...}
+   	
+
+Class initializer list - initializes elements in the order defined in class definition.
+
+
+Value initialized vs default (garbase initialized)
+Set to garbage:
+	int x;
+	int *xp = new int;
+Set to zero:
+	int x {};
+	int *xp = new int();
+	int *xp = new int{};
+	
+
+Constants:
+constexpr double PI {3.14159};	# constexpr at compile time vs const at run time
