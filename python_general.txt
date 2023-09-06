@@ -1,0 +1,91 @@
+Args: positional or keyword
+	def fn(positional_only_args, /, positional_or_keyword, *, keyword_only):
+
+	
+Ternary:
+	a if a < b else b
+
+
+f-string (f"...{var}..."
+   f"{var=}"	# var=10
+   f"{var%2=}"	# var%2=0
+   f"{var=:FORMAT_STRING}"	# format string is related to type. Invokes __format__ method of class/type
+   	f"{now=:%y-%m-%d}"
+   	f"{float_number=:.2f}"
+   f"{var!a}"	# !a -> ascii (converts non-ascii e.g. unicode into \U)
+   f"{var!r}"	# !r -> print repr equivalent
+   f"{var!s}"	# !s -> print str (default) 
+
+   
+Size of:
+   import sys
+   sys.getsizeof([0,1,2,3])	# bytes used by this data struct
+   
+   PyObject has:
+   	ob_refcount
+   	ob_type
+   PyVarObject has:
+   	ob_size		# len - actual size
+   PyListObject has:
+   	ob_item		# pointer
+   	allocated	# how many elem "could" fit in ob_item memory - max size (returned by getsizeof)
+   2 Garbage collection pointers
+   So a list has 7 meta-data elements. Size of empty list = 7 * 8 = 56 bytes
+
+
+Profile with cProfile module:
+   $ python3 -m cProfile mycode.py    # simple/basic
+   $ python3 -m cProfile -o mycode.prof mycode.py && snakeviz mycode.prof
+
+   import cProfile
+   import pstats
+   with cProfile.Profile() as profiler:
+       my_function()
+   stats = pstats.Stats(profiler)
+   stats.sort_stats(pstats.SortKey.TIME).
+   # stats.print_stats()		# alternatel, pip install snakeviz
+   stats.dump_stats(filename='code_profile.prof')
+   
+   $ snakeviz code_profile.prof
+   
+   
+Decorator:
+	Enhance/Modify behavior to existing fn. E.g. add time taken by existing fn; add logging/user behavior; authentication before fn calls.
+	Address cross-cutting concerns (impacts multiple fn).
+	Decorator takes a fn as input and returns modified fn as output.
+	Can have multiple decorator on fn. E.g. @logging @timer on fn
+	Caution - decorator impacts readability/understanding of code. e.g. when multiple decorator are used. Which one kicks in first e.g. logging before timing or after.
+	
+	def my_decorator(func, logger):		# instead of using functools.partial you can create an another outer layer of fn that takes logger as arg and returns my_decorator (see https://stackoverflow.com/questions/5929107/decorators-with-parameters)
+	  @functools.wraps(func)		# fixes func.__name__ not to print "wrapper" but actual fn. Fixes fn.docstring and fn.name
+	  def wrapper(*args, **kwargs):
+	    logger.info(f"Started function {func.__name__}")
+	    ret = func(*args, **kwargs)
+	    logger.info("Ended")
+	    return ret
+	  return wrapper
+	  
+	@my_decorator(logging)		# inc = decorator(logging)(inc)   ... this is what it means and it won't work here because my_decorator needs 2 args. Use functools.partial or wrap my_decorator in another fn lets call it decorator_generator(logger)
+	def inc(x):
+	  return x+1
+
+	my_decorator_with_default_logging = functools.partial(my_decortor, logger=logging)
+	
+	@my_decorator_with_default_logging
+	def dec(x):
+	  return x-1
+	  
+	inc(3)
+
+
+Functools: Fn/Operations on callables (Fn, Class, Obj)
+	@cache - memoize - store return values for args
+	@cache_property - cache for methods; note: @property requires a setter fn but @cache_property allows writes
+	@lru_cache(maxsize=N, typed=False) - args/kwargs must be hashable. Implemented with @cache_property but slightly slower as it needs to handle max_size limits.
+		- has additional data like cache_info() to show hits/misses/currsize.
+		- typically for expensive/recursive compute e.g. fibonacci or news web-page fetch
+	@total_ordering - adds le/ge/lt/gt methods based on 2 methods that user needs to give i.e. eq and one of le/ge/lt/gt
+	@partial - simplifies fn args/kwards by pre-building partial fn object that has some args/kwargs supplied in advance so that partial fn is called with remaining args/kwargs. Similarly, @partialmethod for methods/property.
+
+Coding exercises in various languages (incl Python) with solutions: https://rosettacode.org/wiki/Category:Python 
+David Beazley - https://github.com/dabeaz/blog
