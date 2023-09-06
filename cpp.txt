@@ -1,3 +1,17 @@
+class X {
+	X();			// constructor default
+	~X();			// destructor (make it "virtual" if it will be inherited)
+
+	X(int x);		// user constructor
+	
+	X(const X &x);		// copy constructor
+	X& operator=(const X &x); // copy assignment operator	
+	
+	X(X &&x);		// move constructor
+	X& operator=(X &&x); 	// move assignment operator
+	}
+# If destructor or if resources are being locked (RAII) is specified then define all the above.	
+
 Map: Key-value ordered pair. Also has unordered_map.
 
 if (obj[key])  	# inserts element key into map obj. Instead use obj.at(key) that is const read-only and will not modify map object
@@ -37,3 +51,21 @@ Set to zero:
 
 Constants:
 constexpr double PI {3.14159};	# constexpr at compile time vs const at run time
+
+
+Constant Pointer vs Pointer to constant
+
+const int a = 10;	// or int const a = 10; 		indicates int value is constant
+const int* ptr = &a;  	// or int const * ptr = & a;		indicates int value pointed by pointer is constant but pointer can be moved around
+*ptr = 5; // wrong
+ptr++;    // right
+
+
+int a = 10;
+int *const ptr = &a;  		// ptr (to int) is constant so int value pointed by it can be changed
+*ptr = 5; // right
+ptr++;    // wrong
+
+std::unique_ptr and std::shared_ptr
+std::unique_ptr<UserClassName> ptr;	// cheaper to keep unique ptr that destruct when out of scope. Unique_ptr is better suited for multi-threaded programming
+std::shared_ptr<UserClassName> share_ptr = std::move(ptr);	// make unique_ptr into shared_ptr (does ref.counting and destroys when ref.count=0)
