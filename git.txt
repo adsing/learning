@@ -32,8 +32,15 @@ Reset (reverting back) to a previous git commit log history (discarding some rec
 $ git reset [commit_SHA 7 char atleast]    ****
 # "$ git log" to see history & to find which version you want to revert to 
 
+Log:
+$ git log --oneline
+$ git log --oneline --showgraph
 
-Amend your commits - ability to change history
+Bisect: to find bad commit using binary search
+
+Amend your commits - ability to change history assuming it's not pushed to remote repo
+$ git commit --amend -m "Update last commit msg"
+$ git add missed_adding_this_file_in_last_commint && git commit --amend --no-edit   # keep last commit msg and just add this missed file to that commit
 $ git commit -a  --amend
 
 Branching
@@ -108,8 +115,9 @@ $ git status  #untracked files, tracked files (changed, pushed), current branch 
 $git --version   #2.11
 
 # get latest changes
-$ git fetch # to get the latest changes from master
-$ git pull # to merge with latest changes your branch
+$ git fetch origin # to get the latest changes from master
+$ git reset --hard origin/master # remove any local changes and be identical to origin/master
+$ git pull # to merge with latest changes to your branch
 $ git pull --all
 
 #push latest changes
@@ -138,11 +146,12 @@ $ git branch -d bugfix  #delete old branch
 #stash -save local branch changes temporarily
 ##say you are working in DEV-branch with new files and modification to some…and want to switch to master to do a small commit of a different change
 $ git stash   #save snapshot of git locally (doesn't save untracked/new files not added to git index … use $git stash -u)
+$ gut stash save some_name_to_rember_the_changes_saved
 	# $ git stash list
 	# $ git show  stash@{2} #files in the stash
 $ git checkout master # commit whatever file
 $ git checkout dev-branch  
-$ git stash pop   # or $git stash apply (changes still stashed for reusing this stash)
+$ git stash pop   # or $git stash apply <optional index> (changes still stashed for reusing this stash)
 ..
 $ git stash drop stash@{1}
 $ git stash clear        #removes all stashes
@@ -158,7 +167,7 @@ From <https://stackoverflow.com/questions/36540645/updating-local-master-with-re
 ## your locally commited changes have many commits that you want to consolidate into single/few commits
 ## $ git log --oneline to determine the commits we need to look back HEAD vs origin/HEAD
 ## $ git rebase -i HEAD~3
-## pick the commits you want to keep and squash the rest. Next you can update the commit msg for ones you want to keep
+## "pick" the commits you want to keep and "squash" the rest. Next you can update the commit msg for ones you want to keep
 $ git rebase -i
 
 # undo commit already pushed (assuming no one has pulled)
