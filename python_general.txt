@@ -86,6 +86,9 @@ Functools: Fn/Operations on callables (Fn, Class, Obj)
 		- typically for expensive/recursive compute e.g. fibonacci or news web-page fetch
 	@total_ordering - adds le/ge/lt/gt methods based on 2 methods that user needs to give i.e. eq and one of le/ge/lt/gt
 	@partial - simplifies fn args/kwards by pre-building partial fn object that has some args/kwargs supplied in advance so that partial fn is called with remaining args/kwargs. Similarly, @partialmethod for methods/property.
+	@wraps - calls update_wrapper that updates the wrapper fn like the wrapped fn. Assigns(__module__, __name__, __doc__, __qualname__, __annotations__) and updates (__dict__). Used with decorators wrapping fn.
+	@singledispatch - transform fn into single-dispatch generic fn (based on type of first arg only). Declare the default fn with @singledispatch and then register other variants based on type(s) with @fn.register(type). To check which fn will be called for a given type, test with fn.dispatch(type) .. gives address of fn (not name!).
+	@singledispatchmethod - like singledispatch on methods but applies on first non-self/non-cls arg.
 
 Coding exercises in various languages (incl Python) with solutions: https://rosettacode.org/wiki/Category:Python 
 David Beazley - https://github.com/dabeaz/blog

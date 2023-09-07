@@ -1,0 +1,56 @@
+Books based on https://stackoverflow.com/questions/388242/the-definitive-c-book-guide-and-list/
+1. A Tour of C++ (c++17 2nd ed; 3ed is for c++20)
+    - RECOMMENDS: Programming: Principles and Practice Using C++ (Second edition)
+2. Effective Modern C++ (C++14)
+3. C++ Concurrency In Action (3ed)
+
+
+C++ has 2 parts:
+1. Core language (char/int; for/while)
+2. Standard Lib (cout/getline; vector/map)
+
+Types:
+    bool, char, int, double, unsigned
+    sizeof(int) # machine dependent 
+    0b(binary), 0x(hex), 0(octal)
+    1'234'567'890   # readability
+    x ^ y           # xor
+    ~x              # bitwise complement
+    logical &&, ||, !
+
+variable init in {xx} -or- with = -or- both:
+    int d1 = 2.3;
+    int some_value {123};       # preferred (will raise error)
+    int another_value = {567.8}; #this and first = will not raise error due to C-compatibility
+
+    vector<int> v = {1,2,3,4,5};
+
+    const int x = 5;    # const must be initialized
+    auto ch = 'c';      # avoid writing type. Detect based on value. use = or {} for init.
+    auto ans = sqrt(value);    # auto used in generic-programming
+
+scope:
+    local - var. in fn or lambda (QQQ:?what's lambda in C++?)
+    class - var in class but not in fn/lambda/enum
+    namespace - var not in fn/lambda/enum
+    global - if not one of the 3 above
+    temporaries - no names. e.g. object with new() or temporaries 
+
+constants:
+    const (a promise not to change the value). e.g. when data passed to fn as pointers/references. Value of const evaluated at run-time.
+    constexpr (to be evaluated at compile time). For defining constants, data placed in read-only mem, for speed. .Value of const evaluated at compile-time.
+        constexpr int x = 10;
+        const double v = sqrt(var);
+        double sum(const vector<int> &);    # will not modify vector<int> passed by reference
+        
+        constexpr int square(int x){ return x*x;}
+        constexpr int v1 = square(var);     #var is not const at compile time so error. Arg could have been 17 or a const.
+        const int v1 = square(var);         #OK at run-time v1 will be a const.
+output:
+    #include <iostream>     // alternatively #include <iostream> using namespace std; to stop repeating std:: each time (imports all var)
+    std::out << "Enter a values greater than " << some_value << std::endl;
+    std::in >> new_value;
+
+functions (can have same name aka "overloading" but signature [return_type + args types & #] must differ):
+    return_type function_name(args);
+    char& String::operator[](int index);    //member fn of class String for operator[]
