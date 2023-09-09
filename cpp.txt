@@ -69,3 +69,6 @@ ptr++;    // wrong
 std::unique_ptr and std::shared_ptr
 std::unique_ptr<UserClassName> ptr;	// cheaper to keep unique ptr that destruct when out of scope. Unique_ptr is better suited for multi-threaded programming
 std::shared_ptr<UserClassName> share_ptr = std::move(ptr);	// make unique_ptr into shared_ptr (does ref.counting and destroys when ref.count=0)
+
+
+Cpp coding guidelines: https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines
