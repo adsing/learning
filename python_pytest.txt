@@ -7,14 +7,58 @@ Pytest- https://docs.pytest.org/
 
 python3 -m pip install pytest
 
+$ pytest		# discover the test files and test fn.
+Typically, all test cases in separate file and go under "tests/" sub-folder.
+Pytest - fn have long names and small body.
+
+
+Dependency/State is managed through fixtures that are passed into test fn. E.g. setup like DB connection/JSON data
+Test resullt (. means OK, F means Failure, E means Exception)
+
+def test_prime_numers():
+  assert 25 in {no from no in range(2,50)..}
+
+# try to put fixtures in a separate module. conftest.py is automatically imported with autouse=True
+@pytest.fixture()
+def foo_fixture():
+  return "Foo"
+
+def test_foo_string(foo_fixture):
+  assert foo_fixture == "Foo"
+
+$pytest --fixtures 		# for available fixtures e.g. tmp_path/tmp_dir
+
+# also has monkeypatch to override any module/objeccts attributes (e.g. request.get) to prevent network calls for test cases or don't hit AWS.
+
+
+Marks are like lables on test cases. Pytest allows to selectively run test cased based on marks/lables; directory; name filtering.
+e.g label tests that his DB
+@pytest.mark.db_access
+def test_blah():
+  # do something
+$ pytest -m "not db_access"  # run all marks/label test that are not having 'db_access' in name.
+Existing marks (skip, skipif expression, parameterized - call same test with different args)
+E.g. of Parameterization of tests
+@pytest.mark.parametrize("palindrome", [
+    "",
+    "a",
+    "Bob",
+    "Never odd or even",
+    "Do geese see God?",
+])
+def test_is_palindrome(palindrome):
+    assert is_palindrome(palindrome)
+
+
+
 pytest <test_script> -s  # show stdout
 pytest <test_script> -v  # verbose details per test, for more verbosity do -vv
 
-pytest -x --pdb 	# fail on first error and start pdb session on failure
+pytest -x --pdb # fail on first error and start pdb session on failure
 # exception information in sys.last_value, s.last_traceback (.type/.value/.traceback)
 
 
-pytest -trace 		# drop into pdb at start of each test
+pytest -trace # drop into pdb at start of each test
 
 # set break points
 import pdb;pdb.set_trace() 
@@ -32,10 +76,43 @@ with pytest.raises(RuntimeError) as excinfo:
 @pytest.mark.xfail(raises=IndexError)
 def test_f():
     f()
+$ pytest -m "mark_name"   # run test case with mark_name
+
+
+# fixtures for pre/post test run setup/cleanups
+temp_path = 'TEMP_DIR/temp_path_012345'
+def test_case_22(temp_path):  # temp_path is a fixture
+  # do something with temp_dir
+  assert 0
+
+# fixtures
+# cache :: persist state between testing sessions
+# capfd, capsys (binary) :: capture writes to file-descriptors or sys.stdout/stderr (binary suffix for bytes instead of text)
+# tmpdir, tmp_path :: temp directory unique to each test fn
+# monkeypath ::
 
 pytest has special (detailed) comparision for strings, sets, dicts
 
+Group test_cases in a TestClass - helps with organization, applying a mark to run only specific class related test cases.
+$ pytest -K "TestClass and not test_method_specific"  # name can refer to File/Class/Function  (node_id is File::Class::Method or File::Function)
 
-Group test-cases in class (name must start with Test e.g. TestClass) with methods as test_cases.
-With "Test" classes, you can share fixture to that cass only and apply marks.
+Invoking Pytest:
+$ pytest    # self discovery of test_...py files and TestClass/test_methods and test_functions
+$ python3 -m pytest [...]
+pytest.main()     # in code
+$ pytest test_file.py
+$ pytest test_cases/
+$ pytest test_file.py::test_func   or test_file.py::TestClass::test_method
+$ pytest -k "MyClass and not specific_methods" 	# runs TestMyClass (e.g. TestMyClass.test_this but not TestMyClass.test_specific_method_x)
+$ pytest -m slow		# run tests with "slow" marker with @pytest.marker.slow
 
+Profiling: show slowest 10 test that took over 1.0 seconds
+$ pytest --durations=10 --duration-min=1.0
+# default behavior to not show tests that take < 0.05 seconds
+
+$ pytest -p pytest_cov		# to load a plugin (?) ... to disable "-p no:doctest"
+
+$ pytest --cov			# to check for code coverage with test ... load plugin
+
+
+# how to write & report tests
