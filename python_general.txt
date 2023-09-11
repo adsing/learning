@@ -78,9 +78,67 @@ Faster code tips:
    - speed vs memory trade off (generator vs list) esp if only first elelement of list is needed then next(gen)
    - numpy/numba
    - code optimization e.g. right data struct/algorithm
-   	- e.g. {}, [], () faster than dict(), list(), tuple() fn calls
+   	- e.g. {}, [], () faster than dict(), list(), tuple() fn calls. Tuple faster than list
    	- unique elements of list while retaining order dict.fromkeys(mylist) but elements need to be hashable
+   	- DRY vs calling too many fn (overheads).
+   	- look for loop-invariant stmt (can be done out of loop), use comprehensions, correct data struct(tuple, frozenset, str, bytes, list/bytearray, set, dict)
    
+   
+Data containers : Class/DataClass/Dict/NamedTuple
+	class Pet(typing.NamedTuple):		# Pure classes faster than dataclass (50%) & namedtuple (25%)! but more code. Classes similar to dict.
+	   legs:int
+	   noise:str 
+
+	@dataclass
+	class Pet:
+	   legs:int
+	   noise:str
+
+	Pet = namedtuple("Pet","legs noise")
+
+
+Dataclasses: provides __init__, __repr__ and __eq__ by default. 
+
+from dataclasses import dataclass, field, astuple, asdict
+import inspect
+
+@dataclass(frozen=True, order=True)			# order provides le/ge/lt/gt, frozen allows obj value to NOT be modified after initializations. 
+							# Others: kw_args=True, match=True for structural pattern matching, slots=True
+class Comment:
+    id:int
+    txt:str
+    replies: list[str] = field(default_factory=list)	# list or any other fn that generates initial value. Factory is invoked if user doesn't specify this field while creating object. Can set "init=False" in field() to ensure that user can not provide this arg. "repr=False" to hide field from printing with repr. "compare=False" to skip the field 
+    				# __post__init__(self) method can be used to set attributes that depend on other member attrib.
+    	
+
+def main():
+    comment = Comment(1,"hoo")
+    print(comment)
+    # comment.id=2
+    # comment.set_id(2)
+    # print(comment)
+    comment.x = 100	# can't do if frozen
+    print(comment.x)
+    number, comment = astuple(comment)		# dataclass converts to tuple/dict
+
+    pprint(inspect.getmembers(Comment, inspect.isfunction))
+
+
+if __name__ == '__main__':
+    main()
+    
+
+match statement (for structural pattern matching) from Py3.10. 
+Can match single value (int/str) or other type like list/dict and other objects
+Match patterns based on given sequence i.e. order is important.
+	match var:
+		case 0: pass
+		case 1|2: pass
+		case 3 if condition: pass	#  with if condition
+		case 3: pass
+		case _: pass
+		case other: print("unknown")
+
 Decorator:
 	Enhance/Modify behavior to existing fn. E.g. add time taken by existing fn; add logging/user behavior; authentication before fn calls.
 	Address cross-cutting concerns (impacts multiple fn).
@@ -122,6 +180,14 @@ Functools: Fn/Operations on callables (Fn, Class, Obj)
 	@wraps - calls update_wrapper that updates wrapper fn to look like wrapped function. Assigns __module__, __name__, __doc__, __annotations__, __qualname__. Updates __dict__. Used with decorators specially
 	@singledispatch - transform fn into single-dispatch generic fn (based on type of first arg only). Declare the default fn with @singledispatch and then register other variants based on type(s) with @fn.register(type). To check which fn will be called for a given type, test with fn.dispatch(type) .. gives address of fn (not name!).
 	@singledispatchmethod - like singledispatch on methods but applies on first non-self/non-cls arg.
+
+
+Itertools
+
+Collections
+    defaultdict(factory)
+    Counter(dist).most_common 
+
 
 Coding exercises in various languages (incl Python) with solutions: https://rosettacode.org/wiki/Category:Python 
 David Beazley - https://github.com/dabeaz/blog
