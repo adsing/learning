@@ -206,6 +206,22 @@ Itertools: Creates iterators for efficient looping
 		- combinations(seq, length) permutations but can't have AB == BA
 		- combinations_with_replacement(seq, length) allows AA
 
+Operator: efficient operator fn
+	- le, ge, lt, gt, eq, ne
+	- not, is_, is_not, truth (or bool)
+	- abs(x), add, sub, mul, floordiv, truediv, index (convert non-int to int for use as index), inv/invert, mod (%), pow, matmul (@), pos (postivie),  
+		-- in-place operators (x+=y is x= operator.iadd(x,y)). Returns updated value if inputs are immutable else updates in place.
+		-- iadd/iconcat (a+=b), a&=b, a<<=b, a//=b, a@=b,
+	- lshift, rshift,     neg, or_, and_, xor
+	- concat, contains(a,b ... b in a), countOf, indexOf, get/set/delitem 
+	- call
+	- attrgetter & itergetter:
+		-- f = attrgetter('name.first', 'name.last'), then call f(b) returns (b.name.first, b.name.last).
+		-- g = itemgetter(2, 5, 3), the call g(r) returns (r[2], r[5], r[3]).
+			getcount = itemgetter(1)
+			sorted(inventory, key=getcount)
+			# [('orange', 1), ('banana', 2), ('apple', 3), ('pear', 5)]
+
 Collections
     defaultdict(factory)
     Counter(dist).most_common 
