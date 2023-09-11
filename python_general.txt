@@ -19,10 +19,11 @@ f-string (f"...{var}..."
    
 Size of:
    import sys
-   sys.getsizeof([0,1,2,3])	# bytes used by this data struct
+   sys.getsizeof([0,1,2,3])	# bytes used by this data struct - does not count recursive data structs, only 1 level deep. Custom code to do recusrive size computation. 
+   				# Object has ref.count + ptr.to.its.type at least + 2ptr for garbage collector ... all of which getsizeof() captures.
    
    PyObject has:
-   	ob_refcount
+   	ob_refcount  
    	ob_type
    PyVarObject has:
    	ob_size		# len - actual size
@@ -33,6 +34,15 @@ Size of:
    So a list has 7 meta-data elements. Size of empty list = 7 * 8 = 56 bytes
 
 
+__slots__ can be used to save memory taken by objects + restrict from adding more member variable (obj.NewVar). 
+The instance loses __dicts__.
+The class retains __dicts__ and gains additional __slots__ member along with descriptors to get/set these slots members implemented in C code to access member based on memory location (instead of __dict__). 
+	obj.slotX = 'some value' 	# calls Class.__dict__['slotX'].__set__(obj, 'some_value'
+	print(obj.slotX)		# calls Class.__dict__['slotX'].__get__(obj, Class)
+
+
+Profilers are of 2 types (a) Tracing which have higher initial setup but very accurate reporting (b) Sampling
+cProfile is tracing type; scalene are sampler type which also supports (threads, multiprocessing, Python vs C time, GPU, mem.trend, mem.leaks, copy time between python/native library)
 Profile with cProfile module:
    $ python3 -m cProfile mycode.py    # simple/basic
    $ python3 -m cProfile -o mycode.prof mycode.py && snakeviz mycode.prof
@@ -48,7 +58,87 @@ Profile with cProfile module:
    
    $ snakeviz code_profile.prof
    
+Profiling with scalene:
+   $ scalene [options] mycode.py   
+   	options:
+   	 --reduced-profile (only show where code runs for atleast 1%)
+   	 --html --outfile profile.html  (line, fn level profile)
+   	 --cpu-only	(not memory but does GPU also)
+   	
    
+   
+Benchmarking:
+    1. set PYTHONDONTWRITEBYTECODE=1		# don't cache bytecode between test runs
+    2. python -m timeit -s "from mymodule import function" "function()"		# -s part not included in benchmark time
+    3. 
+    P
+
+Faster code tips:
+   - use itertools/collections e.g. count() instead of loops with var increment
+   - speed vs memory trade off (generator vs list) esp if only first elelement of list is needed then next(gen)
+   - numpy/numba
+   - code optimization e.g. right data struct/algorithm
+   	- e.g. {}, [], () faster than dict(), list(), tuple() fn calls. Tuple faster than list
+   	- unique elements of list while retaining order dict.fromkeys(mylist) but elements need to be hashable
+   	- DRY vs calling too many fn (overheads).
+   	- look for loop-invariant stmt (can be done out of loop), use comprehensions, correct data struct(tuple, frozenset, str, bytes, list/bytearray, set, dict)
+   
+   
+Data containers : Class/DataClass/Dict/NamedTuple
+	class Pet(typing.NamedTuple):		# Pure classes faster than dataclass (50%) & namedtuple (25%)! but more code. Classes similar to dict.
+	   legs:int
+	   noise:str 
+
+	@dataclass
+	class Pet:
+	   legs:int
+	   noise:str
+
+	Pet = namedtuple("Pet","legs noise")
+
+
+Dataclasses: provides __init__, __repr__ and __eq__ by default. 
+
+from dataclasses import dataclass, field, astuple, asdict
+import inspect
+
+@dataclass(frozen=True, order=True)			# order provides le/ge/lt/gt, frozen allows obj value to NOT be modified after initializations. 
+							# Others: kw_args=True, match=True for structural pattern matching, slots=True
+class Comment:
+    id:int
+    txt:str
+    replies: list[str] = field(default_factory=list)	# list or any other fn that generates initial value. Factory is invoked if user doesn't specify this field while creating object. Can set "init=False" in field() to ensure that user can not provide this arg. "repr=False" to hide field from printing with repr. "compare=False" to skip the field 
+    				# __post__init__(self) method can be used to set attributes that depend on other member attrib.
+    	
+
+def main():
+    comment = Comment(1,"hoo")
+    print(comment)
+    # comment.id=2
+    # comment.set_id(2)
+    # print(comment)
+    comment.x = 100	# can't do if frozen
+    print(comment.x)
+    number, comment = astuple(comment)		# dataclass converts to tuple/dict
+
+    pprint(inspect.getmembers(Comment, inspect.isfunction))
+
+
+if __name__ == '__main__':
+    main()
+    
+
+match statement (for structural pattern matching) from Py3.10. 
+Can match single value (int/str) or other type like list/dict and other objects
+Match patterns based on given sequence i.e. order is important.
+	match var:
+		case 0: pass
+		case 1|2: pass
+		case 3 if condition: pass	#  with if condition
+		case 3: pass
+		case _: pass
+		case other: print("unknown")
+
 Decorator:
 	Enhance/Modify behavior to existing fn. E.g. add time taken by existing fn; add logging/user behavior; authentication before fn calls.
 	Address cross-cutting concerns (impacts multiple fn).
@@ -86,7 +176,8 @@ Functools: Fn/Operations on callables (Fn, Class, Obj)
 		- typically for expensive/recursive compute e.g. fibonacci or news web-page fetch
 	@total_ordering - adds le/ge/lt/gt methods based on 2 methods that user needs to give i.e. eq and one of le/ge/lt/gt
 	@partial - simplifies fn args/kwards by pre-building partial fn object that has some args/kwargs supplied in advance so that partial fn is called with remaining args/kwargs. Similarly, @partialmethod for methods/property.
-	@wraps - calls update_wrapper that updates the wrapper fn like the wrapped fn. Assigns(__module__, __name__, __doc__, __qualname__, __annotations__) and updates (__dict__). Used with decorators wrapping fn.
+	@reduce - apply fn to iterable with a default start value e.g. sum of series
+	@wraps - calls update_wrapper that updates wrapper fn to look like wrapped function. Assigns __module__, __name__, __doc__, __annotations__, __qualname__. Updates __dict__. Used with decorators specially
 	@singledispatch - transform fn into single-dispatch generic fn (based on type of first arg only). Declare the default fn with @singledispatch and then register other variants based on type(s) with @fn.register(type). To check which fn will be called for a given type, test with fn.dispatch(type) .. gives address of fn (not name!).
 	@singledispatchmethod - like singledispatch on methods but applies on first non-self/non-cls arg.
 
@@ -114,6 +205,10 @@ Itertools: Creates iterators for efficient looping
 		- permutations(seq, length) all combinations but no repeats e.g. AA but can have AB and BA
 		- combinations(seq, length) permutations but can't have AB == BA
 		- combinations_with_replacement(seq, length) allows AA
+
+Collections
+    defaultdict(factory)
+    Counter(dist).most_common 
 
 Coding exercises in various languages (incl Python) with solutions: https://rosettacode.org/wiki/Category:Python 
 David Beazley - https://github.com/dabeaz/blog
