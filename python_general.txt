@@ -90,5 +90,30 @@ Functools: Fn/Operations on callables (Fn, Class, Obj)
 	@singledispatch - transform fn into single-dispatch generic fn (based on type of first arg only). Declare the default fn with @singledispatch and then register other variants based on type(s) with @fn.register(type). To check which fn will be called for a given type, test with fn.dispatch(type) .. gives address of fn (not name!).
 	@singledispatchmethod - like singledispatch on methods but applies on first non-self/non-cls arg.
 
+Itertools: Creates iterators for efficient looping
+	- non-terminating/infinite iterators
+		- count(start, [step]]: count() from 0/start onwards
+		- cycle(list_elements): cycle('0123456789')  ... 0123456789 0123456789 0123456789
+		- repeat(element, [n)]: repeat('xyx', 20)  ...xyz xyz
+	- terminating on shortest input sequence:
+		- accumulate(list, [func=sum]): accumulate([1,2,3], lambda x,y: x+y) gives 1,3,6 (get running totals/products)
+		- chain(list1, list2): chain any 2 iterables one after another
+		- chain.from_iterable(iterable): chain iterable of iterables
+		- compress(data_list, selector_list_bool): removes elements marked as false in selector list
+		- dropwhile(predicate, sequence): chopping leading sequence. i.e. predicate applied to "leading" sequence; drops leading sequence if initially predicate is true and once false, ignores predicate and generates till end of sequence.
+		- filterfalse(predicate, sequence): opposite of filter(which keeps elements where predicate is true), this keeps elements where predicate is false
+		- groupby(iterable, [key]): sub-iterators groups by value of key(v)
+		- isslice(sequence, [start, stop, step]): like slice/range for sequence
+		- pariwise(iterable): ABCD gives overlapping pairs of AB BC CD
+		- starmap(function, sequence): gives sequence of fn(*seq[0]), fn(*seq[1]). i.e. fn args come from sequence (as sub-lists) and returns sequence of results
+		- takewhile(predicate, sequence): opposite of dropwhile, it gives the leading sequence while predicate is true
+		- tee(iterator, n): splits one iterator in N-iterators. Allows reuse/copy of iterator.
+		- zip_longest(seqA, seqB, [fillValue='-']) gives tuple having first element from seqA and second frmo seqB. Any missing values are replaced with None/fillValue.
+	- Combination/Permutations
+		- product(seqA, seqB, [repeat=1]) Cartesion product
+		- permutations(seq, length) all combinations but no repeats e.g. AA but can have AB and BA
+		- combinations(seq, length) permutations but can't have AB == BA
+		- combinations_with_replacement(seq, length) allows AA
+
 Coding exercises in various languages (incl Python) with solutions: https://rosettacode.org/wiki/Category:Python 
 David Beazley - https://github.com/dabeaz/blog
