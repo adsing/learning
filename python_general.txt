@@ -1,7 +1,7 @@
 Args: positional or keyword
 	def fn(positional_only_args, /, positional_or_keyword, *, keyword_only):
 
-	
+
 Ternary:
 	a if a < b else b
 
@@ -14,16 +14,16 @@ f-string (f"...{var}..."
    	f"{float_number=:.2f}"
    f"{var!a}"	# !a -> ascii (converts non-ascii e.g. unicode into \U)
    f"{var!r}"	# !r -> print repr equivalent
-   f"{var!s}"	# !s -> print str (default) 
+   f"{var!s}"	# !s -> print str (default)
 
-   
+
 Size of:
    import sys
-   sys.getsizeof([0,1,2,3])	# bytes used by this data struct - does not count recursive data structs, only 1 level deep. Custom code to do recusrive size computation. 
+   sys.getsizeof([0,1,2,3])	# bytes used by this data struct - does not count recursive data structs, only 1 level deep. Custom code to do recusrive size computation.
    				# Object has ref.count + ptr.to.its.type at least + 2ptr for garbage collector ... all of which getsizeof() captures.
-   
+
    PyObject has:
-   	ob_refcount  
+   	ob_refcount
    	ob_type
    PyVarObject has:
    	ob_size		# len - actual size
@@ -34,9 +34,9 @@ Size of:
    So a list has 7 meta-data elements. Size of empty list = 7 * 8 = 56 bytes
 
 
-__slots__ can be used to save memory taken by objects + restrict from adding more member variable (obj.NewVar). 
+__slots__ can be used to save memory taken by objects + restrict from adding more member variable (obj.NewVar).
 The instance loses __dicts__.
-The class retains __dicts__ and gains additional __slots__ member along with descriptors to get/set these slots members implemented in C code to access member based on memory location (instead of __dict__). 
+The class retains __dicts__ and gains additional __slots__ member along with descriptors to get/set these slots members implemented in C code to access member based on memory location (instead of __dict__).
 	obj.slotX = 'some value' 	# calls Class.__dict__['slotX'].__set__(obj, 'some_value'
 	print(obj.slotX)		# calls Class.__dict__['slotX'].__get__(obj, Class)
 
@@ -55,22 +55,22 @@ Profile with cProfile module:
    stats.sort_stats(pstats.SortKey.TIME).
    # stats.print_stats()		# alternatel, pip install snakeviz
    stats.dump_stats(filename='code_profile.prof')
-   
+
    $ snakeviz code_profile.prof
-   
+
 Profiling with scalene:
-   $ scalene [options] mycode.py   
+   $ scalene [options] mycode.py
    	options:
    	 --reduced-profile (only show where code runs for atleast 1%)
    	 --html --outfile profile.html  (line, fn level profile)
    	 --cpu-only	(not memory but does GPU also)
-   	
-   
-   
+
+
+
 Benchmarking:
     1. set PYTHONDONTWRITEBYTECODE=1		# don't cache bytecode between test runs
     2. python -m timeit -s "from mymodule import function" "function()"		# -s part not included in benchmark time
-    3. 
+    3.
     P
 
 Faster code tips:
@@ -82,12 +82,12 @@ Faster code tips:
    	- unique elements of list while retaining order dict.fromkeys(mylist) but elements need to be hashable
    	- DRY vs calling too many fn (overheads).
    	- look for loop-invariant stmt (can be done out of loop), use comprehensions, correct data struct(tuple, frozenset, str, bytes, list/bytearray, set, dict)
-   
-   
+
+
 Data containers : Class/DataClass/Dict/NamedTuple
 	class Pet(typing.NamedTuple):		# Pure classes faster than dataclass (50%) & namedtuple (25%)! but more code. Classes similar to dict.
 	   legs:int
-	   noise:str 
+	   noise:str
 
 	@dataclass
 	class Pet:
@@ -97,19 +97,19 @@ Data containers : Class/DataClass/Dict/NamedTuple
 	Pet = namedtuple("Pet","legs noise")
 
 
-Dataclasses: provides __init__, __repr__ and __eq__ by default. 
+Dataclasses: provides __init__, __repr__ and __eq__ by default.
 
 from dataclasses import dataclass, field, astuple, asdict
 import inspect
 
-@dataclass(frozen=True, order=True)			# order provides le/ge/lt/gt, frozen allows obj value to NOT be modified after initializations. 
+@dataclass(frozen=True, order=True)			# order provides le/ge/lt/gt, frozen allows obj value to NOT be modified after initializations.
 							# Others: kw_args=True, match=True for structural pattern matching, slots=True
 class Comment:
     id:int
     txt:str
-    replies: list[str] = field(default_factory=list)	# list or any other fn that generates initial value. Factory is invoked if user doesn't specify this field while creating object. Can set "init=False" in field() to ensure that user can not provide this arg. "repr=False" to hide field from printing with repr. "compare=False" to skip the field 
+    replies: list[str] = field(default_factory=list)	# list or any other fn that generates initial value. Factory is invoked if user doesn't specify this field while creating object. Can set "init=False" in field() to ensure that user can not provide this arg. "repr=False" to hide field from printing with repr. "compare=False" to skip the field
     				# __post__init__(self) method can be used to set attributes that depend on other member attrib.
-    	
+
 
 def main():
     comment = Comment(1,"hoo")
@@ -126,9 +126,9 @@ def main():
 
 if __name__ == '__main__':
     main()
-    
 
-match statement (for structural pattern matching) from Py3.10. 
+
+match statement (for structural pattern matching) from Py3.10.
 Can match single value (int/str) or other type like list/dict and other objects
 Match patterns based on given sequence i.e. order is important.
 	match var:
@@ -145,7 +145,7 @@ Decorator:
 	Decorator takes a fn as input and returns modified fn as output.
 	Can have multiple decorator on fn. E.g. @logging @timer on fn
 	Caution - decorator impacts readability/understanding of code. e.g. when multiple decorator are used. Which one kicks in first e.g. logging before timing or after.
-	
+
 	def my_decorator(func, logger):		# instead of using functools.partial you can create an another outer layer of fn that takes logger as arg and returns my_decorator (see https://stackoverflow.com/questions/5929107/decorators-with-parameters)
 	  @functools.wraps(func)		# fixes func.__name__ not to print "wrapper" but actual fn. Fixes fn.docstring and fn.name
 	  def wrapper(*args, **kwargs):
@@ -154,17 +154,17 @@ Decorator:
 	    logger.info("Ended")
 	    return ret
 	  return wrapper
-	  
+
 	@my_decorator(logging)		# inc = decorator(logging)(inc)   ... this is what it means and it won't work here because my_decorator needs 2 args. Use functools.partial or wrap my_decorator in another fn lets call it decorator_generator(logger)
 	def inc(x):
 	  return x+1
 
 	my_decorator_with_default_logging = functools.partial(my_decortor, logger=logging)
-	
+
 	@my_decorator_with_default_logging
 	def dec(x):
 	  return x-1
-	  
+
 	inc(3)
 
 
@@ -209,11 +209,11 @@ Itertools: Creates iterators for efficient looping
 Operator: efficient operator fn
 	- le, ge, lt, gt, eq, ne
 	- not, is_, is_not, truth (or bool)
-	- abs(x), add, sub, mul, floordiv, truediv, index (convert non-int to int for use as index), inv/invert, mod (%), pow, matmul (@), pos (postivie),  
+	- abs(x), add, sub, mul, floordiv, truediv, index (convert non-int to int for use as index), inv/invert, mod (%), pow, matmul (@), pos (postivie),
 		-- in-place operators (x+=y is x= operator.iadd(x,y)). Returns updated value if inputs are immutable else updates in place.
 		-- iadd/iconcat (a+=b), a&=b, a<<=b, a//=b, a@=b,
 	- lshift, rshift,     neg, or_, and_, xor
-	- concat, contains(a,b ... b in a), countOf, indexOf, get/set/delitem 
+	- concat, contains(a,b ... b in a), countOf, indexOf, get/set/delitem
 	- call
 	- attrgetter & itergetter:
 		-- f = attrgetter('name.first', 'name.last'), then call f(b) returns (b.name.first, b.name.last).
@@ -243,11 +243,11 @@ Collections: container datatypes
 		for key in cm:
 			print(key, cm[key])
 
-    - Counter : a dict subclass for counting hashable objects. Store {Key: Counts}. Any missing key gives count 0. 
+    - Counter : a dict subclass for counting hashable objects. Store {Key: Counts}. Any missing key gives count 0.
 				Methods: c.most_common(5), c.total(), c.subtract(another_counter)
-				Addition and subtraction combine counters by adding or subtracting the counts of corresponding elements. 
-				Intersection and union return the minimum and maximum of corresponding counts. 
-				Equality and inclusion compare corresponding counts. 
+				Addition and subtraction combine counters by adding or subtracting the counts of corresponding elements.
+				Intersection and union return the minimum and maximum of corresponding counts.
+				Equality and inclusion compare corresponding counts.
 				**Each operation can accept inputs with signed counts, but the output will exclude results with counts of zero or less.
 				c = Counter(a=3, b=1, c=0)
 				d = Counter(a=1, b=2, d=-1)
@@ -257,13 +257,13 @@ Collections: container datatypes
 				# Counter({'a': 2, 'd': 1})
 				c & d                       # intersection:  min(c[x], d[x])
 				# Counter({'a': 1, 'b': 1})
-				c | d  
+				c | d
 				Counter({'a': 3, 'b': 2})
 				-d (or +d) removes zero/negative counts from result
 				Counter({'d': 1})  (or Counter({'b': 2, 'a': 1}))
 
-	- deque (double ended queue). Called "deck". 
-			Optimized for stack(LIFO) and queue(FIFO) operations in O(1) 
+	- deque (double ended queue). Called "deck".
+			Optimized for stack(LIFO) and queue(FIFO) operations in O(1)
 			Can be unbounded or length given - in which case any new adds once size limit is reached causes overflow from other end.
 			Recipe to use for moving average of 3 elements.
 				dq = deque('abcdef', maxlen=5)	# gives bcdef
@@ -272,7 +272,7 @@ Collections: container datatypes
 				f = dq.pop()		# bcde
 				b = dq.popleft()	# cde
 				c,e = dq[0], dq[-1]
-				dq.rotate(1)		# ecd 
+				dq.rotate(1)		# ecd
 				dq.rotate(-1)		# cde
 				dq.extend('xyz')	# dexyz
 				dq.extendleft('ABC') # CBAde <<note the order of insert
@@ -282,7 +282,7 @@ Collections: container datatypes
 		Returns dict like object that has __missing__ method added (called by __getitem__) that invokes default_factory (if defined else KeyError) to setup a default value.
 		Note: default_factory is not called for d.get() but only for d['item'] (__getitem__)
 		Note: Py3.9 adds dict merge(|) and update(|=).
-		
+
 		Faster than an equivalent technique using dict.setdefault()
 			for k, v in s:
     			d.setdefault(k, []).append(v)   # without defaultdict
@@ -295,7 +295,7 @@ Collections: container datatypes
 		Tuple Subclass but with extra method and fields.
 			Since it's a subclass, it can be extended to add methods.
 			To add more data attributes, create new NamedTuple instead like so:
-				
+
 		Extra fields: var._fields & var._field_defaults. These list field names & their defaults.
 		Extra methods: NamedTuple._make(iter) to make a namedtuple, var._asdict() returns dict of fields names & values and var._replace(**kwargs) to replace named vars as per dict given
 		namedtuple(typename, field_names, *, rename=False, defaults=None, module=None)
@@ -340,21 +340,89 @@ Collections: container datatypes
 			od.move_to_end('k2', last=False) # k2, k1, k3 (moves to beginning)
 
 	- UserDict/UserList/UserString classes to allow customized Dict/List/String subclass development by user.
-		Content of Dict/List/String is accessible in member attribute .data.		
+		Content of Dict/List/String is accessible in member attribute .data.
+
+collections.abc - Abstract base classes for collections
+	issubclass/isinstance works in one of 3 ways:
+	1. inheritance from ABC. e.g. class MyClass(Sequence):...
+	2. registering as virtual subclass. e.g. Sequence.register(MyClass) where MyClass does not inherit from Sequence
+	3. by presense of specific dunder methods
+
+	Avaialble ABC (with abstract methods):
+		Container (__contains__)
+		Hashable  (__hash__)
+		Iterable  (__iter__)
+		Iterator  (__next__)
+		Reversible (__reversed__)
+		Generator | Coroutine (send, throw)
+		Sized	(__len__)
+		*Callable (__call__)
+		*Collection 	(Sized __len__, Iterable __iter__, Container __contains__)
+		*Sequence	(Collection, Reversible __reveresed__)
+			- MutableSequence (addition __get|set|delitem__)
+			- ByteString
+		Set (Collection) | MutableSet (Set)
+		Mapping (Collection) | MutableMapping (Mapping)
+		MappingView (Sized) | KeysView (MappingView, Set) | ValuesView (MappingView, Collection) | ItemsView (MappingView, Set)
+		Awaitable (__await__) | AsyncIterable (__aiter__) | AsyncIterator (__anext__) | AsyncGenerator (asend|athrow)
+
+
+Abstract base class (abc):
+	Multiple inheritance may lead to metaclass conflicts
+	1. via inheritance of ABC or ABCMeta (which has additional metho like .mro and .register(some_other_subclass) )
+		from abc import ABC
+		class MyABC(ABC):
+			pass
+	2.register the subclass (note: it won't show up in __mro__)
+		MyABC.register(tuple) 	# MyABC is a subclass of tuple
+		assert issubclass(tuple, MyABC)
+		assert isinstance((), MyABC)
+
+	A class that has a metaclass derived from ABCMeta cannot be instantiated unless all of its abstract methods and properties are overridden.
+	class C(ABC):
+		# @abstractmethod (simple, @classmethod, @staticmethod)
+		@abstractmethod
+		def my_abstract_method(self, arg1):
+			...
+		@classmethod
+		@abstractmethod
+		def my_abstract_classmethod(cls, arg2):
+			...
+		@staticmethod
+		@abstractmethod
+		def my_abstract_staticmethod(arg3):
+			...
+		## property (get/set)
+		@property
+		@abstractmethod
+		def my_abstract_property(self):
+			...
+		@my_abstract_property.setter
+		@abstractmethod
+		def my_abstract_property(self, val):
+			...
+		## another way to set (abstract) property
+		@abstractmethod
+		def _get_x(self):
+			...
+		@abstractmethod
+		def _set_x(self, val):
+			...
+		x = property(_get_x, _set_x)
 
 copy: shallow/deep copy compound objects
 	Deep copy can run into recursion so it maintains a memo dictionary of objects already copied.
-	A class needs to implement __copy__(x) and __deepcopy__(x, memo_dictionary). 
-	Stuff that can't be copied e.g. stack frame/trace, socket, file 
+	A class needs to implement __copy__(x) and __deepcopy__(x, memo_dictionary).
+	Stuff that can't be copied e.g. stack frame/trace, socket, file
 		from copy import deepcopy
 
 
-pprint: pretty print. 
+pprint: pretty print.
 	Dicts are sorted by keys. Option to put _ in numbers, indent_depth, column_width)
-	Recursive objects will print "<Recursion in object with id=..>". 
+	Recursive objects will print "<Recursion in object with id=..>".
 	IsReadable if string can be used to eval() and reconstruct the object.
 		from pprint import pprint
 		pprint(some_complex_datastruct)
 
-Coding exercises in various languages (incl Python) with solutions: https://rosettacode.org/wiki/Category:Python 
+Coding exercises in various languages (incl Python) with solutions: https://rosettacode.org/wiki/Category:Python
 David Beazley - https://github.com/dabeaz/blog
