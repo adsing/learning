@@ -222,9 +222,139 @@ Operator: efficient operator fn
 			sorted(inventory, key=getcount)
 			# [('orange', 1), ('banana', 2), ('apple', 3), ('pear', 5)]
 
-Collections
-    defaultdict(factory)
-    Counter(dist).most_common 
+Collections: container datatypes
+	- ChainMap: create a "view" to treat many dict/mappings as one. Internally store as references to dicts as a list (so update on any dict is reflected in ChainMap view). Can be updated/deleted but impacts only first dict/map in list.
+				Can create new & separate "child" ChainMaps that append to existing ones.
+				Can be used to select from options ChainMap(args, env, default).
+					defaults = {'user': 'guest',...}
+					parser = argparse.ArgumentParser()
+					parser.add_argument('-u', '--user')
+					namespace = parser.parse_args()
+					command_line_args = {k: v for k, v in vars(namespace).items() if v is not None}
+					combined = ChainMap(command_line_args, os.environ, defaults)
+					combined['user']
+
+		da = {'a':1,'b':2}
+		db = {'a':3,'c':4}		# a:3 is not visible as a from da comes first
+		dc = {'k':5}
+		cm = ChainMap(da,db,dc)
+		dc['x']=99		# visible in ChainMap
+		cm['z']=100		# adds to da
+		for key in cm:
+			print(key, cm[key])
+
+    - Counter : a dict subclass for counting hashable objects. Store {Key: Counts}. Any missing key gives count 0. 
+				Methods: c.most_common(5), c.total(), c.subtract(another_counter)
+				Addition and subtraction combine counters by adding or subtracting the counts of corresponding elements. 
+				Intersection and union return the minimum and maximum of corresponding counts. 
+				Equality and inclusion compare corresponding counts. 
+				**Each operation can accept inputs with signed counts, but the output will exclude results with counts of zero or less.
+				c = Counter(a=3, b=1, c=0)
+				d = Counter(a=1, b=2, d=-1)
+				c + d                       # add two counters together:  c[x] + d[x]
+				# Counter({'a': 4, 'b': 3})
+				c - d                       # subtract (keeping only positive counts)
+				# Counter({'a': 2, 'd': 1})
+				c & d                       # intersection:  min(c[x], d[x])
+				# Counter({'a': 1, 'b': 1})
+				c | d  
+				Counter({'a': 3, 'b': 2})
+				-d (or +d) removes zero/negative counts from result
+				Counter({'d': 1})  (or Counter({'b': 2, 'a': 1}))
+
+	- deque (double ended queue). Called "deck". 
+			Optimized for stack(LIFO) and queue(FIFO) operations in O(1) 
+			Can be unbounded or length given - in which case any new adds once size limit is reached causes overflow from other end.
+			Recipe to use for moving average of 3 elements.
+				dq = deque('abcdef', maxlen=5)	# gives bcdef
+				dq.append('g')		# cdefg
+				dq.appendleft('b')	# bcdef
+				f = dq.pop()		# bcde
+				b = dq.popleft()	# cde
+				c,e = dq[0], dq[-1]
+				dq.rotate(1)		# ecd 
+				dq.rotate(-1)		# cde
+				dq.extend('xyz')	# dexyz
+				dq.extendleft('ABC') # CBAde <<note the order of insert
+				dq.clear()
+
+	- defaultdict(default_factory=None):
+		Returns dict like object that has __missing__ method added (called by __getitem__) that invokes default_factory (if defined else KeyError) to setup a default value.
+		Note: default_factory is not called for d.get() but only for d['item'] (__getitem__)
+		Note: Py3.9 adds dict merge(|) and update(|=).
+		
+		Faster than an equivalent technique using dict.setdefault()
+			for k, v in s:
+    			d.setdefault(k, []).append(v)   # without defaultdict
+		Example:
+			exception_tracking = defaultdict(list)
+			exception_tracking[exception].append(code_line_number)
+
+	- namedtuple: Factory Function for Tuples with Named Fields; helps improve code readability.
+		Named tuple instances do not have per-instance dictionaries, so they are lightweight and require no more memory than regular tuples.
+		Tuple Subclass but with extra method and fields.
+			Since it's a subclass, it can be extended to add methods.
+			To add more data attributes, create new NamedTuple instead like so:
+				
+		Extra fields: var._fields & var._field_defaults. These list field names & their defaults.
+		Extra methods: NamedTuple._make(iter) to make a namedtuple, var._asdict() returns dict of fields names & values and var._replace(**kwargs) to replace named vars as per dict given
+		namedtuple(typename, field_names, *, rename=False, defaults=None, module=None)
+			- rename incorrectly named fields
+			- defaults associated from right most fields
+			- returns tuple subclass
+			- fields defined in list or string separated by whitespace
+				Point = namedtuple("Point", ['x','y'])   # namedtuple("Point", "x y")
+				Point = namedtuple("Point", ['x', 'y'], defaults=(0,))  # y is default to 0
+				p1 = Point(10,20)
+				p2 = Point(x=11,y=22)
+				p3 = Point(30)
+				getattr(p3,'y')	# 0
+
+			Recipe used to handle fields coming back from CSV/DB records:
+				EmployeeRecord = namedtuple('EmployeeRecord', 'name, age, title, department, paygrade')
+				import csv
+				for emp in map(EmployeeRecord._make, csv.reader(open("employees.csv", "rb"))):
+					print(emp.name, emp.title)
+
+			Recipe to add methods to namedtuple subclass
+				class Point(namedtuple('Point', ['x', 'y'])):
+					__slots__ = ()
+					@property
+					def hypot(self):
+						return (self.x ** 2 + self.y ** 2) ** 0.5
+					def __str__(self):
+						return 'Point: x=%6.3f  y=%6.3f  hypot=%6.3f' % (self.x, self.y, self.hypot)
+				for p in Point(3, 4), Point(14, 5/7):
+					print(p)
+				Point: x= 3.000  y= 4.000  hypot= 5.000
+
+	- OrderedDict - superior to dict in ordering but less performant in space/iteration/updates. Suitable for LRU caches where ordering is often.
+		Since Py3.7 dict are ordered.
+		dict.popitem() returns key,value tuple from end; while in OrderedDict.popitem(last=False) can return the first key,value tuple as well. Equivalent with dict: (k := next(iter(d)), d.pop(k))
+		OrderedDict.move_to_end(key) can be done in dict as (d[k] = d.pop(k)). However, dict can move an element to front which OrderedDict can do with od.move_to_end(key, last=False).
+		So if you don't need the functionality to move key to front then better off just using dict.
+			od = OrderedDict([('k1','v1'),('k2','v2'),('k3','v3')])
+			k,v = od.popitem(last=True)		# pop from end (k3,v3)
+			k,v = od.popitem(last=False)	# pop from beginning (k1,v1)
+			od.move_to_end('k2')			# k1, k3, k2 (k2 moves from middle to end)
+			od.move_to_end('k2', last=False) # k2, k1, k3 (moves to beginning)
+
+	- UserDict/UserList/UserString classes to allow customized Dict/List/String subclass development by user.
+		Content of Dict/List/String is accessible in member attribute .data.		
+
+copy: shallow/deep copy compound objects
+	Deep copy can run into recursion so it maintains a memo dictionary of objects already copied.
+	A class needs to implement __copy__(x) and __deepcopy__(x, memo_dictionary). 
+	Stuff that can't be copied e.g. stack frame/trace, socket, file 
+		from copy import deepcopy
+
+
+pprint: pretty print. 
+	Dicts are sorted by keys. Option to put _ in numbers, indent_depth, column_width)
+	Recursive objects will print "<Recursion in object with id=..>". 
+	IsReadable if string can be used to eval() and reconstruct the object.
+		from pprint import pprint
+		pprint(some_complex_datastruct)
 
 Coding exercises in various languages (incl Python) with solutions: https://rosettacode.org/wiki/Category:Python 
 David Beazley - https://github.com/dabeaz/blog
