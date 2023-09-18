@@ -215,12 +215,15 @@ Operator: efficient operator fn
 	- lshift, rshift,     neg, or_, and_, xor
 	- concat, contains(a,b ... b in a), countOf, indexOf, get/set/delitem
 	- call
-	- attrgetter & itergetter:
+	- attrgetter/itergetter/methodcaller:
 		-- f = attrgetter('name.first', 'name.last'), then call f(b) returns (b.name.first, b.name.last).
 		-- g = itemgetter(2, 5, 3), the call g(r) returns (r[2], r[5], r[3]).
 			getcount = itemgetter(1)
 			sorted(inventory, key=getcount)
 			# [('orange', 1), ('banana', 2), ('apple', 3), ('pear', 5)]
+		-- m = methodcaller('name', 'arg1',arg2=10)
+			m(obj) calls obj.name('arg1',arg2=10)
+
 
 Collections: container datatypes
 	- ChainMap: create a "view" to treat many dict/mappings as one. Internally store as references to dicts as a list (so update on any dict is reflected in ChainMap view). Can be updated/deleted but impacts only first dict/map in list.
@@ -409,6 +412,62 @@ Abstract base class (abc):
 		def _set_x(self, val):
 			...
 		x = property(_get_x, _set_x)
+
+contextlib: for invoking tasks "with expr as target: <code block/suite>"
+	Set up runtime context by implementing enter/exit fn for a code suite.
+	contextmanager.__enter__() : returns this object (or related to context) and assigned to target.
+	contextmanager.__exit__(exception_type, exception_value, exception_traceback) : Exit runtime context & return bool flag(true) to indiate if any exception is to be suppressed.
+		Returning true causes any exception to be subpressed. Any exeption that occur in __exit__ will replace the exception raised in with block.
+
+	@contextmanager decorator - to define factory fn that sets up a resource in __enter__, yields a resource (causing code suite to run) and frees at __exit__.
+	with closing(resource) as fh:	# closign will call resource.close() in __exit__ (no setup)
+		...
+	nullcontext(enter_result) - returns enter_result on entry. Standin for optional conext manager (e.g. if/else where one part does proper content management and else part does nullcontext)
+		if isinstance(file_or_path, str):        # If string, open file
+			cm = open(file_or_path)
+		else:        # Caller is responsible for closing file
+			cm = nullcontext(file_or_path)
+		with cm as file:
+			# Perform processing on the file
+	suppress(*Exceptions) -
+		with suppress(FileNotFoundError):
+			os.remove('somefile.tmp')
+	redirect_stdout(new_target): Context manager for temporarily redirecting sys.stdout to another file or file-like object.
+		with open('help.txt', 'w') as f:
+			with redirect_stdout(f):
+				help(pow)
+	redirect_stderr
+	chdir(path): change directory and restore when done. Not thread safe; changing global state of program
+	ContextDecorator: A base class that enables a context manager to also be used as a decorator.
+		Context managers inheriting from ContextDecorator have to implement __enter__ and __exit__ as normal.
+		__exit__ retains its optional exception handling even when used as a decorator.
+			class mycontext(ContextDecorator):
+				def __enter__(self):
+					print('Starting')
+					return self
+
+				def __exit__(self, *exc):
+					print('Finishing')
+					return False
+			@mycontext()
+			def function():
+				print('The bit in the middle')
+			# use as below, can test as function()
+			with mycontext as tgt:
+			    print("something")
+	ExitStack : A context manager that is designed to make it easy to programmatically combine other context managers and cleanup functions,
+			especially those that are optional or otherwise driven by input data.
+			Similar to having nested with-statement. Maintains stack of callsbacks that are called in LIFO when instance is closed.
+			with ExitStack() as stack:
+    			files = [stack.enter_context(open(fname)) for fname in filenames]
+	Receipe/Usecases:
+		1. Handling multiple context managers
+		2. Handling exception handling in __enter__ as external resource API maybe badly desgined. Note: You want to throw exceptions from with-codesuite.
+
+	Context managers tend to be One-shot (single use) context managers.
+	Re-enterant context managers example suppress(), redirect_stdout(), chdir(). threading.Rlock()
+	Re-usable (but no re-enterant) context managers (example ExitStack, threading.Lock)
+
 
 copy: shallow/deep copy compound objects
 	Deep copy can run into recursion so it maintains a memo dictionary of objects already copied.
