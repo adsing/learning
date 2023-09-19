@@ -1,0 +1,73 @@
+Design Patterns
+
+SOLID Design Principles: applies to class/module/fn (any block of collective code)
+    - Single Responsibility : a class should be responsibile to only one actor/stakeholder - which drives any reason to change the class. a class should do only one job/Responsibility and a change to class should happen only because there is a change to it's responsibility.
+    - Open-Closed           : open for extension, closed for change/modification. Behavior should be extendable without altering code. Open to extension via inheritance/delegate fn; close for altering (defines an interface for it's usage). E.g. each Shape defines how to compute it's area; AreaCalculator has a shape attribute which uses "interface" defined on shape to ensure they have area() method in it.
+    - Liskov Substitution   : A "property" that applies to Type T or a BasClass, will also to each subclass. i.e. Derived class is Substitutable for base class. Behavioural sub-typing.
+    - Interface Segregation : classes should implement interfaces only which are used by them i.e. don't force unneccesaary interfaces upon them. E.g. separate AreaCalculator & VolumeCalculator interfaces instead of clubbing them together. 3D objects can implement both interfaces, while 2D object can implement only for area.
+    - Dependency Inversion  : High-level class should not depend on low-level; they should both depend on interfaces/abstraction. Abstraction should not depend on details/concretions but rather vice-versa details on abstracts. Often we think of making smaller utility fn/method to fulfil higher level fn but this creaet higly coupled system; instead use interface between high-level and lower-level. Allows upper layers to use other implementations of lower levels. Common to have an "adapter" between service & abstraction. 
+
+Creational Design Patterns: Builder, Factories (Factory Method and Abstract Factory), Prototype and Singleton
+    Builder: construct complex (different) objects in steps.
+            Complex due to multiple fields and/or nested objects.
+            Move object construction code out of class and into Builder object.
+            Organize construction into steps (buildA, buildB, buildC) and execute the steps you need (ex. buildAC).
+            Director (optional):: builder steps put in separate class. Director defines order of building; Builder provides implementation.
+            Use to:
+                o get rid of telescoping constructor (multiple or many argument constructor)
+                o to create different representations of product. Construction step differs in details (e.g. made of Stone/Wood).
+                o construct complex objects - details wrapped in Director class. Call step recusively to create trees.
+        b = new ConcreteBuilderA()  # based off an interface (reset, buildStepA, buildStepB.., buildStepZ)
+                    # results in Product1 (getResult :: return this.result, reset :: newProduct1, buildStepA,...buildStepZ)
+                    # client code can call ConcreteBuilderA directly (reset, stepsA-Z) ..or use Director
+        d = new Director(b) # (Director(builder), changeBuilder(builder), make(typeA..Z) :: if simpleA then buildA only if complexA then (buildA, buildA2) )
+        d.reset()
+        d.make()
+        ProductA pa = d.getResult()
+
+    Factory Method (Virtual constructor): interface for creating objects in superclass but subclasses can alter type of object created.
+            New replaced by factory method that produces new objects in subclass or provide basic default object. 
+            Override Factory method in subclass to produce different products (from same baseclass/interface).
+            Use to:
+                o Use when you don't know exact types/dependeny objects
+                o To provide a way to extend internal components (reduce construction code to single factory method for overriding)
+                o Reuse existing objects instead of creating new (memory saving) e.g. pool
+        Creator class has an abstract factory method and other operations that interface that are assumed from such to-be-created objects e.g. product = self.factory_method() && product.do_something().
+        Subclasses defined factory_method to return ConcreteProductA.
+        Product interface defines do_something()...and each productA/B/C implements do_something.
+        Client code can use Creator and Product interface.
+
+    Abstract Factory:
+            Interfaces for product (concrete ProductA, ProductB)
+            Next Interface (abstract factory) is list of methods on product (rather family of related/similar products).
+            Client code works with chosen-factory & interface methods.
+            Use to:
+            o Make code for families of related product and code to interface than concrete classes (allows easy expansion/parallel dev).
+            o Class with multiple factory methods that blurs primary responsibility (class dealing with multiple product types)  
+
+
+Structrural Design Patterns: Adapter, Bridge, Composite, Decorator, Façade, Flyweight and Proxy
+        Adapater: Allow incompatible interfaces to collaborate. E.g. EU-US power adapter
+            o when many subclasses lack common functionality that can't be added to superclass. Adapter comes inbetween to address missing functionality. 
+
+        Decorator: Decorator obj linked to target object and delegates all requet to target but alters the result/pre/post operation. E.g. Do what should be done + sendSMS.
+            o Assign extra behavior at runtime to objects without changing code
+            o When extending behavior through inheritance is not possible/awkward.
+            Why not inheritance? Inheritance is static; can't alter behavior at runtime. Only replace with subclass objects. Multiple inheritance may not be allowed in language.
+
+        Facade: provides simplified interface to a complex sub-system. May limit functionality
+            o to have limited but straight forward interface to complex system (e.g. setting up config/boiler plate fn)
+            o make layers of facade where each layer reduces coupling or if facade itself is becoming too complex (don't be a God object).
+
+Behavioral Design Patterns: Chain of Responsibility, Command, Interpreter, Iterator, Mediator, Memento, Observer, State, Strategy, Template Method and Visitor
+        Observer: aka Subscriber; allows to define a subscription to notify multiple Observers of any events on objects they are observing.
+        
+        Command: Turn request into object with all info. Use to pass as arg or add to queue etc.
+            e.g. waiter between customer/chef with paper (object)
+
+        Strategy: different algorithm in different classes (Strategy). Based on context, object decides on which strategy/algo to use.
+        
+        Iterator: allows to traverese elements of a colleciton without exposing underlying representation.
+
+        Mediator: reduce chaotic dependeny between objects (of a system). All communications via mediator only. e.g. Air Traffic Controller. Hub/spoke model.
+                Leads to decoupling with each component only passing msg to Mediator object to action on. Microservices architecture.
