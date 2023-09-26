@@ -70,8 +70,8 @@ Profiling with scalene:
 Benchmarking:
     1. set PYTHONDONTWRITEBYTECODE=1		# don't cache bytecode between test runs
     2. python -m timeit -s "from mymodule import function" "function()"		# -s part not included in benchmark time
-    3.
-    P
+    3. timeit.timeit("code_to_test()", setup="from __main__ import code_to_test", number=10)
+
 
 Faster code tips:
    - use itertools/collections e.g. count() instead of loops with var increment
@@ -120,10 +120,7 @@ def main():
     comment.x = 100	# can't do if frozen
     print(comment.x)
     number, comment = astuple(comment)		# dataclass converts to tuple/dict
-
     pprint(inspect.getmembers(Comment, inspect.isfunction))
-
-
 if __name__ == '__main__':
     main()
 
@@ -209,7 +206,7 @@ Itertools: Creates iterators for efficient looping
 Operator: efficient operator fn
 	- le, ge, lt, gt, eq, ne
 	- not, is_, is_not, truth (or bool)
-	- abs(x), add, sub, mul, floordiv, truediv, index (convert non-int to int for use as index), inv/invert, mod (%), pow, matmul (@), pos (postivie),
+	- abs(x), add, sub, mul, floordiv, truediv, index (convert non-int to int for use as index), inv/invert, mod (%), pow, matmul (@), pos (postive),
 		-- in-place operators (x+=y is x= operator.iadd(x,y)). Returns updated value if inputs are immutable else updates in place.
 		-- iadd/iconcat (a+=b), a&=b, a<<=b, a//=b, a@=b,
 	- lshift, rshift,     neg, or_, and_, xor
@@ -469,6 +466,49 @@ contextlib: for invoking tasks "with expr as target: <code block/suite>"
 	Re-usable (but no re-enterant) context managers (example ExitStack, threading.Lock)
 
 
+Typing:
+
+		from collections.abc import Sequence, Callable, Iterable
+		from typing import NewType, TypeAlias, Protocol
+
+		# TypeAlias simple
+		Vector: TypeAlias = list[float]  # type alias
+
+		# TypeAlias (complex)
+		ConnectionOptions: TypeAlias = dict[str, str]  # user: password
+		Address: TypeAlias = tuple[str, int]  # host:port
+		Server: TypeAlias = tuple[Address, ConnectionOptions]
+
+
+		def scale(scalar: float, vector: Vector) -> Vector:
+		    return [scalar * x for x in vector]
+
+
+		def broadcast_msg(msg: str, servers: Sequence[Server]) -> None:  # Sequence
+		    for server in servers:
+			print(server, msg)
+
+
+		# NewType
+		UserId = NewType("UserId", int)  # UserId subclass of int
+		SuperUserId = NewType("SuperUserId", UserId)
+		student_id = UserId(123)
+		if 123 == UserId(123):
+		    print("yes")
+
+		Base: TypeAlias = int
+		Derived = NewType("Derived", Base)
+
+
+		# Callable objects
+		def feeder(get_next_item: Callable[[int], None]) -> None:
+		    # Callables takes one arg (int) and returns None
+		    # Callable with multiple (3) args may look like Callable[[int,str,UserId], UserId]
+		    # use ... for arbitary arg list
+		    # For keyword args, variable args, or overloaded fn; define using Protocol and __call__() ???
+		    pass
+
+
 copy: shallow/deep copy compound objects
 	Deep copy can run into recursion so it maintains a memo dictionary of objects already copied.
 	A class needs to implement __copy__(x) and __deepcopy__(x, memo_dictionary).
@@ -482,6 +522,11 @@ pprint: pretty print.
 	IsReadable if string can be used to eval() and reconstruct the object.
 		from pprint import pprint
 		pprint(some_complex_datastruct)
+
+VSCode settings:
+ - install Python from market place (also installs pylint and pylance)
+ - python.analysis.typeCheckingMode: off/basic/strict   *If you follow typing hints*
+ - editor.formateOnSave + editor.codeActionsOnSave (source.organiseImports=true)
 
 Coding exercises in various languages (incl Python) with solutions: https://rosettacode.org/wiki/Category:Python
 David Beazley - https://github.com/dabeaz/blog
