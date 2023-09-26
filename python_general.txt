@@ -17,6 +17,38 @@ f-string (f"...{var}..."
    f"{var!s}"	# !s -> print str (default)
 
 
+Enum: (unique) Symbolic names bound to a variable. Advantages: grouping, nice repr, type safe.
+	  If 2 names have same value then second serves as alias to first -- which is returned when accessing first or second such enum member.
+	  ALiases are not showin while iterating over enum.
+	  To force, unique values as well then use @unique.
+
+		from enum import Enum, auto, Flag, unique
+
+		@unique
+		class RGBColors(Enum):
+			RED=1			# attribute .name=RED and .value=1
+			GREEN=2
+			BLUE=auto()
+
+		RGBColors(2)		# repr:: <RGBColors.GREEN: 2>
+		print(RGBColors(2)) # str:: RGBColors.GREEN
+
+	Similar to Enum, is Flag (bitset)
+		class TimeInForce(Flag):
+			AON = 1		# index starts from 1 even if auto() used
+			DNR = 2
+			DNI = 4
+			FOK = auto()
+			NH = auto()
+		tif = TimeInForce.AON | TimeInForce.NH		# Py3.11
+		for v in tif:			# iterate over flags
+			print(v)
+	Access: TIF['AON'] by name; TIF(1) by value, TIF.AON.value
+
+	Enum similar to namedtuple. E.g. Animal = Enum('Animal', 'ANT BEE CAT DOG')
+	To compare Enum to integers, use IntEnums (or StrEnums or IntFlags or StrFlags).
+
+
 Size of:
    import sys
    sys.getsizeof([0,1,2,3])	# bytes used by this data struct - does not count recursive data structs, only 1 level deep. Custom code to do recusrive size computation.
@@ -464,6 +496,110 @@ contextlib: for invoking tasks "with expr as target: <code block/suite>"
 	Context managers tend to be One-shot (single use) context managers.
 	Re-enterant context managers example suppress(), redirect_stdout(), chdir(). threading.Rlock()
 	Re-usable (but no re-enterant) context managers (example ExitStack, threading.Lock)
+
+Descriptors:
+	Allow to customize attribute lookup, storage and deletion (by defining methods __get__, __set__, __delete__ and optional __set_name__)
+	Obj.attrib is first looked in dictionary (in order of object dict, class dict, classes dict in MRO, __get__ method).
+	classmethod/staticmethod/property/slots/functools.cached_property/super are examples of descriptors.
+
+	Protocol:
+		descr.__get__(self, obj, type=None) -> value
+		descr.__set__(self, obj, value) -> None
+		descr.__delete__(self, obj) -> None
+
+		Object defining __set__ or __delete__ is called data descriptor. With only __get__ it's a non-data descriptor.
+		The difference is that in case of conflict in name between data descriptor vs name in dict, data descriptor takes precedence.
+		For non-data (get) descriptor, the dict value takes precedence.
+		Instance lookup scans through a chain of namespaces giving data descriptors the highest priority, followed by instance variables, then non-data descriptors, then class variables, and lastly __getattr__() if it is provided.
+		a.x is really desc.__get__(a, type(a)).
+
+		To make attribute read-only, define __get__; and for __set__, raise AttributeError
+
+
+	Allows to create dynamic lookups e.g. in case below to "get" size of a directory (as files are added/deleted)
+		import os
+		class DirectorySize:
+			def __get__(self, obj, objType=None):
+				return len(os.listdir(obj.dirname))
+			# can have __set__ and __del__ methods as well
+			def __set__(self, obj, value):
+				print(obj, value)
+				obj.size = value		# hard coding of attribute (size)
+		class Directory:
+			size = DirectorySize()		# descriptor instance ... must be class variable (not instance variable)
+			def __init__(self, dirname):
+				self.dirname = dirname
+		#
+		g = Directory("somePath/someDir")
+		g.size()		# 3			# descriptor is running a computation
+		os.remove("somePath/someDir/someFile")
+		g.size() 		# now 2
+
+	Managed Attributes - to manage access to obj data/attributes.
+	Descriptor assigned to an attribute e.g. DirectorySize() in class dict.
+	Actual data stored in object.__dict__ as private _attribute.
+	See link for a more generic example where Descriptor class is not hard-coded to one specific attribute name with __set_name__. See https://docs.python.org/3/howto/descriptor.html#customized-names
+
+	Complete practical example for Descriptors:
+	class Validator:
+		"""Generic Descriptor & abstract class that requires implementation of validate()"""
+		def __set_name__(self, owner, name):
+			print(f"__set_name__: {owner}, {name}")
+			self._owner = owner
+			self.private_name = "_" + name
+
+		def __get__(self, object, objType):
+			print(f"__get__: {object}, {self.private_name}")
+			return getattr(object, self.private_name)
+
+		def __set__(self, object, value):
+			self.validate(value)
+			print(f"__set__: {object}, {self.private_name}, {value}")
+			setattr(object, self.private_name, value)
+
+		@abstractmethod
+		def validate(self, value):
+			...
+#
+	class OneOf(Validator):
+		def __init__(self, *options) -> None:
+			super().__init__()
+			self._options = set(options)
+		def validate(self, value):
+			if not value in self._options:
+				raise RuntimeError(
+					f"Value {value} is not one of available options {self._options}"
+				)
+#
+	class Number(Validator):
+		def __init__(self, min=None, max=None) -> None:
+			print(f"Number init {min} - {max}")
+			super().__init__()
+			self.min = min
+			self.max = max
+		def validate(self, value):
+			# return super().validate(value)
+			print(f"Number validate {value} with range {self.min} - {self.max}")
+			if not isinstance(value, int | float):
+				raise RuntimeError("Not int or float")
+			if self.min and value < self.min:
+				raise RuntimeError(f"Below min value of {self.min} ")
+			if self.max and value > self.max:
+				raise RuntimeError(f"Above max value of {self.max} ")
+#
+	class Test:
+		num = Number(1, 10)
+		big_num = Number(100, 1000)
+		opt = OneOf("plastic", "wood")
+
+		def __init__(self, num, big_num, opt) -> None:
+			self.num = num
+			self.big_num = big_num
+			self.opt = opt
+#
+	t = Test(1, 400, opt="w00d")
+	t.num = -100		# set throws error
+
 
 
 Typing:
