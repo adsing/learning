@@ -8,7 +8,7 @@ F5 - debug
 Remote Dev - connect to remote hosts for environment
 
 Setup python env: Create Environment (venv)
-$ python3 -m vevn .venv
+$ python3 -m venv .venv  && source .venv/bin/activate
 $ python3 -m pip install --upgrade pip
 $ python3 -m pip install -r requirements.txt
 $ 
