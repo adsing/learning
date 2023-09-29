@@ -416,11 +416,11 @@ Abstract base class (abc):
 		@abstractmethod
 		def my_abstract_method(self, arg1):
 			...
-		@classmethod
+		@classmethod		# used to define alternate constructors + handle inheritance issues where return by class-name is done instead of using "cls" var
 		@abstractmethod
 		def my_abstract_classmethod(cls, arg2):
 			...
-		@staticmethod
+		@staticmethod		# loosely tied to class methods e.g. validate input before creating object
 		@abstractmethod
 		def my_abstract_staticmethod(arg3):
 			...
@@ -658,6 +658,16 @@ pprint: pretty print.
 	IsReadable if string can be used to eval() and reconstruct the object.
 		from pprint import pprint
 		pprint(some_complex_datastruct)
+
+
+Packaging options: PyPI, setup.py, wheel
+	Code that uses only std.library can be distributed as .tar.gz (called "sdist" package for Source Distribution Package). Typically, adds requirement.txt for other packages needed.
+
+	If any C/C++ library is needed then use Wheel to package these binary dependencies with code.
+
+	When making modules, you oraganize your code in tree directroy structure where each directory has a __init__.py that can gie directions on what to import automatically.
+	E.g. 	import mymodule.submodule.somepycode
+	invokes mymodule/__init__.py then mymodule/submodule/__init__.py then mymodule/submodule/somepycode
 
 VSCode settings:
  - install Python from market place (also installs pylint and pylance)
