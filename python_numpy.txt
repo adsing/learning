@@ -1,0 +1,88 @@
+Numpy Array - homogenous type (dtype) and more compact than Python list.
+    Rank indicates dimension (1D, 2D)
+    ar.shape(gives length of each dimension) e.g (5,) or (2,3)
+    ar = np.array([[1, 2], [3, 4], [5, 6]])   # 2D array with shape of (3,2)
+    "ndarray" implied N dimension array. Vector (one dimension ndarray) vs Matrix (2D ndarray) vs Tensor (3D ndarray)
+
+Differs from python list as slicing refers to same data while in python creates a new list. View on underlying data.
+
+Create array: np.array() - pass list 1D/2D
+        or np.zeros/ones/empty  - empty is filled with random values and is faster to initialize
+        or np.arange - range end or range start/stop/step
+        or np.linespace()
+    Default dtype is float64. Can specify dtype in creation e.g. dtype=np.int32
+
+Sort: np.sort(arr) returns sorted copy
+    matrix/ND-array have dtype that specify col.name & type. np.sort() accepts order=['colA','colB']
+    np.searchsorted([1,2,3,4,5], 3, side='right') -- where to insert into sorted array (Similar to python bisect).
+
+Concatenate: np.concatenate((arr1, arr2)) with optional axis
+    np.concatenate(([[1,2],[3,4]], [5,6]), axis=0)
+    np.concatenate((a, b.T), axis=1)  # [[1,2,5],[3,4,6]]
+
+Reshape:
+    arr.shape   # (m,n) or (m,)
+    arr.reshape(m,n)
+
+Adding new axis to array:
+    np.newaxis: ar[np.newaxis, :]
+    np.expand_dims(ar, axis=0)  # shape (n,1)
+
+Index/slice:
+    ar[1], ar[0:2], ar[-1:]
+    ar[ar > 10], ar[(ar > 3) & (ar < 10)]
+    b = np.nonzero(a > 5)  # returns 2 tuples (X-indices and Y-indicies) of elements that are non-zero. These indicies that can be zipped together to get (X,Y) where a>5 in 2D array "a" or extract with a[b]
+    Check if element exists : np.nonzero(arr == 42) will be empty
+
+    slice yields a new array (not a view)
+    ar = a[3:8] # changing a[0] does not impact ar
+
+    np.vstack/hstack to stack.
+    np.hsplit(ar, equal_parts__or_column_index)
+
+Numpy uses views for optimization i.e. shallow copy with ar.view().
+To make separate copy, use ar.copy()
+
+Array operations:
+Basic math: add/subtract/multiple/divide e.g. ar1 + ar2
+    ar.sum(axis=0)  # axis=0 means run fn over the axis of rows i.e one value per column (excel sum column); axis=1 refers one value over row.
+    axis=0 (fn per column); axis=1 (fn across row)
+
+Broadcast : perform operation over entire array. ar * 1.5
+min/max/sum/prod/mean/std
+
+Matrix (2D array):
+    matrix = np.array([[1,2],[2,3],[3,4]])
+    matrix.max()    # 4
+    matrix.max(axis=0)  # [3,4]
+    matrix1 + matrix2
+    matrix + vector ## broadcast addition
+
+Unique & Counts:
+    # gets unique values in array
+    uniq_values = np.unique(arr)
+    uniq_values, indices_list, unique_count =
+        np.unique(arr, return_index=True, return_count=True)
+    Works on matrix/2D as well - flattens (if axis is not given) and finds unique/indices/counts
+
+Transpose/Reshape:
+    arr.T or arr.transpose()
+
+Reverse or Flip:  np.flip(arr)
+    np.flip(matrix, axis=0)
+    np.flip(matrix[1]) # flip one row (np.flip(matrix[1,:]))
+
+Flattening: matrix.flatten() generates new flat array
+    matrix.ravel() generates a aview on top of matrix so changes impact underlying
+
+Save/Load from file:
+    1. np.save("filename", arr) and ar = np.load("filename.npy") is good for a single NDarray.
+    Also have savetxt() and loadtxt() to dump as ASCII text. E.g. np.savetxt('np.csv', a, fmt='%.2f', delimiter=',', header='1,  2,  3,  4')
+    2. To save multiple data objects, use np.savez or np.savez_compressed (.npz files)
+    3. CSV - use pandas.read_csv() and to_csv(). Matrix can be fed into dataframe
+    4. ndarray.tolist(), fromstring()
+    5. memmap() files
+
+Plotting:
+    import matplotlib.pyplot as plt
+    plt.plot(arr)
