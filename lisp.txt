@@ -1,0 +1,23 @@
+Lisp - ANSI Common List (CL - standard 1986) and Scheme
+Multi-paradigm - OO, fn, generic, DSL
+Compiler - clisp or SBCL
+
+Everything in ()
+Function before arguments. (* 2 4)
+( * 2 4)  
+(+ ( * 2 4) 3)
+
+; comment
+( myFunction )                ; functions return a value .. when defined with defun returns the fn name
+(defparameter *someGlobalVariable* 100)  ; top-level definition; *x* are called earmuffs and optional but good for code-readability
+(defvar *anotherGlobalVar* 200)          ; won't over-write variable value with new defvar unlike defparameter which overrides prev value 
+(defun my_function_name (arguments_if_any)
+ ...
+ )
+
+
+(defparameter *small* 1)
+(defparameter *big* 100)
+(defun guess_my_number()
+    (ash (+ *small* *big*) -1)   ; ash = arithmentic shift (-1 = right one bit) for divide by 2)
+)
