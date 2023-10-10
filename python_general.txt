@@ -645,6 +645,17 @@ Typing:
 		    pass
 
 
+array - compact representation of numeric/char array (same type restriction vs list).
+	Same method as list except itemsize + typecode. Init from list/iterable/bytes
+
+	ar = array.array('i', [1,2,3,4,5])
+
+	element_size = ar.itemsize	# 4
+	datatype = ar.typecode 		# i
+
+	array.typecodes			# 'bBhHiIlLqQfd'
+
+
 copy: shallow/deep copy compound objects
 	Deep copy can run into recursion so it maintains a memo dictionary of objects already copied.
 	A class needs to implement __copy__(x) and __deepcopy__(x, memo_dictionary).

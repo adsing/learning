@@ -4,6 +4,20 @@ Books based on https://stackoverflow.com/questions/388242/the-definitive-c-book-
 2. Effective Modern C++ (C++14)
 3. C++ Concurrency In Action (3ed)
 
+Tool chains (PreProcessor + Compiler + Linker):
+1. GCC v11 - C/C++/ObjC/Java/Go
+2. Clang/LLVM -  mainly C/C++/ObjC - modern/extensible
+
+Debugger:
+1. g++ hello.cpp -o hello.binary -g    # -g for additional debug info
+2. gdb hello.binary
+	break fn_name | code.cpp:line_number
+	run
+	step
+	next
+	continue
+	info locals	# print locals
+	variable
 
 C++ has 2 parts:
 1. Core language (char/int; for/while)
