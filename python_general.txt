@@ -647,12 +647,12 @@ Typing:
 
 array - compact representation of numeric/char array (same type restriction vs list).
 	Same method as list except itemsize + typecode. Init from list/iterable/bytes
-
+	
 	ar = array.array('i', [1,2,3,4,5])
-
+	
 	element_size = ar.itemsize	# 4
-	datatype = ar.typecode 		# i
-
+	datatype = ar.typecode 		# i 
+	
 	array.typecodes			# 'bBhHiIlLqQfd'
 
 
