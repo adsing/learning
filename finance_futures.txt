@@ -1,0 +1,18 @@
+Future - an exchange traded forward contract.
+Forward contract (by manufacturers to hedge future price risk) between buyer/seller to agree on qty/price & time.
+Contract can be closed by another trader taking the long position.
+Future contracts are more standardized e.g. fixed qty/time/price.
+
+If you leave futures contracts open by maturity as a buyer, the clearing house will ensure seller delivers the physical qty.
+
+Buyer/seller agree to a deal for a transaciton to take place in future as specified in agreement (specific commodity at specific price on specific time.
+
+Future contracts for risk management.
+Results in cash settlement (traders) or physical settlement (producer/manufacturers)x`.
+
+Future - commodity (metal/agri/energy/livestock)  or financial (indices/forex/interet rate.
+
+Spot price is current trading price.
+Value of contract will change as future spot price changes.
+
+Trading happens on an exchange (CME)

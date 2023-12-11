@@ -1,0 +1,14 @@
+A right (not an obligaiton) to buy(call)/sell(put) the underlying security at a given (strike price) with right expiring at expiration date for a premium $ amount.
+
+Exercise an option means to take delivery of physical/underlying.
+Typically traders offload their position by offsetting trade (sell a call if you bought a call initially). Preimum chanes as underlying stock px change
+
+American options are flexible; european style
+1 contract = 100 shares so price paid for buying an option is premium * 100.
+
+Buyer: holder
+Seller: writer
+
+Derivative : options, futures|forwards, swaps
+
+Covered warrants: holder of 100 shares of ABC writes a put option for a low price (20% below current px as market price). he is the writer of put option and he makes money if stock falls below strike px (covered from px drop below strike px)

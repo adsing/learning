@@ -1,0 +1,70 @@
+
+Bond is a fixed-income instrument that is a loan made by investor to a borrower.
+Interest typically paid at fixed interval (semi/annual). Interest is called coupon and rate is called coupon rate.
+Issued by a trusting authority (govt, state/city, company) and rated by credit ratings (AAA, AA, A, BBB, BB, B...). Investment grade at/above BB and Junk below BBB.
+
+Bonds traded daily (700 B) vs Stocks (200 B).
+
+Common terms:
+Issuer - Borrower
+Investor - Lender/Creditoy
+Principal/Face/Par/Nomimal value -  Amount borrowed 
+Interest amount - coupon (paid at fixed interval and if not paid then company is in default)
+interest rate - coupon rate (fixed mostly; can also be floating)
+Maturity - Due date (when principal is paid back in full)
+Term - Time to mature (duration - fixed)
+Yield to maturity - annualized return on bond investment (inversely related to price; depends on macro economic conditions like interest rate, credit ratings)
+Market value - current price
+
+Treasury 5% 2025 112  (EOD pricing on newspaper)
+Name of Bond/Company | Coupon Rate | Maturity | current price that changes daily
+Flat Yield = Coupon * 100 / Price of Bond = 5*100/112 = 4.4
+Yield to maturity (YTM) calc:
+        Cost per year of bond =  (Price - Face value) / Number of years = 3.25
+        Yield to maturity = (coupon - cost_per_year) / current_px = 1.55%
+        
+Type of bonds:
+Govt (war funding) | Corporate | Internation (Euro bonds)  | Muni (no tax & typically slight lower rate) | Asset-backed (MBS)
+Treasury bills (<1yr), notes (2-10), bonds (10-30), TIPS (inflation protected).
+
+Corporate bond issue:
+ Lenders have priority over share-holders. Company must give out coupon regularly else legally in default and can be re-org per law (chapter 13).
+
+Bond prices vs yields: inversely related.
+Interest rate and yield: directly relatied.
+
+As interest rates goes up, price of bonds go down (and yields go up). Older bonds have lower rates and with increased market interest rates, demand for such lower rate bonds go down.
+
+Discount bonds : yield > coupon rate
+Par bonds      : yield = coupon rate (when issued)
+Premium bonds  : yield < coupon rate (rates decrease making your bonds @ higher rate)
+
+Bond yield or price depends on:
+Face value :  $1000
+Bond price :  $ 800
+Annual coupon rate : 4%
+Years to maturity (term) : 10yr
+gives Bond yield or prive
+
+Yield curve: Yield vs time
+Smalled term has lower interest rate typically. Curve gets flatter with time.
+But yield curve can be inverted if short term interest rates spike up while long term rates don't go up much. Inverted curve indicates changes of recession.
+
+Rates decided by Central Banks (e.g. Federal Reserve Bank, ECB) whose goals are:
+1. Stabilize currency
+2. Keep employment low
+3. Prevent inflation
+
+Purchase:
+US bonds - treasury.gov
+Corp bonds or as low-expense ETF (ticker e.g. BND, AGG) - Brokerage
+
+Trading strategy:
+1. Long-short near vs far term bonds
+2. Laddering: Invest in 1,2,3,4,5 yr bonds/CDs. At end of year one, take proceed and invest in another 5 year that matures at year-6.
+
+
+Taxes:
+1. Bond interest is taxed as part of normal income (Fed + State). Potential capital gains taxed as well. Good for Roth IRA.
+2. Muni bond - no fed tax (and maybe no state).
+3. Bond funds taxed like bonds.

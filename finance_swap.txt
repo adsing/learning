@@ -1,0 +1,32 @@
+Swap - Reduce borrowing costs for companies (not for retail as big $ amounts involved) with intermediary as bank.
+
+Firm-A wants to borrow on variable interest rate (thinking it will fall going forward). e.g. LIBOR/Fed - cost of borrowing.
+Firm-B wants to borrow on fixed rates (mortgage) but is smaller firm.
+
+Firm-A (var.interest)
+Bank-A (var.rate = LIBOR; fixed = 7%)
+
+Firm-B (fixed interest)
+Bank-B (var.rate = LIBOR + 15; fixed = 10%)
+
+Swap Bank:
+ 1. Ask Firm-A to take out fixed rate loan (not variable that it wanted) @ 7%
+ 2. Ask Firm-B to take out floating rate loan (not fixed rate that it wanted) at LIBOR+1%
+ 3. Manage interest cash flows on (same) principal amount and pay the next of 2 cash flows.
+    Firm-A --> Swap Bank @ LIBOR interest rate
+    Firm-A <-- Swap Bank @ 8%
+       Firm-A gets 8% and gives to Bank-A 7% saving 1% while paying LIBOR (floating rate it wanted to swap bank)
+       
+    Swap Bank --> Firm-B @ LIBOR interest rate
+    Swap Bank <-- Firm-B @ 8.5%
+        Firm-B gets LIBOR and needs to pay out LIBOR+1% to Bank-B. 
+        It gives 8.5% to Swap bank. Thus effective interest rate is 8.5 + 1 = 9.5% (fixed rate, better than 10% from Bank-B). So it too saves 1%.
+        
+    Swap bank makes 0.5% as it's getting 8.5% from Firm-B and giving out 8% to Firm-A.
+    Swap bank makes 2 swap agreement with 2 firms.
+    
+Typically takes collateral to ensure against default risk of firms.
+Helps reduce interest rate for big players.
+
+Mortgage rates not swap eligible because it's not big enough.
+       
