@@ -1,3 +1,10 @@
+Learn:
+ - polars
+ - asyncio
+ - multi-threading and multi-processing
+ - profiling with Scalene
+
+
 Args: positional or keyword
 	def fn(positional_only_args, /, positional_or_keyword, *, keyword_only):
 
