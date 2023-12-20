@@ -1,0 +1,9 @@
+Python:
+ - asyncio
+ - multithreading
+ - FastAPI / flask
+
+Design Patterns
+
+Dbt
+

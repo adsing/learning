@@ -1,0 +1,23 @@
+Generative AI - is AI that produces content (text/image/audio).
+
+AI vs ML
+
+AI is theory of building systems that act/behave like humans.
+
+ML is sub-field of AI that trains a model from past/input data to make useful prediction on new/similar data - the ability to learn without explicit programming.
+
+Subclasses of ML : Supervised vs Unsupervised models
+Supervised models have labelled data that's used as training dataset. Compare with real-world example for error and calibrate the model.
+Unsupervised models attempt to group/cluster data.
+
+Deep learning uses AI neural networks to process complex patterns. Many interconnected nodes that perform data processing and make predictions. Generally multiple layers of neural nodes. It is semi-supervised learning - the neural network is trained on a small labelled data (supervised) and large unsupervised data. (2010s)
+
+Deep learning model types : Discriminative (classify data, trained on labelled data) and Generative (generates similar, new data to what it's been trained on based on probability distribution of trained data e.g. predict next word). Output is Number/Discrete/Probability.
+
+Generative AI (Gen AI) is subset of Deep learning.
+It uses AI neural network that processes labeled/unlabeled data using supervised/unsupervised/semi-superised methods. Output is natural language/code/image/audio. (2020s)
+
+Large Language Models (LLM) is a subset of Deep learing and overlaps with Generative AI.
+Pre-trained on large dataset, parameters (knowledge), usable for general purpose and fine-tuned for specific purpose. e.g. GPT, Bard.
+User focuses on prompt design; no need for ML expertise.
+
