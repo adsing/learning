@@ -1,4 +1,14 @@
 Python:
+ - pandas
+	df.query('colX > @some_value and colA == "Some Value" and colB > 10') # some_value variable defined outside
+	for indx, row in df.iterrows():  # row['colA']
+	df.apply(lambda row: row['colA'] **2, axis=1)
+	to_frame(name=columnA) # (series -> dataframe)
+	df.duplicated()  and df.loc[~df.duplicated(subset=['colA','colB'])]
+	df.isna().sum() - which columns are empty or df.isna()
+	plots/matplotlib bar,barh,hist,scatter,pairplot (relationship), correlation/heatmap
+
+ - polars
  - asyncio
  - multithreading
  - FastAPI / flask
@@ -7,3 +17,5 @@ Design Patterns
 
 Dbt
 
+AdventOfCode 2022 - Python
+Cpp crash course Josh Lospinoso
