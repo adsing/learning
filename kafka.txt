@@ -1,0 +1,18 @@
+Kafka 
+
+A distributed, scalable, fault-tolerant messaging + store(db) system.
+Event based log/stream with publisher/subscriber model. 
+Producer & consumer decoupled.
+Kafka processes events exactly-once.
+Servers : brokers (store data) & connectors (pull/push) data.
+Clients in multiple languages + REST API.
+
+Log of "topic" (in order, durable/replicated); "partition"ed into buckets and distributed amongst different brokers based on a key (same key is always on same topic-partition combo); redundant/replicated.
+
+Microservices listen to one topic and generate processed data in another topic - leading to real-time data processing.
+Easy to expand to other systems and gain firm wide adoption.
+
+
+KStreams (API - for real-time join/windowing/aggregation) & KSQL - SQL for data enrichment/manipulation
+Kafka connect - to let other systems (pluggable modules) to connect & talk/absorb to/from Kakfa.
+
