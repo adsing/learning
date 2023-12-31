@@ -1,0 +1,35 @@
+Agile
+
+Manifesto values:
+- "Individuals and interactions" over processes and tools
+- "Working software" over comprehensive documentation
+- "Customer collaboration" over contract negotiation
+- "Responding to change" over following a plan
+
+Principles:
+1. Customer is the highest priority. 
+2. Be ready for change in requirements at any stage.
+3. Deliver earlier & continuously.
+4. Dev & biz must work together daily.
+5. Give independence to each developer to get things done; provide support + env.
+6. Effective communicaiton through face-to-face meetings.
+7. Working software is measure of progress.
+8. Pace of development should be sustainable (forever like a marathon).
+9. Good design & techincal excellence lead to agility.
+10. Keep it simple.
+11. Teams should self-organize to achieve best desgin/architecture.
+12. Review periodically on how to be more efffective & tune behavior accordingly
+
+
+Scrum - framework for software development.
+
+Sprints - 2-4wk - well defined goals (or backlog) time-boxed. 
+At end of sprint - demonstrate work to stakeholders by releasable 'increments', backlog refinement (add complexity metric; prioritize) & next sprint's goals, retrospective to review what can be improved.
+
+Daily scrum meetings - 15 mins - assess progress towards sprint goals. What goals are met & what are the blockers; what are you doing today? Encourages face-to-face meeting. Breakout session for issues that can't be solved in 15mins. Update burn-out chart (done vs pending; estimated completion) of tasks.
+Development is iterative & incremental.
+
+Product owner -  stakeholders representative/voice; responsible for delivery of results. Manage the backlog & can cancel a sprint. No technical inputs given.
+Scrum master -  run & coach developers on scrum practice. Typically team lead or PM. Goal setting, problem solving, oversight, plan & backlog mgmt. Oftem Proj.Mgr not involved to let team members self-organize.
+Developers - Develop/maintain per sprint target.
+

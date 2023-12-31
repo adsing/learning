@@ -155,6 +155,9 @@ $ \dt person.*
  sales          | store                                 | table | postgres
 (68 rows)
 
+$ psql -s <dbname>                      # -s single-step mode : pauses before sending the commands to server
+\i input.sql                            # \i exeucte input.sql file
+
 Character set (Latin-1 or ASCII) are 8 bits (127 char).
 Unicode (8,16,32 bits)
 
