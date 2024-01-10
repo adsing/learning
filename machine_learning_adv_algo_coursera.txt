@@ -1,0 +1,475 @@
+Neural networks (aka deep learning algo) & decision trees.
+
+Week 1: Neural network (trained & parameters) & inference/prediction
+Week 2: Train your own neural network based on labelled input data
+Week 3: Practical advice on how to build ML systems
+Week 4: Decision Trees
+
+
+Neural Networks:
+        Initial motivation was to mimic how human brain works.
+        Initial use OCR to read zip codes or checks amount in 1980-90s.
+        2005 rebranded as "Deep Learning".
+        New use in 2005 for speech recognition -> computer vision (image net) -> text (natural language processing).
+        Now neural network not like brain.
+        Neuron get multiple inputs, computes a response that's send output to other neurons (input to next neuron).
+        Amount of Data has exploded in recent years (internet, phones, digitization) hsa shown the logistic/linear regression have limited performance on such large datasets. Nueral networks have better performance on larger data sets and as size of neural network increased so did it's performance i.e. neural network was able to scale unlike regression.
+        Recent hardware improvements like GPU also helped deep learning algo to take off.
+        
+How neural network works?
+        Example demand prediction for t-shirts.
+        Input (x) = price
+        Output f(x) = 1 / (1 + e ** -(wx+b) )   = a (activation from neuro science to activate next neuron)
+        Model (neuron) computes the output based on given input.
+        Layer is grouping of neuron that take same/similar inputs and their output is fed to next layer of neuron (potentially the final output layer of neuron).
+        4 numbers input ("input layer" or layer-0) to layer 1 ("hidden layer") that generate 3 activations/output that's fed to "output layer" to compute one final number. 
+        Instead of cherry picking which orinput/feature should be fed into a given neuron, each neuron has access to every input feature.
+        
+        A neural network is like logistic regression which can discover it's own feature to make accurate prediction. E.g. Hidden layer as input to output layer to generate output. Hidden layer activations are the "discovered" features.
+        
+        Question on how many hidden layers or how many neurons in each layer? Deciding on architecture to follow.
+        "Multilayer perceptron" refers to neural network with many layers.
+        
+        aj[l] = g(wj[l].a[l-1] + [j[l] )    # layer(l), unit(j), activation fn(g) e.g. sigmoid
+Computer vision:
+        Face recognition: input image (1000 x 1000 matrix of pixel intensity 0-255), output name.
+        Image input -> layer 1 -> layer 2 -> layer 3 -> layer output -> person 'XYZ'.
+                Layer-1 looking for small segments like line (vertical/diag/horizontal)
+                Layer-2 looking for medium segments like jig-saw puzzle pieces e.g. eye, bottom of ear.
+                Layer-3 looking for faces for shapes
+                Layer-4 map to faces
+                
+                
+Neuron Network "Layer" - how a layer of neurons work.
+        Layer 1 input : a[1]
+        Layer 1 computations: g(w1 * a[1] + b1)        where g(z) = 1 / (1 + e**-z) sigmoid fn
+        Layer 1 output/activation = a[2]  # size different from a[1]
+        
+
+Inference with forward propogation
+        Recognize hand-written 0 or 1.
+        Layer-1 25 units  gives a1 with 25 differnt values
+        Layer-2 15 units
+        Layer-3  1 unit gives a[3] = f(x) i.e. fn computed by neural network
+        
+        a1 = q(w1[1].a[0] + b1[1])
+        ...
+        a25 = q(w25[1].a[0] + b25[1])
+        Algorithm is called "forward propogations" as problem is solved L-R each stage at a time.
+
+
+
+TensorFlow is a ML package by Google. Keras (layer-centric interface) + TensorFlow = TensorFlow 2.0. Tensor means array.
+        TensorFlow to implement Deep learning algos. Other option is Pytorch.
+        TensorFlow "Dense" are the layers of neural network (NN).
+        TensorFlow (TF) requires data to be in 2D-array/matrix. Numpy & TF have differences.
+        a1 = tf.Tensor (i.e. 2d-array with shape & type)
+        a1.numpy()
+
+Normalize data:
+        norm_l = tf.keras.layers.Normalization(axis=-1)
+        norm_l.adapt(X)  # learns mean, variance
+        Xn = norm_l(X)
+
+Building neural network & predicting:
+        model = Sequential([layer_1, layer_2])
+        model = Sequential([
+                Dense(units=3, activation="sigmoid",
+                Dense(units=1, activation="sigmoid",
+        ])
+        model.summary()                 # param = w param + b param 
+        x = np.array([ [1,2], [2,3], [3,4]])
+        y = [1,0,1]
+        model.compile()         # defines a loss function and specifies a compile optimization.
+        model.fit(x,y)          # runs gradient descent and fits the weights to the data
+        # inference / forward propogation
+        model.precdict(x_new)
+        
+Forward propogation: See image for computations of x -> a1 -> a2.
+        Implementation in python: implement a "dense" layer of neural network.
+        
+        
+Artificial Generalized Intelligence - AI intelligence like that of human.
+        AGI - "general" intelligence - anything a human can do.
+        ANI - "narrow" intelligence - intelligence to specific task e.g. smart driving task, web search. Lot of progress.
+
+
+Scaling neural networks through vectorization (matrix multiplication with GPU/CPU) - using np.matmul
+        Z = np.matnul(A.T + W)   # where A.T is transpose
+          = A.T @ W              # @ indicate matrix multiplcation
+          
+        For each layer of neural network, if "i" is input units and "o" is output or input to next layer then dimension of W are(i x o), of B are (o).
+        
+                
+
+Training neural network:
+        Specify model (Sequential, Dense) and compile with loss fn (BinaryCrossEntropy).
+        Then fit the model on dataset (X & Y) & # of steps to run for (epoch).
+        
+        Model training steps:
+        1. Define the model :: Specify how to compute output given input x and parameters w & b.
+                z = np.dot(w,x) + b
+                f_x = 1 / (1+np.exp(-z)
+        2. Specify loss/cost fn:: L(f_wb(x), y)
+                loss = -y * np.log(f_x) - (1-y) * np.log(1 - f_x)
+                cost = J(w,b) = 1/m * sum(losses)   # avg. of losses
+        3. Alogorithm to minimize cost function J(w,b)
+                w = w - alpha * dj_dw
+                b = b - alpha * dj_db
+                
+        For neural network:
+                1. Define model with Sequential & Dense layers. Know layers, activation fn, parameters w & b of each level.
+                
+                2. Compile the model and specify the loss fn (BinaryCrossentropy fn). Cost = Avg. of loss.
+                        Binary loss fn = L( f(x), y) =  -y * log(f(x)) - (1-y) * log (1 - f(x))   .. called as BainryCrossEntropy Loss fn.
+                        For regression models, to min. mean square error use MeanSquareError() loss fn.
+                        model.compile(loss=BinaryCrossentropy())
+                        
+                3. Minimize cost i.e. Gradient Descent algo. in neural network, "back propogation" is used with fit() to compute partial derivatives d/dw, d/db
+                        model.fit(X,y, epochs=iterations)
+                        
+Building models libraries :: TensorFlow & pyTorch
+
+Alternatives to sigmoid fn (neaural networks build on logistic regression use sigmoid fn). Using other fn can make the neural network more powerful.
+        a = g(w.x + b)
+        
+        If we want a parameter to have values 0, 1 and higher instead of just 0 & 1 from sigmoid.
+        "ReLU" (Rectified Linear Unit) example g(z) = max(0, z) i.e. positive value sonly
+        "Linear" activation g(z) = z
+        "softmax" activation :: to follow
+        
+        Choice of activation fn: 
+                output layer fn might be obvious; but consider hidden layer as well.
+                For hidden layers, ReLU is the most preferred/frequent.
+                        ReLU is :
+                                1. faster (to do max(0,z))
+                                2. gradient descent is slower for fn that is flat in multiple places so better off with ReLU
+
+
+Why have activation fn and why linear activation doesn't work if used everywhere?
+        counter: Why use neural network if you just need to do linear regression? Learning is limited with linear fn.
+        Don't use linear activation fn in hidden layers; it's same as no activation fn in hidden layers. 
+        OK to use in final or output layer.
+        
+
+Multiclass classification (more than 0/1):
+        Clustering of data for each class
+        
+        Softmax regression algo - generalization of logistic regression (binary classification) that can do multi-class classification. So last layer has avtivation='linear' (not softmax).
+                binary: a1 = g(z) = 1/(1+e**-z) gives P(y=1|x)
+        multi-class (softmax .. .1 of 4 classes) a1 = e**z1 / (e**z1 + e**z2 + e**z3 + e**z4) gives P=1|x) 
+                probabilty of all classes needs to add upto 1.
+                
+        In both softmax regression and neural networks with Softmax outputs, N outputs are generated and one output is selected as the predicted category. In both cases a vector 𝐳 is generated by a linear function which is applied to a softmax function. The softmax function converts 𝐳 into a probability distribution as described below. After applying softmax, each output will be between 0 and 1 and the outputs will add to 1, so that they can be interpreted as probabilities. The larger inputs will correspond to larger output probabilities.
+
+        As you are varying the values of the z's above, there are a few things to note:
+            the exponential in the numerator of the softmax magnifies small differences in the values
+            the output values sum to one
+            the softmax spans all of the outputs. A change in z0 for example will change the values of a0-a3. Compare this to other activations such as ReLU or Sigmoid which have a single input and single output.
+
+Obvious code with last layer as softmax:
+        model = Sequential(
+            [ 
+                Dense(25, activation = 'relu'),
+                Dense(15, activation = 'relu'),
+                Dense(4, activation = 'softmax')    # < softmax activation here
+            ]
+        )
+        model.compile(
+            loss=tf.keras.losses.SparseCategoricalCrossentropy(),
+            optimizer=tf.keras.optimizers.Adam(0.001),
+        )
+
+        history = model.fit(            # history has metrics like loss
+            X_train,y_train,
+            epochs=10
+        )
+
+Preferred code with more stable results (with logits - see below notes).
+        # numerical stability is improved if the softmax is grouped with the loss function rather than the output layer during training. 
+        preferred_model = Sequential(
+            [ 
+                Dense(25, activation = 'relu'),
+                Dense(15, activation = 'relu'),
+                Dense(4, activation = 'linear')   #<-- Note (no activation)
+            ]
+        )
+        preferred_model.compile(
+            loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),  #<-- Note
+            optimizer=tf.keras.optimizers.Adam(0.001),
+        )
+
+        history = preferred_model.fit(
+            X_train,y_train,
+            epochs=10
+        )
+        # Notice that in the preferred model, the outputs are not probabilities, but can range from large negative numbers to large positive numbers. The output must be sent through a softmax when performing a prediction that expects a probability
+        # sm_preferred = tf.nn.softmax(p_preferred).numpy()
+        # print("largest value", np.max(sm_preferred))
+        # for i in range(5):
+        #    print( f"{p_preferred[i]}, category: {np.argmax(p_preferred[i])}")
+        
+        # Tensorflow has two potential formats for target values and the selection of the loss defines which is expected.
+        #    SparseCategorialCrossentropy: expects the target to be an integer corresponding to the index. For example, if there are 10 potential target values, y would be between 0 and 9.
+        #    CategoricalCrossEntropy: Expects the target value of an example to be one-hot encoded where the value at the target index is 1 while the other N-1 entries are zero. An example with 10 potential target values, where the target is 2 would be [0,0,1,0,0,0,0,0,0,0].
+
+
+        Loss fn = -log an for y=n
+                TensorFlow calls loss=SparseCategoricalCrossentropy()
+        
+        Neural network's outer layer has 10units instead of just 1 for binary output.
+        Activation fn is fn not just z1 but of z1...zn for each unit a1 = e**z1 / (e**z1+...+e**zn) and so on till a10.
+        
+        Numerical Optimization when you have (1 + 1/largeNum) - (1 - 1/LargeNum) = 2/LArgeNum
+        Logistic Regression Loss fn = -y.log(1/(1+e**-z)) - (1-y)log(1 - 1/(1+e**-z)) ... here the log(...) parts show the longer inefficient computation.
+                To achieve this, set "from_logits=True" in loss fn loss=SparseCategoricalCrossentropy(from_logits=True) for layer which has activation="linear"
+        
+
+Multilabel Classification - one image has multple images
+        y = vector of outputs [is_car, is_bus, is_ped]
+        vs in multiclass classification y can have one of many values.
+        
+        Can have multiple neural networks to detect for each output value.
+        Or one model predicts for 3 outputs (activation=sigmoid for yes/no).
+        
+        
+Adam Algorithm: Train neural network much faster than gradient descent.
+        Gradient descent has w_j= w_j - alpha* d/dw J(w,b) 
+        Adam algo make alpha go bigger (if it's minimising loss fn) or smaller (if loss fn is oscillating).
+        Adam : Adapative movement estimation
+        
+        Adam algo uses different alpha for every parameter in model. i.e. a1, a2,...a10, a11( for b).
+        If w or b moving in same direction, then make alpha bigger.
+        If w or b oscillating, reduce alpha.
+        
+        
+Additional Layer Types (i.e. not Dense type) - *Convolution* Layer
+        Dense layer : each neuron's output is a fn of every output of previous layer
+        Convolution layer : each neuron looks at only part of the previous layers' output.
+                This is faster and needs less data (less prone to overfitting).
+                E.g. Neuron looks at a region of image.
+                If multiple convolution layer then called convolution neural netowrk.
+                
+                EKG signal of 100 different values.
+                Each neuron of layer 1 looks at 20 consequtive values (0-20, 11-30, 21-40, 31-50, 41-60, 51-70, 61-80, 71-90, 81-100) has 9 neurons and produces 9 value output.
+                Next layer looks at 5 values (a1-a5, a3-a7, a5-a9) 3 units gives one output.
+                Final layer is sigmoid layer.
+                
+                
+Back-propogation computes derivative:
+        Derivatives: d/dw of J(w) means what's the rate of change of J(w) given a very small change to w.
+        For J(w) = w**2
+        d/dw J(w) = 2w
+        
+## TODO :: optional videos
+
+
+Best practices for training and evaluating your learning algorithms:
+        Learning algo : linear, logistic regression & deep learning (descision trees to follow).
+        
+        Regularized Linear regression algorithm that still produces large errors - what next?
+                - get more data  (high variance models benefit from more data)
+                - try fewer features or get additional features (fewer features as they are not relevant makes mode simpler -- fixes higher variance; more features -- high bias)
+                - add polynomial features based on existing features (x1**2, x1.x2 etc) (like adding more features to fit model well on training set -- fix high bias)
+                - adjust lambda (inc or dec)  -- decrease lambda less regularization fix high bias; increase lambda overfitting data so model smoother to fix high variance.
+                ...how to make the choice? Depends on algo having high bias or high variance.
+                
+        Fit parameters by minimizing J(w,b) with regularization.
+        J(w,b) = 1/2m * sum(f_wb_xi - yi)**2 + lambda/2m * sum(wj**2)     
+        
+        Machine learning diagnostic: determine what works and what doesn't.
+        
+        Evaluating a model (systematically):
+                - split data into train/test data set (80-20)
+                        - compute test error: J_test i.e cost (error sq) on test data
+                        J_test(w,b) = 1/2m * sum(f_wb_xi - yi)**2   (No regularization term i.e. wj**2 part)
+                        - also computer training error (on training data data set)
+                        J_train(w,b) = 1/2m * sum(f_wb_xi - yi)**2
+                        
+                        - similarly for classification problem compute J(w,b) with -1/m*sum(y.log(f_wb) + (1-y)log(1-f_wb))
+                        Determine incorrect classification in train set (and test set).
+                        J_train will be low; but J_test can be high (new data points not seen by model)
+
+        
+                - Model selection (first order/2nd order etc polynomial)
+                        - J_train_wb is much lower than average general error. Instead use J_test_wb instead for each model. But this overestimates cost since degree is based on J_test
+                        - split data into training set, cross-validation set (cv or dev) and test set in (60-20-20) ratio. CV data is used to cross-check validity of model.
+                        If scaling data, ensure same mean/std.deviaiton is used for scaling CV/test data.
+                        - computer J_wb for each train|CV|test set (without regularization) i.e. 1/2m*sum(f_wb - yi)**2
+                        - pick degree of model based on J_cv (cost of CV data) and estimate generalizaiton error using J_test (since w,b and d(degree) were not base don J_test)
+                        - can be extended to neural networks as well. Computer J_cv for misclassified data to pick #layers 
+
+
+        Bias & Variance
+                When model doesn't work then look at bias & variance of algorithm.
+                High-bias when model underfits data. 
+                        J_train is high; J_cv is high 
+                High variance when high order polynomials made to fit training data but don't do well with test data.
+                        J_train is low; J_cv is high
+                Look at performance of algorithm on training and then on test data. A good model will have low bias and low variance (low J_train & J_test).
+                Higher degree polynomial will fit J_train better.
+                
+                
+        How regularization (lambda) affects bias & variance - helps to chose lambda
+                Try different lambda values and determine cross-validation error J_cv. Report J_test.
+                Establish baseline performance e.g. human performance level, prior model level
+                
+        Learning curves
+                How algorithm does with experience/training data size?
+                As training data size increases, J_train increases too but J_cv decreases. J_cv > J_train.
+                High bias curves have gap between baseline (human/prev.algo) vs where J_train & J_cv converge. Throwing more data doesn't help models with high bias.
+                High variance curves (J_cv >> J_train). J_train < Baseline (human/prior algo) < J_cv. As more data, all 3 converge. Having more data will help.
+                
+        
+        High variance algo can be fixed by more data or model simplification (less features or higher lambda).
+        High bias (not fitting on training data) - increase/polynomial features, or decrease lambda regularization parameter.
+        
+        Bias & variance easy to learn but take lifetime to master! Be systematic & practice. 
+        
+        Neural networks:
+                Neural network + big data can address both high biad and high variance.
+                Without NN, ML engr trade-off complexity (polynomial fit with high variance) vs simple model (high bias) -- tradeoff between bias w.r.t variance.
+                Large NN trained on small/moderate data are low-biased machines. A large NN, will fit the data well if data is not very big.
+                Is J_train low on given NN (large bias)? No - increase NN (more units, more layers) and repeat.
+                Is J_cv low (high variance)? No - need more data, repeat and review from step_1 J_train.
+                But at expense of computation...GPU, SIMD.
+                A large NN with regularization will do same/better than smaller NN.
+                
+                
+Process of developing ML systems:
+        step 1: Choose architecture (model, parameters, data)
+        step 2: Train model
+        step 3: Diagnostics (bias/variance, error analysis) ... review architecture.
+
+        Error Analysis:
+                manually classify on common traits (e.g. spam : pharma-based, misspelled, routing header, msg in image)
+                
+        Adding data:
+                instead of adding data of all type, focus on type of data that can have bigger impact.
+                data augmentation (images/video) - create new dataset from existing dataset (.e.g by rotation, font/contract change, mirror image); voice/speech (overlay noisy background e.g .crowd/car/bad connection)
+                data synthesis : creating brand new example (various font & contrast photo taken for OCR)
+                transfer learning : use data from different task (neural model that recognizes different pets) and use the same model setup & weights discovered and replace output layer with same number of outputs you expect that wlll be different from previous NN model.
+                        Supervised pretraining : use trained model and use it's architecture & weights to fit your data.
+                        Fine tuning.
+                        
+                        *Download other's model and use for your purpose.
+                        GPT3/BERTs/Imagenet NN - 
+
+ML Development Process:
+        1. Scope define (speech recognition)
+        2. Collect data (what data is required for model)
+        3. Train model (training, error analysis, iterative improvement)
+        - audit for potential harm i.e. ethical issues
+        4. Deploy in prod, monitor & maintain the system for performance (new data from prod for further improvement)
+                ML model in an inference server that interacts with external world and server applies model to predict the output for given input.
+                Monitor for shift in user needs, or model shifting as underlying data changes. Update model to keep it relevant. MLOps - build & deploy ML systems for reliable, scalable system.
+        
+        Ethical approach - system is fair, not biased
+        
+        
+Skewed data sets:
+        E.g. for rare disease that occur in 0.5% of population, having a 1% error rate in model is not desirable (99% accurate; 1% error).
+        Skewed dataset require a different error metric to know how well the model is doing. e.g. Precision & Recall.
+        Precision = True positives / All predicted positives
+                = True Positives / (True positives + False positives)
+        Recall = True positives / Actual positives
+                = True positves / (True positives + False negatives)
+        Both precision & recall should be high to indicate model is working well.
+        
+        Trade-off between Precision & Recall.
+        If rare disease and we want to be very sure it's the case then P(f_wb) > 0.7 instead of > 0.5. This leads to higher precision but lower recall.
+        To avoid missing too many case, we might want P(f_wb) > 0.3 then 1. Lower precision but higher recall.
+        F1 score : to automatically make the best trade off between precision and recall.
+                = inverse of avg.of inverse of Precision and recall
+                = 1 / 0.5*(1/P + 1/R) = 2PR/(P+R)          # harmonic mean of P & R emphasis on smaller of the 2 values.
+                
+               
+                
+Decision Trees (for is-cat or not):
+        Output is categorical e.g. face is round vs not.round.
+        
+        Building a decision tree given a training set.
+        1. Pick root node feature
+        2. Focus on left branch and decide on next feature for this left node
+        3. At some point, instead of making another decision node, it will be leaf node that makes a prediction (cat or not-caT).
+        4. Focus on right branch and repeat process (decision node or prediction leaf)
+        
+        Decision:
+                - which feature to split on each node? Maximize purity (minimize impurity) - get to subset to get all-cats in prediction leaf to be accurate.
+                - when to stop splitting? when a node is 100% cat or when max.depth is reached or when improvement in purity score is below a threshold or when # of classification is below a threshold.
+                
+        Measuring purity through Entropy - measure of impurity of dataset.
+        Entropy H(p) = 1 when dataset is 50-50. H(p) = 0 when all cat or no cat i.e. when p=0 or p=1, then H(p) = 0
+        p0 = 1 - p1  (probability of no-cats =  1 - p of all cats)
+        H(p1) = -p1.log(p1) - p0.log(p0)    # log base 2
+                
+        Split to max information gain or minimize entropy
+                Pick the decision with minimum weighted avg. entropy. w.r.t to root node entropy; compute reduction in entropy
+                   Informaiton gain = H(root_node) -  [( # on left node / # total) * H(p_left) + ( # on right node / # total) * H(p_right)]
+                   Information gain = H(p_root) - (w_left.H(p_left) + w_right.H(p_right))
+                   Pick the desision with highest information gain.
+                   
+
+        Building large decision tree:
+        1. Start at root node
+        2. Pick feature with highest info gain
+        3. split dataset, creating left & right branches
+        4. keep repeating step 2-3 till stopping criterion is reached when:
+                - when a node is 100% of one class
+                - max depth reached or info.gain is below threshold or # of examples is below threshold
+                
+        "One hot encoding" for features that have multiple classification values (e.g. face round, oval, other -> create 3 new features is_round, is_oval, is_not_round_oval...each of which can take only two values 0/1)
+        
+        Features with continuous values (e.g. weight) - compute H(p) as each data point as a split and max on info gain.
+        
+        Regression with decision tree: Earlier decision trees used for classification; now for regression to output a number (cat weight) for each leaf node.
+                How to split : instead of reducing entropy, reduce vairance of weights by maximizing below:
+                        variance_root - (w_left.variance_left + w_right.variance_right)
+                        
+                        
+Multiple/Ensemble of Decision Trees for better results:
+        Single decision tree sensitive to changes of data. So better to train multiple trees. Run test on all trees to get a "vote" on if it's a cat or not. Overall algo is now less sensitive to a single tree.
+        
+        Sampling with replacement - for 10 inputs, pick with replacement 10 values (repeats are possible).
+        
+        Random forest algorithm - a tree enemble algorithm
+                for B (~100) times,             # compute vs diminishing returns
+                        sample m data points
+                        build a decision tree
+                Make a bagged decision tree.
+                * Drawback using same data point at root node and/or near root node
+                Modification pick only k of n-features (k<n, typically k = sq_root(n)), build tree only from the subset of features.
+                Sampling with replacment addresses the sensitivity of decision tree to data changes by building multiple subsets of input data to build a random forest.
+                
+                
+        Boosted trees
+                for B (~100) times,             # compute vs diminishing returns
+                        sample m data points ... but instead of picking from all examples of equal probability (1/m), make it more likely to pick misclassified examples from previous trained trees (...deliberate practice)
+                        build a decision tree
+                Make a bagged decision tree
+    
+        XGBoost (eXteme Gradient Boosting) to build decision trees/random forest.
+        XGBoost - fast, open-source, inbjuilt criterion for stopping + regularization to prevent overfit.
+                from xgboost import XGBClassifier    # XGBRegressor for regression
+                model = XGBClassifier()
+                model.fit(X_train, y_train)
+                y_pred = model.predict(X_test)
+
+
+Decision Trees vs Neural Network - what to use & when
+        Decision Trees
+                + For tabular/structured data only
+                + for classificaion or regression
+                + fast to train - allows to go through ML cycle (model, train, diagnostic) quicker
+                + small trees can be interpretable by humans (not so for big forest etc)
+                - Forest/Ensemble expensive (with XGBoost) vs single decision tree
+                
+        Neural Network
+                + for structured & unstructured data (image, audio) & mixed data
+                - slower than decision tree
+                + able to transfer learning!
+                + ability to string multiple trees together (more easily than decision tree - which is done one at a time)
+                
+                
+                
+Deliberate practice on areas where you are not good
