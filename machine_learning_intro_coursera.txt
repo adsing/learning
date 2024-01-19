@@ -1,0 +1,254 @@
+ML - "Getting computers to learn without being explicitly programmed".
+ML is subfield of AI.
+Artifical General Intelligence - where machines are as intelligent as humans.
+
+E.g. spam filtering/classification, voice-to-text speec recognition, machine translation, advertisement (user info), self driving car (images/radar -> position of other cars/obstacle), product visual inspection for defects,  recommendation engines, web-search
+
+What is ML?
+ML - "Getting computers to learn without being explicitly programmed".
+E.g. Train machine to learn how to play checkers. Play itself based on rules 100,000 times (the more it plays, the better it gets - like gaining experience). Identify board patterns that lead to wins vs losses.
+
+Type of ML - Supervised & Unsupervised.
+
+Supervised learning algorithm 
+        - used extensively in real-world.
+        - Mapping input to output
+        - y = f(x) where x is (labelled, training) input, y is (contiguous) output
+        - labelled, training data used to build model so that it can predict on test data
+        - regression (straight lines; curve; other complex fn) predicts X->Y for numbers (many/infinite outputs)
+        - classification algo predict category (output:yes/no answer or small subset of classes/category possible). Multiple input dimension would require a boundary creation between categories.
+
+Unsupervised systems
+        - 2nd most popular after supervised learning
+        - input data is not labelled. Aim to find pattern/structure in data. 
+        - Clustering (Google news - links all related news for one headline together based on common key workds "pands twims born zoo"
+        - Anamoly detection (fraud detection)
+        - Dimensionality reduction (compress data using fewer numbers)
+
+Recommender system
+Reinforced learning
+
+
+
+**Supervised Learning Model - Regression ** - straight line fit to data
+        Feed training data (input: square foot -> output: price of house).
+        Predict output (price of house) for any given input. Infinite range of output is assumed.
+
+        Training set - labelled input (with output known) is used to build/train the model.
+        Total number of training examples: m (rows)
+        Single training example: (x,y)   e.g. (2104 sq ft, 400 K)
+        Generalized example: (x(i), y(i))    where "i" is the row number (i is superscript)
+        
+        Input or "feature" variable: x  (square foot)
+        Output or "target" variable: y  (price in 100K)
+           Input feature and output targets from training data set are fed into a learning algorithm to produce a fn (model/hypothesis) that is used to predict/estimate future output values (y-hat). Error in model is y-hat - y (actual value).
+                Linear regression function (f) :: 
+                f(X) = wx + b  (straight line equation) with x a input and give y-hat predicted output. Weight W; Bias b are parameters/coefficients/weights of the model that can be adjusted to improve the model.
+        Linear model are easier to work with.
+        f = wx + b is uni-variate linear regresssion 
+        
+        **Cost function** tells how well the model is performing - by adjusting parameters/weights "w" & "b".
+                w = slope
+                b = y-intercept
+        Measure how well the predicted line fits the model. Compare y-hat with actual y-values from test data to get the "error".
+        Mean Squared error = J(w,b) = avg (y-hat - y)**2  (statistically divide by 2m instead of just m to get avg). Plot w vs J(w,b=0). Will look like parabola (when b=0; or a soup-bowl when b is variable as well - plot countour or 3-d plot). 
+        Look for value of w when J(w) is minimum,
+        
+        Aim to minimuze mean square error J(w,b). RMSE used extensively for linear regression.
+        
+        
+        **Gradient Descent algorithm** gives you best fit line while minimizing cost function.
+        This algo is used extensively even to train advanced neural network models i.e. deep-learning models.
+        Aim to minimize cost function like J(w,b) for linear regression.
+        Note : cost function can any fn. e.g. multi-variate linear regression error cost e.g. J(w1,w2,w3..., b) or other complex quaratic regressions.
+        Start with some w,b (w=0, b=0)
+        Keep chaning w & b slightly (i.e. values in a circle given current (w,b)) with aim of reducing cost to determine the minimum (can have more than one minimum). 
+        Keep doing this till you get a local max or min.
+        Repeat with slightly different starting w,b.
+        
+        alpha = learning rate (small increment step)
+        d/dw = derivative of cost fn J (direction of step) over w
+        d/db = derivative of cost fn J (direction of step) over b
+                d/dx of fn(x) is slope of tanget drawn to fn's curve at a given point.
+                If curve down, then slope negative. If curve upwards, then slope positive.
+                So x - alpha * d/dx(fn) will take x to minimum
+        update both w & b as follows:
+                tmp_w = w - alpha * d/dw of J(w,b)  
+                tmp_b = w - alpha * d/db of J(w,b)  # needs same w (not new w) so use tmp_ vars
+                w = tmp_w
+                b = tmp_w
+
+        How to chose "alpha" i.e. learning rate (how small/big should our steps be?
+        Alpha step determines efficiency. Small step - too slow. Too large - might overshoot and miss true minimum and may even diverge.
+        What if multple minimas? Above method (with fixed learning rate) gives only one minimum of d/dw of J(w). But d/dw of J(x) keeps reducing each time as slope of curve reduces...so each new value of w is updated by a smaller and smaller value.
+        
+        
+        Applying gradient descent to linear regressions' avg mean square error.
+                mean square cost fn has a bowl shape i.e. cost fn is a "convex" function and hence, there is only single minima.
+                
+        Batch gradient descent - each step of gradient descent uses all input training set examples.
+
+# review & fix ... misplaced this #        **Normal equation** - an alternative to gradient descent
+                - specific/works only for linear regression
+                - slow if number of features is large (> 10,000)
+                - solve w & b without iterations
+        
+
+
+
+Linear regression - multiple input features (x1, x2..xn)
+        Notion: Subscript refers to feature (xj -> jth feature)
+                Superscript refers to row (xi (power i or x**i)) refers to data in ith row
+                x (row is in superscript; column/feature is in subscript)
+                x with arrow on top denotes a vector
+                
+                a : scalar, non bold 	
+                                    𝐚 : vector, bold 	
+                                   𝐀 : matrix, bold capital
+
+        f_wb = wx + b                                           # univariate or one-feature
+        f_wb = w1*x1* + w2*x2 + ... + w*n * x*n + b             # n-features
+        vector(f_wb)   = vector(w).vector(x) + b                       # dot-product of w & x vector
+                # called "multiple linear regression" (not multi variate regression)
+                
+
+        Vectorization: more efficient code that take advantage of libraries like numpy + also use GPU.
+        f_wb = np.dot(w,x) + b                  # np.dot(v1, v2) uses SIMD on CPU or GPU advantage
+          
+        # numpy has ability to broadcast and be efficient
+        # 1-D array  have array.shape = (n,)
+        np.array([0,1,2,3,4,5])
+        np.zeros('65)
+        ar = np.random.rang((6)
+        ar.shape  # (5,)
+        ar[2::2]        # elements at index 2, 4, 6 returned
+        np.sum(ar)
+        
+        np.dot(np.random.rand(6), np.randome.rand))   # a * b
+        np.random.rand(12),reshape((3, -1))   # reshape these 12 numbers into 3 rows each, compute column (-1)
+        
+        
+        
+        ** Feature Scaling ** to make gradient descent to run faster
+        Comparing size/range of feature (X) vs parameters (w) values.
+        For a feature x1, having a large range of values, it's parameter (w1) should be smaller.
+        For feature x2 with small ranges, it's parameter w2 value will be larger.
+        So a small change in w1 (short range) can cause large fluctuations or changes in cost func J leading to highly elliptical cost contour plot. Causing gradient descent to bounce back & forth a lot before optimal value is found.
+        Helpful to scale all data points in range (0-1) leading to cost fn contours to look like circular.
+
+        
+        Scaling option 1: divide all values by max of series.
+        Scaling option 2: mean normalization. 
+                Find mean (u1) for series s1. This leads to all values centered around zero ranging from -1 to 1 on x & y axis.
+                Normalixed x1 = (x1 - u1) / (x.max - x.min)
+        Scaling option 3: z-score normalization. 
+                Find std.deviation (sigma and mean) for each feature (sigma1, u1) for x1. Centered around
+                Z-score x1 = (x1 - u1) / sigma1  
+      
+      Aim for -1 to 1 range. OK to have -3 to 3 range. Not ok to have large numbers into 100 or below 0.01).
+      When in doubt, perform feature scaling.
+      
+      
+      Ensuring convergence of gradient descent - plot cost fn J(w,b) on training set for each iterations (x-axies). The curve should fall & flatten after N-iterations & this curve is called "learning curve". Expect cost to decrease with iterations otherwise alpha is too large or code is buggy. If cost is going up instead of coming down consistently then bug and less likely big alpha is the cause. If it's going up and down then likely alpha is too large.
+      Tip - start with alpha small (0.0001) and run few iterations to ensure cost is going down and then go up 3x or 10x and repeat.
+      Convergence can be declared when J(w,b) cost decreases less than epsilon (0.001) between 2 iterations.
+
+
+        ** Choosing Features ** or Feature engineering
+        Creating x3 = x1 * x2 (e.g. for sq.foot area) using intuition or business knowledge to understand which new feature from combination of existing feature can help build a better model
+        
+        
+        ** Poylnomial regression or "curve" fitting **
+        f_wb(x) = w1.x1 + w2.x2**2 + b                  (square curve: rises up quickly and flattens; sqaure root flattens faster)
+        f_wb(x) = w1.x1 + w2.x2**2 + w3.x3**3 + b    (cubic curve: rises up and then falls)
+        
+        features with powers (squares & cubes) makes scaling very important.
+
+## pending todo - explore scikit learn for scaling, cost fn and linear regression##
+
+
+Week 3: Classification, overfitting in logistic regression via regularization
+        Binary classification : 0/1, Negative/Positive, False/True, No/Yes
+                E.g. tumor or not
+                
+        Classification - output is a handful/set of outputs/classes/categories
+                Can't use linear regression as if future data points to far-right (high values) can cause best fit line to slope less causing the decision boundary line to shift right and mistakenly include Positives as Negatives (due to shift in decition boundary).
+                This can be avoided by using logistic regression which gives output as classifications.
+                
+
+
+        ** Logistic Regression **
+                Logistic or Sigmoid fn (S curve) : 
+                        - outputs value 0 or 1 and in-between
+                        - g(z) = 1 / (1 + e ** -z) for 0 < g(z) < 1 where e ~ 2.7
+                                g(z) = 0.5
+                                g(100000) ~ 1
+                                g(-100000) ~ 0
+                        - f_wb(x) = wx + b = z
+                          f_wb(x) = g(wx + b) = g(z) =  1 / (1 + e ** -(wx+b))
+                          consider this as a probability of class/label=1 so P(0) + P(1) = 1
+                          
+                          P(y=1|x;w,b)  probability y=1 given input param depends on w & b
+                          
+                          Decision boundary at y-hat >= 0.5 then 1 else 0
+                                z >= 0  means  wx+b >= 0   then model predicts y-hat = 1
+                          f(x) can be a complex equation e.g. w1.x1 + w2.x2**2 + w3.x3**3 to make complex curve (circle/elipse) to encase one class of data. 
+                                
+                          
+                        - for values between 0-1 that need to be classed as 0 or 1.
+
+        Cost function - square error is not ideal.
+                f_wb(x) = 1/ (1+e** -(wx+b) ) yields non-convex cost fn (multiple local minima with one global minima)
+                In linear regression, cost fn  = 1/m * sum( 1/2 * (f_wb xi - yi)**2) = 1/m sum (loss fn)
+                Loss fn for logistic regression
+                        if y = 1 then loss = -log(f_wb xi)
+                        if y = 0 then loss = -log(1 - f_wb xi)
+                        
+                Cost fn = 1/m * Loss fn (as shown above)
+                 J(w,b) = 1/m * sum (-yi.log(f_xb xi) - (1-yi)log(1 - f_wb_xi))
+                        = -1/m * sum(yi.log(f_xb xi) + (1-yi)log(1 - f_wb_xi))
+
+ 
+        Fit best fit for parameters w & b by minimizing cost fn by applying gradient descent.
+                Min Cost fn J(w,b) = -1/m * sum(yi.log(f_xb xi) + (1-yi)log(1 - f_wb_xi))
+                 by repeatedly determine w & b by adjusting it:
+                       w = w - alpha * d/dw J(w,b)
+                       b = b - alpha * d/dw J(w,b)
+                       
+
+        Model ** Overfitting ** and ** underfitting ** the training data.
+                Underfit - algo not fit training data well or has "high bias". Clear pattern that algo can't capture. Perhaps it's not linear
+                Generalization - model fits well and can predict unseen input correctly. 2nd degree polynomial fits
+                Overfit - using 4 degree polynomial to fit _all_ the training data to get zero error. Likely not going to predict well. Algo has "high vairance". 
+                
+        Avoid over-fitting with regularization.
+        1. Get more training data - learning data will learn to fit the data better without wiggling.
+        2. Feature selection - Select using fewer features (most useful/relevant features). Can potentially throw some useful features given the manual selection.
+        3. Regularization - large paramters for w_j and higher order polynomial eqution for fit.
+                f(x) = 28.x - 385.x**2 + 39.x**3 - 174.x**4 + 100
+                (a) by feature selection, try to reduce higher order parameters (174.x**4)
+                (b) instead of removing the parameter, try to shrink the parameter values to lower values e.g. 0.0001.x**4. So features are kept but prevents from these features from having large effect to avoid over-fitting.
+                
+        Smaller values to parameters (w1,w2,w3,w4...and b) leads to simpler model and is less prone to overfit.
+        Build model with all parameters and then penalize all parameters by using lambda/2m > 0 (called regularization parameter).
+        J_wb = 1/2m * sum(f_wb.xi - yi)**2 + lambda/2m * sum(wj**2)   | where lambda > 0 and scaled by 2m
+        Cost fn tries to fit the values well by minimizing mean squares (first part) and (second part) regularization term tries to keep parameters wj small. Choice of Lambda balances these 2 parts.
+        Lambda zero - overfitting possible
+        Lambda v.large (1M) - regularization part heavy and require w-values are close to zero ... leading f(x) = b (horizontal straight line) making it underfit
+        
+        Regularized linear expression - gradient descent now involves regularization term i.e. lambda/2m * sum(wj**2).
+        Regularization term aims to minimize the size of parameter (w). Parameter b is not regularized per standard practice.
+        This impacts d/dj of J_wb to have an additional term, while d/db of J_wb is unchanged as we are not regularizing it.
+        d/dw of J_wb = 1/m * sum(f_wb of xi - yi).xj_i + lambda/m*wj
+        * i ranges over m i.e. # of input rows
+        * j ranges over n i.e. # of features
+                
+TODO short term:
+1. review contour cost fn -https://www.coursera.org/learn/machine-learning/lecture/QI1h6/visualizing-the-cost-function
+2. Partial derivative vs derivative
+3. Scaling - https://www.coursera.org/learn/machine-learning/lecture/KMDV3/feature-scaling-part-1
+
+TODO: Coursera machine learning specialization
+  Course 1:
+  Course 2:
+  Course 3:
