@@ -223,13 +223,13 @@ Itertools: Creates iterators for efficient looping
 		- cycle(list_elements): cycle('0123456789')  ... 0123456789 0123456789 0123456789
 		- repeat(element, [n)]: repeat('xyx', 20)  ...xyz xyz
 	- terminating on shortest input sequence:
-		- accumulate(list, [func=sum]): accumulate([1,2,3], lambda x,y: x+y) gives 1,3,6 (get running totals/products)
+		- accumulate(list, [func=sum]): accumulate([1,2,3], lambda x,y: x+y) gives 1,3,6 (get running totals/products/max)
 		- chain(list1, list2): chain any 2 iterables one after another
 		- chain.from_iterable(iterable): chain iterable of iterables
 		- compress(data_list, selector_list_bool): removes elements marked as false in selector list
 		- dropwhile(predicate, sequence): chopping leading sequence. i.e. predicate applied to "leading" sequence; drops leading sequence if initially predicate is true and once false, ignores predicate and generates till end of sequence.
 		- filterfalse(predicate, sequence): opposite of filter(which keeps elements where predicate is true), this keeps elements where predicate is false
-		- groupby(iterable, [key]): sub-iterators groups by value of key(v)
+		- groupby(iterable, [key]): sub-iterators groups by value of key(v). E.g. for key, group in groupby(sorted('abbaab')): print key, list(value) # gives 'a' -> ['a','a','a'] and similar for 'b'
 		- isslice(sequence, [start, stop, step]): like slice/range for sequence
 		- pariwise(iterable): ABCD gives overlapping pairs of AB BC CD
 		- starmap(function, sequence): gives sequence of fn(*seq[0]), fn(*seq[1]). i.e. fn args come from sequence (as sub-lists) and returns sequence of results
@@ -238,7 +238,7 @@ Itertools: Creates iterators for efficient looping
 		- zip_longest(seqA, seqB, [fillValue='-']) gives tuple having first element from seqA and second frmo seqB. Any missing values are replaced with None/fillValue.
 	- Combination/Permutations
 		- product(seqA, seqB, [repeat=1]) Cartesion product
-		- permutations(seq, length) all combinations but no repeats e.g. AA but can have AB and BA
+		- permutations(seq, length) all combinations but no repeats e.g. AA but can have AB and BA. Note: permutations are "ordered" combinations (i.e. in permutations order matters; in combinations it does not)
 		- combinations(seq, length) permutations but can't have AB == BA
 		- combinations_with_replacement(seq, length) allows AA
 
@@ -381,6 +381,34 @@ Collections: container datatypes
 	- UserDict/UserList/UserString classes to allow customized Dict/List/String subclass development by user.
 		Content of Dict/List/String is accessible in member attribute .data.
 
+
+Generator: a fn that uses yield.
+	Returns iterable object (once), items are generated lazily so memory efficient when handling large datasets.
+	Generator fn uses "yield" instead of "return'.
+	For-loop uses iter.next() until StopIteration is hit.
+	for i in (x for x in range(10) if X%2==0):
+		print(f"Geneterated {i}")
+
+	Use generators to setup processing pipelines where each is fn that starts a for loop and does a yield.
+		def process(sequence):
+			for s in sequence:
+				# something with s
+				yield processed_s
+
+	Less known is the fact that yield can also recieve values! e.g. item = yield
+	Need to advance to yield stmt with next(s) first and then send data (s.send('x'))
+		g = generator()							 def generator():
+													try:
+		g.next()		# advance to yield				item = yield   # send() sets item=item
+		g.send(item)	# send data to generator		yield some_value
+		g.close()       # shutting down processing	except GeneratorExit:   # close called/shutdown
+		g.throw(RuntimeError,'Broken')				except RuntimeError as e: # exception trown
+													return "value"     # raises StopIteration with value=value
+
+	Delegate to sub-generator with "yield from <gen>". Allows stacking/sequencing of generators.
+
+	A coroutine (enter/exit & resume at many different points with send()) vs subroutine(where entry & exit path is fixed). A coroutine is for consuming data; while generators are for producing data.
+
 collections.abc - Abstract base classes for collections
 	issubclass/isinstance works in one of 3 ways:
 	1. inheritance from ABC. e.g. class MyClass(Sequence):...
@@ -458,6 +486,26 @@ contextlib: for invoking tasks "with expr as target: <code block/suite>"
 	@contextmanager decorator - to define factory fn that sets up a resource in __enter__, yields a resource (causing code suite to run) and frees at __exit__.
 	with closing(resource) as fh:	# closign will call resource.close() in __exit__ (no setup)
 		...
+
+        # example
+        def open_file(filename):
+            fh = open(filename, 'r')
+            try:
+                yield fh
+            finally:
+                fh.close()
+
+	# context manager with generator (yield) to split fn into 2 parts where each is called at __enter__ and __exit__
+	@contextmanager
+	def time_this(label):							with time_this("counting"):
+		start = time.time()								n = 1_000_000
+		try:											while n: n -=1
+			yield	# cuts fn into top being called at __enter__ (imagine a next() call)
+					# and bottom half is called at __exit__
+		finally
+			end = time.time()
+			print("Time taken by {} was {:0.4f}s".format(label, end-start))
+
 	nullcontext(enter_result) - returns enter_result on entry. Standin for optional conext manager (e.g. if/else where one part does proper content management and else part does nullcontext)
 		if isinstance(file_or_path, str):        # If string, open file
 			cm = open(file_or_path)
@@ -654,12 +702,12 @@ Typing:
 
 array - compact representation of numeric/char array (same type restriction vs list).
 	Same method as list except itemsize + typecode. Init from list/iterable/bytes
-	
+
 	ar = array.array('i', [1,2,3,4,5])
-	
+
 	element_size = ar.itemsize	# 4
-	datatype = ar.typecode 		# i 
-	
+	datatype = ar.typecode 		# i
+
 	array.typecodes			# 'bBhHiIlLqQfd'
 
 
@@ -668,6 +716,7 @@ copy: shallow/deep copy compound objects
 	A class needs to implement __copy__(x) and __deepcopy__(x, memo_dictionary).
 	Stuff that can't be copied e.g. stack frame/trace, socket, file
 		from copy import deepcopy
+		x_copy =  deepcopy(x)
 
 
 pprint: pretty print.
@@ -676,6 +725,126 @@ pprint: pretty print.
 	IsReadable if string can be used to eval() and reconstruct the object.
 		from pprint import pprint
 		pprint(some_complex_datastruct)
+
+
+pickle:
+        binary serialization/unserialization protocol for python objects (need to share/import class definition).
+        Great if both consumer/producer are python based.
+        Pickle is backward compatible by specifying pickling protocol(1-5).
+        Pickle data can be further compressed with zip/lzm4 etc
+        Caution: never unserialize untrusted pickled data.
+
+        Does not work with and raises PickingError exception:
+        1. Lambda  (relies on being able to pickle fn. name only)
+        2. Classes/fn not at top level of module (i.e nested - only instance data is pickled; not class code/data so such classes/fn should be importable when unpickling)
+        3. Deeply recursive data structs (> sys.setrecursionlimit())
+
+        dumps/loads work with bytes.
+        dump/load work with fh.write or io.BytesIO
+
+		For large data transfer/pickling - out-of-band buffers were added in Protocol v5 and above. This allows provider/consumer to handle PickleBuffers instead of just bytes. Requires provider to implement __reduce__ex__() & consumer provides a buffer for unpickling apart from unpickled byte-stream.
+
+
+JSON:
+        text format; human readable; inter-operable outside python.
+        No support for custom clases; no vulnerability while deserializing JSON.
+
+
+string:
+        string.ascii_letters | ascii_lowercase | ascii_uppercase
+        string.digits | hexdigits | octdigits
+        string.punctuation
+        string.whitespace
+        string.printable (letters + digits + punctuation + whitespace)
+        string.capwords(s, sep=None)  # capitalize each word (unlike str.capitalize which does first char only) .. also removes lead/trail/multiple whitespaces.
+
+        conversion flags: "More {var!r}"   # '!s' str(), '!r' repr() and '!a' ascii().
+        # format ':...' is [[fill]align][sign]["z"]["#"]["0"][width][grouping_option]["." precision][type]
+
+        alignment: '{:<10}'.format('left')      # default for str
+                   '{:>10}'.format('right')     # default for numbers
+                   '{:*^10}'.format('center *fill rest')   # '{:{fill}{align}WIDTH}'
+        sign: '{:+f} {: f} {:-f}'.format(no1, no2, no3)
+              # show +/- sign; space if +; only - for last (default).
+        dec/oct/hex: '{:0d} {:0o} {:0x} {:0e} {:.2f} {:0c}'.format(...)  # dec, oct, hex, float, scientific, char
+        separator : '{:,} {:_}'.format(bigno1, bigno2) # use , or _ separator
+        percentage: '{:.2f%}'   # 2 decimal places with % at end
+        datetime: : '{:%Y-%m-%d %H:%M:%S}'.format(d)
+
+        Template strings: Does $var substitution. Also has safe_substitute in case a var is not supplied (in which case it displays '$var' as-is.
+        from strings import Template
+        template_str = '$name is $age years old'
+        template_str.substitute(name='Adi', age=44)     # Adi is 44 years old
+        template_str.safe_substitute(name='Adi')        # Adi is $age years old
+
+
+re: for regular expression
+        import re
+        # pattern r'..' doesn't interpret special charcters so no need to escape without which escaping \ as \\ in pattern needs to be written as \\\\. Better off with r'\\'
+        # both pattern & text need to be str or bytes
+        match = re.search(pattern, text)
+        if match:
+                match.group()
+
+
+        # special
+        \d (digit)
+        \w (word char that covers digits)
+        \s (whitespace)  \S non-whitespace
+        Greedy vs Non-greedy matches :: <.*> vs <.*?>
+        Range : a{2,6}  aa to aaaaaa. Non-greedy a{2,6}? will match only aa if aaa to aaaaaa.
+        Possesive Quantifiers (new v3.11): *+, ++, ?+ and {m,n}+
+                unlike their greedy counterparts, they don't allow backtracking
+                so a*a will match a* with all string 'aaaa' and final a will fail to match and regex match fail. Same as (?>a*)
+        (...) remember the matched string and access via \1 in rest of pattern
+        (?P<name>...) & (?P=<name>)  instead of using \1 use python variable name <name> and reuse with P= in pattern. e.g. (?P<quote>['"]).*?(?P=quote)
+        (?=...) or (?!...) : matches if ... matches next. e.g. 'Isaac (?=Asimov)' will pass only for 'Isaac Asimov' but not for 'Isaac A'
+        (?<=...) Positive Lookbehind Assertion. .e.g (?<=abc)def will match abcdef as it will match deg and then lookback to ensure last 3 char are abc.
+        (?iMaS...) match pattern but ignore-case multi-line ascii dot-all(S)
+        (?#comment)
+
+        \A \Z - start/end of string
+        \b - boundary between \w and \W (word boundary)
+        \d \w \s (\w is alhpanum; \s is whitespace)
+
+        re.X or re.VERBOSE allows writing patterns with comments and improve readability.
+        # b = re.compile(r"\d+\.\d*")
+        a = re.compile(r"""\d +  # the integral part
+                           \.    # the decimal point
+                           \d *  # some fractional digits""",
+                           re.X)
+
+        re.compile saves the pattern that can be used in match or search
+        result = re.match(pattern, text)
+        vs
+        pattern_compiled = re.compile(pattern, flags)
+        result = pattern_compiled.search(text)
+        if result:
+                results.
+
+        re.match - match from beginning for text (faster but pattern needs to match from first letter)
+        *re.search* - more general but slower than match. Both search & match have start & end pos args to limit the search to specific sub-string
+        re.fullmatch - pattern must match entire string
+        re.split(pattern, text, maxsplits=0)
+        re.findall or re.finditer - return list/iter of Match objects
+        re.sub(patter, replace, text, count=0, flags=0)  # replace can be str (with \1) or fn(match_obj)
+        re.escape(text) - escape special characters
+
+        match object:
+        match.expand("a\g<1>c")    # abc where b was group1
+
+        match.group() or match.group(0) gives whole string matched
+        match.group(1) or match.group([1,2]) gives the groups matched as \1 \2
+        match.lastindex # gives the max group so you know how many group(N) to search for
+
+        # groups
+        match.groups()   # gives all groups as a tuple of string
+        match.groupdict()       # for group-named based with (?P<name>)
+        match.start() | .end() | .span() returns the indicies of match in input text.
+        # group-names
+        match = re.match(r"(?P<first_name>\w+) (?P<last_name>\w+)", "Malcolm Reynolds")
+        match.group('first_name')
+
 
 
 Packaging options: PyPI, setup.py, wheel
