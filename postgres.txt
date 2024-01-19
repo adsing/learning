@@ -7,9 +7,62 @@ $ systemctl start postgresql
 $ psql -d Adventureworks
 postgres=# \l       # list databases
 postgres=# \q       # quit
-postgres=# \dt      # list tables
+postgres=# \i <file> # run SQL from input file from local system
+postgres=# \dt      # list tables/relations
+postgres=# \dt schema.*      # list tables of under schema
+postgres=# \d+ users      # list tables of under any schema (default to "public".users)
 
 postgres=# \conninfo #You are connected to database "postgres" as user "postgres" via socket in "/var/run/postgresql" at port "5432".
+
+Installation : https://www.digitalocean.com/community/tutorials/how-to-install-and-use-postgresql-on-ubuntu-20-04
+# create admin user (psql_admin)
+$ sudo -u postgres createuser --interactive
+could not change directory to "/home/user": Permission denied
+Enter name of role to add: psql_admin
+Shall the new role be a superuser? (y/n) y
+# psql_user
+$ sudo -u postgres createuser --interactive
+could not change directory to "/home/user": Permission denied
+Enter name of role to add: psql_user
+Shall the new role be a superuser? (y/n) n
+Shall the new role be allowed to create databases? (y/n) n
+Shall the new role be allowed to create more new roles? (y/n) n
+
+
+Coursera:
+Host:     pg.pg4e.com 
+Port:     5432 
+Database: pg4e_8fc2bd283d 
+User:     pg4e_8fc2bd283d 
+Password: pg4e_p_33c8011a0a23258 (hide/show copy) 
+psql -h pg.pg4e.com -p 5432 -U pg4e_8fc2bd283d pg4e_8fc2bd283d
+
+Important: The database we create for you is limited in size and will be automatically removed after an about 60 days.  If you find that your database has been removed, just come back and run this "Initial Database Setup" assignment and the second assignment to create the "pg4e_debug" table and you should be able to continue with the course.
+
+
+Server <-> Client (psql/pgAdmin/python etc) <-> DBA
+superuser (postgres)
+$ sudo -u postgres psql -U postgres	# make user/role and associated db
+ create use psql_admin with password 'admin123';
+ create database test_db with owner 'psql_admin';
+ \q
+ 
+# connect to test_db as psql_admin
+$ sudo -u postgres
+$ psql -W test_db psql_admin     ( or psql -W -d test_db -U psql_admin)
+Password
+????
+	postgres@user-desktop:/home/user$ psql test_db psql_admin
+	could not change directory to "/home/user": Permission denied
+	psql: error: connection to server on socket "/var/run/postgresql/.s.PGSQL.5432" failed: FATAL:  Peer authentication failed for user "psql_admin"
+$ create table users( name varchar(128), email varchar (128) );
+$ create unique index users_name_uniq on users(name);            # b-tree by default
+$ create index users_name_hash_index on users using hash(name);  # hash index (saves space & exact match)
+$ select pg_relation_size('users'), pg_indexes_size('users')
+\q
+
+# user=postgres db=Adventureworks .. don't touch postgres/template0/template1
+$ sudo -u postgres psql -U postgres -d Adventureworks
 
 postgres demo db setup
 Postgres installation of AdventureWorks database
@@ -17,6 +70,7 @@ See https://github.com/lorint/AdventureWorks-for-Postgres
 
 #user# $ sudo -u postgres bash
 $ psql -d Adventureworks
+$ \dt person.*
 
 
 # if a cleanup is required:
@@ -101,7 +155,302 @@ $ psql -d Adventureworks
  sales          | store                                 | table | postgres
 (68 rows)
 
-
 $ psql -s <dbname>                      # -s single-step mode : pauses before sending the commands to server
 \i input.sql                            # \i exeucte input.sql file
 
+Character set (Latin-1 or ASCII) are 8 bits (127 char).
+Unicode (8,16,32 bits)
+
+Data types:
+- CHAR/VARCHAR
+- TEXT no length specified; not indexed; avoid order by
+- bit/varbit/bytea (array)
+- integer, bigint, smallint
+- double precision (float8), numeric(p,s), real, 
+- date, interval, time/timestamp w|w/o time zone
+- json/jsonb, xml
+- money
+- uuid, serial, bigserial, smallserial
+- box, circle, line, lseg, path, point, polygon (shapes)
+- tsquery, tsvector (ts: text search)
+- cidr/inet/macaddr
+
+Column can be made "serial" for auto-incrementing that user doesn't provide input values for.
+	"serial" maps to "not null default nextval('col_id_seq'::regclass)"
+
+Schema diagram (table name, column, relation)
+	Model real world (one object is written once e.g. credit card number saved once and accessed by key/id)
+
+Index (hash or tree):
+ B-tree (balanced binary tree) - range based, can be nested. Complexity ln(N).
+ 	Good for range/individual/prefix lookup and ordering.
+ Hash (fn map) - Complexity O(1). 
+ 	Good for exact match (not range/prefix/ordering). E.g. P-key; UUID search.
+
+Logical key: what columns the outside world uses for lookup (index these)
+Primary/Foreign key: Uniquely identify a row; refers to primary key on another table (e.g. artist_id points to artist table with pkey=id).
+     Index Pkey/FKey for data often needs to be joined.
+     FKEY setup:: artist_id <int> references <table>(<col>) on delete cascade;  -- delete from primary table causes delete on foreign table for all referenced records
+     			Restrict/Default - don't allow changes that break constraint
+     			Cascase - Remove/update child rows to keep data consistent and leave no unmapped data
+     			Set Null - Set foreign key columns in child rows to null (assumes key column is nullable)
+     PRIMARY KEY(id)
+     UNIQUE(col1, col2)  --- composite key is unique
+     col3 <type> not null UNIQUE
+     
+  Normalized tables with Pkey/Fkey are joined to get completely mapped data.
+    TableA  <------- TableB
+           1       Many
+           1         1
+           Many      1 (fan out)
+           Many     Many requies a junction (or join or membership) table (e.g. student <-> course mapping is many to many)
+           
+  JOINS:
+  	Cross - cartesian product (does't need a ON clause). 
+  	Inner - exact 1-to-1 join Cross-join with on clause (ON tbl1.id = tbl2.id).
+  
+ALTER TABLE -- add/drop column, extend size of column, add/drop constraint
+   alter table <tbl> add column <col> text;
+   alter table <tbl> alter <col> type text;
+   alter table <tbl> drop column <col>;
+   
+ETL (pgsql):
+\copy table from 'file.txt' with delimiter ',' CSV;
+\copy table from program 'wget -q -O - "$@" htttp://url.com/somefile.txt' with delimiter '|';
+
+Date types: Store with TZ or store UTC
+	Date YYYY-MM-DD
+	Time HH:MM:SS
+	Timestamp    YYYY-MM-DD HH:MM:SS        8 bytes
+	TimestampTZ  YYYY-MM-DD HH:MM:SS CST	8 bytes
+	NOW()	     2023-11-29 22:19:53.954 -0600 	TimestampTZ
+	Interval arithmetic :: now() - Interval '2 days'
+
+	  select now(), 
+	         now() at time zone 'UTC',
+	         now() at time zone 'America/Chicago'; 
+	         -- 2023-11-29 22:23:35.411 -0600	2023-11-30 04:23:35.411	2023-11-29 22:23:35.411
+	         
+  	select * from pg_timezone_names limit 20;
+  	America/Chicago	CST	-06:00:00	false
+	America/Tijuana	PST	-08:00:00	false
+	
+	date_trunc('day', now()) -- truncate down to day
+	
+Distinct - removes dup rows
+*Distinct ON - removes dups on set of columns e.g. select distinct on (model)  make, model from racing_cars;  -- returns make, model where models are distinct
+
+Subquery can lead to bad/slow execution. E.g. subquery gets aggregate data and outer query filters it ...same could have been achieved with having.
+
+Cast: Two ways to do it
+	select now()::date,
+		cast(now() as date)
+
+Compound state with "returning *" & upsert:
+ e.g. insert into table value(1,2,3) returning *;  -- insert data and return inserted data (same for update)
+ e.g. one stmt doing insert/update + select
+ insert into table (x,y,z_ values(1,2,3)
+  on conflict (x,y)
+  do update set x = x+1			-- upsert
+  returning *;                         -- select record after insert/update so that we know what the new values are
+  
+Locking for update:   --skip lock returns rows not locked.
+  begin
+  select x from tbl where id=99  for update of x;  -- lock for update
+  update tbl set x=11 where id=99;
+  rollback; -- or commit;
+  
+Stored procedures: Hard to port so avoid
+   Multiple languages supported (plpgsql/python/perl/tcl) - stick to plpgsql
+   Create function returning trigger -- used to create a trigger before update run this fn  ... e.g. to setup update_timestamp
+   
+   table with created_at/updated_at timestamp default now()...for update timestamp, we can manage through triggers.
+   -- user defined fn
+   create or replace function trigger_set_update_timestamp()
+   returns triggers as $$
+   begin
+      new.updated_at = NOW();
+      return NEW;
+   end;
+   $$ LANGUAGE plpgsql;
+   
+   -- trigger linked to user defined fn
+   create trigger set_update_timestamp
+   before update on tbl
+   for each row
+   execute procedure trigger_set_update_timestamp()
+   
+   delete from tbl if exists  ;
+   alter sequence account_id_seq RESTART with 1;
+   
+Data generation:
+  repeat("abc", 3) - generate long strings gives "abcabcabc"
+  generate_series(1,10) - generate rows 1 to 10
+  random() - 0.0 - 1.0
+  e.g. Generate 10 random rows:
+  	select generate_series(1,10) || case when random()<0.5 then 'a' else 'b' end; 
+
+Text fn:
+  like/ilike - ignore case (ilike)
+  similar to - like with regex capability
+  lower()/upper()
+  ascii('a'), chr(97);
+  char_length(str) - length (octet_length, bit_length)
+  substring(str [from int] [for int]) - substring("Thomas" from 2 for 3) gives "hom"
+  substring(str from pattern) - substring("Thomas" from "...$") gives "mas"
+  			- e.g. sender set from header: UPDATE messages SET sender=substring(headers, '\nFrom: [^\n]*<([^>]*)');
+  substr(str, start, end)
+  position("ho" in "Thomas") - gives 2
+  strpos(str, substr) -- gives starting position
+  split_part(str, split_str, part#)  -- split a string and extract one part/substring
+  overlay(str placing str from int for int) - overlay("Txxxas" placing "hom" from 2 for 3) gives "Thomas"
+  trim(leading|trailing|both|[chars] from str) - trim both 'xyz' from 'xyTomzzz' gives 'Tom'
+  translate('Hello','Hl','hL') give heLLo
+
+Regular expression:
+  ~   reg-ex match case sensitive   (!~) e.g. colA ~ 'mypattern'  or colA like '%mypattern%'
+  ~*  reg-ex match case insensitive (!~*)
+  substring(colA from pattern)    
+  e.g. select substring(colA from '[0-9]+') frm table colA ~ '[0-9]'  -- pull digits from colA
+       selct substring(email from '.+@(.*).com$') from table; --returns gmail, hostmail etc
+  to get all pattern matches, yse regexp_matches
+     select regexp_matches(tweet, '#([0-9a-zA-Z]+)'. 'g') as tweet_hashes from tweet_tbl;  -- gives all tweet-hashes from each data row with one per row
+     
+JSON: Putting unstructured data into structured data 
+  uses inverted index
+
+Index leads to selective data read. Gives location of which blocks are to be read.
+ Type - Forward - typical - tells you which block(s) has a given logical key
+	      - BTree - default - N-node balanced tree; minimize depth of tree
+	      - BRIN - block range index - min/max per block - smaller/faster if data is sorted (e.g. sorted by date)
+	      - Hash - quick lookup until collision
+      - Inverted - input string/query/(list/array) and returns all rows that match - used for text search (think of string_to_array(colA, split)->{data1,data2,data3...} & unnest(result) to get individual data fields as row) 
+      			e.g. select unnest(string_to_array('Hello world', ' ')) gives 2 rows.
+      			-- build GIN index like table
+      			INSERT INTO docs_gin (doc_id, keyword)
+      			SELECT DISTINCT id, s.keyword AS keyword
+			FROM docs AS D, unnest(string_to_array(D.doc, ' ')) s(keyword)    --can't use join, read on unnest
+			ORDER BY id;
+			-- search in docs with GIN table
+			SELECT DISTINCT doc FROM docs AS D
+			JOIN docs_gin AS G ON D.id = G.doc_id
+			WHERE G.keyword = ANY(string_to_array('I want to learn', ' '));  -- I/to should be stop words and filtered (stem words i.e. same/similar meaning & case insensitive)
+			-- stop words + case insenstive
+			INSERT INTO docs_gin (doc_id, keyword)
+			SELECT DISTINCT id, s.keyword AS keyword
+			FROM docs AS D, unnest(string_to_array(lower(D.doc), ' ')) s(keyword)
+			WHERE s.keyword NOT IN (SELECT word FROM stop_words)
+			ORDER BY id;
+			
+			-- with inbuilt GIN index
+			CREATE TABLE docs (id SERIAL, doc TEXT, PRIMARY KEY(id));
+			CREATE INDEX gin1 ON docs USING gin(string_to_array(doc, ' ')  array_ops);  -- gin index
+			-- The <@ if "is contained within" or "intersection" from set theory
+			SELECT id, doc FROM docs WHERE '{learn}' <@ string_to_array(doc, ' ');   -- '<@' contained within e.g. is this small array contained within larger array
+
+	      - GIN - generalized inverted index - multiple values in column e.g. text lookup/search. Expensive to insert/update date with index.
+	      			hash based
+	      		create index gin1 on table using gin(string_to_array(col, ' ') _text_ops);   -- 'string_to_array(col, ' ')' must match where clause {str} <@ string_to_array(col, ' ')
+	      		create index gin1 on table using gin(to_tsvector('english', col));   -- match it how you will use in search "to_tsvector('english', col)"
+	      		-- to_tsvector applies steming/stop-words. Vector of n-dimension
+	      		SELECT to_tsvector('english', 'This is SQL and Python and other fun teaching stuff');
+			-- 'fun':8 'python':5 'sql':3 'stuff':10 'teach':9
+			select to_tsquery('english','teaching'); --does stemming/stop rules and gives 'teach'
+			-- @@ means does ts_query match a ts_vector
+			CREATE TABLE docs (id SERIAL, doc TEXT, PRIMARY KEY(id));
+			CREATE INDEX gin1 ON docs USING gin(to_tsvector('english', doc));
+			SELECT to_tsquery('english', 'teaching') @@ to_tsvector('english', 'UMSI also teaches Python and also SQL'); -- true
+			# tsquery operators & | <<-> !
+			SELECT to_tsquery('english', 'teaching & parents') -- both
+			SELECT to_tsquery('english', 'teaching <--> parents') -- teaching and then parents follows
+			SELECT to_tsquery('english', 'teaching & !parents') -- has teching but not parents
+			SELECT to_tsquery('english', 'teaching parents') -- teaching and then parents follows
+			SELECT to_tsquery('english', 'teaching -parents') -- has teching but not parents
+			# rank
+			select ts_rank(to_tsvector('english',body), to_tsquery('english', 'teaching & parent)
+			
+	      - GiST - Generalized search tree - reduces size by using hash but false positive removal requies actual table lookup. Good for insert/update heavy apps.
+	      - SP-Gist - space partitioned GiST
+	      
+	SQL file from coursera course - https://www.pg4e.com/lectures/05-FullText.sql
+	      
+Index BTree - maintanis order; good for exact lookup, prefix, range (>, <), sort
+Index Hash - smaller for exact lookup; joining (work) tables
+
+Performance:
+  Query Plan: explain analyse <query>; # show plan + run with analyze
+  	# Avoid Seq scan
+  Space Table/index size:  select pg_relation_size('table_name'), pg_indexes_size('table_name')
+
+  
+Server config:
+  show server_encoding;  -- utf8
+  
+  files - split into block (8K page) - rows saved in a block|page with each row stored at offset stored from end-of-block; with offsets stored in beginning of block - allows for potential in-block update. Write block to disk when done with insert/update.
+  Table consists of one or more data files - Need more space per row, links to another block|page. 
+  1 row per block - wastes free space
+  N rows per block - too much disk IO for one row access
+  
+  Limit # of blocks to load to respond to a query - indexing.
+  Cheapest if block is in memory (
+  
+
+DB (utf8) -- Python (Unicode) -- Network/DB (utf8) :: decoding/encoding 
+    bytes -- str -- bytes
+    pyscopg2 does the encoding/decoding automatically; prog has to do this when dealing with files/sockets directly.
+
+Python: DBI 
+	import psycopg2
+	conn = psycopg2.connect(host, port, database, user, password, connect_timeout=10)
+	cur = conn.cursor()
+	sql = 'INSERT INTO pythonfun (line) VALUES (%s);'
+	cur.execute(sql, (txt, ))
+
+	sql = "SELECT id, line FROM pythonfun WHERE id=5;" 
+	cur.execute(sql)
+	row = cur.fetchone()
+	if row is None : 
+	    print('Row not found')
+	else:
+	    print('Found', row)
+
+	
+
+NoSQL Elasticsearch for high-speed search and indexing. BASE-style (Basic Availability, Soft State, Eventual Consistency) database approach vs ACID.
+NoSQL BASE systems
+	- ACID sytems are single server so for large data need big/expensive servers (vertical scaling) or single-master read-only replicas (parallel systems using transaction logs to replicate data); multiple master (have high bandwidth between 2 masters & highly co-ordinated/complicated system to ensure both are in sync); multiple store system (DB + filesystem e.g. for images/video); multi tenant (each client has it's own DB); 
+	- Global UniqueID (for uniqness), App retried for stale data (Transactions), Not able to do Uniqueness, 
+	- Mongo, Casandra, BigTable
+
+Multi-master systems achive consistency by blocking rows across all master. This blocking can slow down the rate of inserting data and can be unacceptable in firms where speed is of paramount importance e.g. high frequence trading firms.
+
+An update on a large number of rows will require one master to block all masters for many records. This can be time consuming and the whole update might take sometime as well. Such large sized updates will have to be done in after-hours and this really boxes the firm on when it can do large updates.
+
+Multi-master systems have complex coordination mechanisms and are hard to debug. In case of any data consistency issues, in-house developers may not be able to debug the issue as it's a database server issue. So we need to sign up for maintenance programs with the multi-server solution provider.
+
+A - atomicity
+C - consistency
+I - isolation
+D - durability
+ACID - all readers/writers see the same data
+
+B Basically
+A Available
+S Soft State
+E Eventual
+BASE - Eventual consistency changes percolate everywhere
+
+sudo -u postgres psql postgrest
+create database <dbname> with owner <dbuser> encoding 'utf-8';
+
+Read 
+	datatypes
+	ETL: copy in/out
+	select distinct on ..
+	insert into table - on conflict (colA, colB) do update set colA = .., colB = ... - returning *
+	select * from tbl where ...for update of colA
+	string functions
+	utf8
+	reg-ex
+	types of index
+	PEP 249 - Data API

@@ -228,3 +228,29 @@ git config --local alias.lg "log --oneline --decorate"c
 
 http://ohshitgit.com/ -- foobars and solutions to commonly occuring issues like make a small tweak to last commit.
 Change from HTTPS to SSH to let you use id_rsa as key (no asking user/password) - https://stackoverflow.com/questions/66262923/how-to-use-ssh-key-instead-of-password-to-clone-push-to-a-specific-gihub-repo
+
+
+
+
+Github Actions (CI/CD pipeline) - automate devloper workflows e.g. CI/CD
+Alternative Jenkins.
+
+e.g. (github events like) PR -> merge code -> test -> build -> push to repo - deploy
+                                                      Build project -> docker image -> push to repo (dockerhub/artifactory)
+Event trigger action. Multiple actions are workflows.
+   
+Build project (bazel/make)
+Run tests (unit/integration)
+Docker image
+Push to AWS repo
+Deploy to AWS EKS
+
+See starter workflows in https://github.com/actions/starter-workflows
+
+
+Github has many prebuilt (and in marketplace) actions with prebuilt yml file that need slight modifications for your needs.
+Also, can setup secrets for username/passwords in repo.
+
+
+
+

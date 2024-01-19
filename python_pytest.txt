@@ -112,7 +112,8 @@ $ pytest --durations=10 --duration-min=1.0
 
 $ pytest -p pytest_cov		# to load a plugin (?) ... to disable "-p no:doctest"
 
-$ pytest --cov			# to check for code coverage with test ... load plugin
+$ pytest --cov			# to check for code coverage with test ... load plugin		# pip install pytest-cov
+$ pytest --cov --cov-report=html:covereag_report.html
 
 
 # how to write & report tests

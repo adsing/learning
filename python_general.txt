@@ -700,6 +700,13 @@ Typing:
 		    pass
 
 
+io - for working with streams (text/binary/raw generic; file object concrete)
+	Text IO works with str (binary with byes).
+	Text steam : f = open("somefile", "r", encoding="utf-8")
+	In-memory text stream : f = io.StringIO("some data is in here")
+	
+	Binary IO: file open in "rb" mode and in-memory with io.BytesIO
+
 array - compact representation of numeric/char array (same type restriction vs list).
 	Same method as list except itemsize + typecode. Init from list/iterable/bytes
 
