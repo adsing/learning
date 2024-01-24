@@ -39,7 +39,7 @@ async def main():
     # tasks = [asyncio.create_task(task_fn(interval,count))
     #                              for interval,count in enumerate(sleep_iterval)]
     # results = await asyncio.gather(*tasks)  # can take co-routines directly which asyncio.await can't do
-    
+
     co_routines = [task_fn(interval,count) for interval,count in enumerate(sleep_iterval)]
     results = await asyncio.gather(*co_routines, return_exceptions=True)	# use try-catch here if not using return_exceptions=True
     print(results)
@@ -49,3 +49,126 @@ async def main():
 
 if __name__ == '__main__':
     asyncio.run(main())
+
+
+
+
+ThreadPoolExecutor
+# Beazley youtube - https://www.youtube.com/watch?v=5-qadlG7tWo
+
+import time
+def fn(x,y):
+    time.sleep(1)
+    return x+y
+
+from concurrent.futures import ThreadPoolExecutor
+pool = ThreadPoolExecutor(8)
+future_obj = pool.submit(fn, 2, 3)
+future_obj.result   # blocks until thread is done and gives result=5
+                    # any exception will propogate out
+
+# handle result with callsback if don't want to block waiting for result
+def exit_handle_result(result):
+    try:
+        print(f"Got {result.result()}")
+    except Exception as e:
+        print(f"Failed {type(e)})
+...
+pool = ThreadPoolExecutor(8)
+# trigger computations with call back at entry...callback will be the exit
+future_obj = pool.submit(fn, 2, 3)
+future_obj.add_done_callback(exit_handle_result)
+
+# one function using __enter__/__exit__ with yield
+@inlined_future
+def do_func(x,y):
+    result = yield pool.submit(fn, x, y)    # code before yield w/pool.submit is enter-code; rest is exit-code
+    print(f"Got {result})
+
+run_inline_future(do_func_)
+
+
+
+
+
+
+
+
+
+
+
+Threading - alternative concurrent.futures.ThreadPoolExecutor + queue for data exchange between threads
+        - second alternative asyncio that avoids multiple OS threads
+
+    Due to GIL in Cpython, only one thread can run at a time. Python interpreter is single process and always has main thread.
+    So threads are good for processes with lot of IO. For CPU heavy process, use multiprocessing.
+
+    Module functions:
+    ----------------
+    active_count() - # of active threads (excludes not-started or completed threads)
+    enumerate() - list all active threads including daemon threads. active_count() is based on this.
+    thread_object = current_thread()
+    excepthook - for uncaught exceptions from thread.run. Ignores SystemExit from thread (to indicate it's done) else printed on stderr.
+    get_ident() - get current thread's thread-identifier; a non-zero value.
+    get_native_id() - get OS thread id
+    main_thread() -  return main thread i.e. from where python started
+    set|get trace() - set trace on all threads (?unsure?)
+    getprofile() - profile fn set
+    TIMEOUT_MAX - max value allowed for timeout in acquire()/wait() meathods of Locl/RLock/Condition. Over it gives OverflowError.
+
+    stack_size([size]) - get thread stack size(typicall 32KB - where thread stores it's local data + recursion). Can also be set to specific size so that threads created after the size change have updated stack size
+    local() is where thread specific values/data is saved. e.g. mydata = threading.local; mydata.x = 1
+
+
+    Thread object: an activity that runs in separate thread.
+        Thread created by (1) overrideing thread.run or (2) passing callable to constructor (Class derived from threading can override only __init__ & run).
+        Thread started by t.start()  -- which calls t.run() and now is_alive() is true; active_count is up.
+        main thread waits for t.join() -- can't exit if thread is not a daemon so use join() to specify your wait point else main won't exit at end of code and wait for thread completion.
+            Caution on resources used in daemon threads since they can die if main ends.
+
+        t1 = Thread(target=print, args=(1,2,3,), kwards={'debug': True}, daemon=False, name=None)
+            # name is typicall "Thread-N"; daemon state copied from creating thread if not supplied so daemons create daemons.
+        t1.start()  # thread is now active and awaits CPU timeslot. Call just once else RuntimeError
+            # a subclass can invoke .run() that starts the callable set in __init__
+        t1.join(timeout=None)   # wait until t1 terminates and calling thread is blocked
+            # if using timeout, use t1.is_alive() to check for timeout vs thread terminated.
+        Others:
+            tt1.name, t1.ident; t1.native_id; t1.daemon
+
+    Lock object: for synchornization; not owned by a particular thread
+        state set by:  acquire() to locked  and release() to unlocked
+        when state=locked then acquire(blocking=True, timeout=-1) will block
+        supports contextmanager so can be used like:
+            with lock:
+                # acquire
+                do mutually exclusive action
+                # release
+
+        Lock methods:
+            acquire(blocksing=True, timeout=-1) : # returns True if locked. Can return False when it times out
+            release()       # no return value; can be called by any thread (not just the one that acquired it!). On release, other waiting threads can block it
+            locked()        # True if lock is acquired
+
+        RLock methods:
+
+
+queue.Queue:
+    thread-safe data sharing between threads
+        from queue import Queue
+        q = Queue()
+        q.put(1), q.put(2), q.put(3)
+        print(q.get())      # blocks until some item is available
+        # block thread until all queue is processed
+        q.join()
+        # at end
+        q.task_done
+
+
+
+ThreadPoolExecutor performs betters instead of mutually creating/starting/joining threads. Overall memory usage is less and faster 2X than manual approach.
+    from concurrent.futures import ThreadPoolExecutor
+    with ThreadPoolExecutor() as executor:
+        future = executor.submit(fn, arg1, arg2)
+        # future.result() future.exception()
+
+        results = executor.map(fn, zip(arg1_list, arg2_list))

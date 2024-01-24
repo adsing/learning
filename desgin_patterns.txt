@@ -7,6 +7,7 @@ SOLID Design Principles: applies to class/module/fn (any block of collective cod
     - Interface Segregation : classes should implement interfaces only which are used by them i.e. don't force unneccesaary interfaces upon them. E.g. separate AreaCalculator & VolumeCalculator interfaces instead of clubbing them together. 3D objects can implement both interfaces, while 2D object can implement only for area.
     - Dependency Inversion  : High-level class should not depend on low-level; they should both depend on interfaces/abstraction. Abstraction should not depend on details/concretions but rather vice-versa details on abstracts. Often we think of making smaller utility fn/method to fulfil higher level fn but this creaet higly coupled system; instead use interface between high-level and lower-level. Allows upper layers to use other implementations of lower levels. Common to have an "adapter" between service & abstraction. 
 
+
 Creational Design Patterns: Builder, Factories (Factory Method and Abstract Factory), Prototype and Singleton
     Builder: construct complex (different) objects in steps.
             Complex due to multiple fields and/or nested objects.

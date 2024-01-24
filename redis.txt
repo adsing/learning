@@ -236,6 +236,8 @@ ld-chces16:6379> zadd marks 78 sam
 (integer) 1
 ld-chces16:6379> zadd marks 92 dee
 (integer) 1
+ld-chces16:6379> zcard marks            # how many members
+(integer) 3
 ld-chces16:6379> zrange marks 0 -1         #order per score
 1) "sam"
 2) "adi"
@@ -243,7 +245,7 @@ ld-chces16:6379> zrange marks 0 -1         #order per score
 
 ld-chces16:6379> zadd marks 78 another78
 (integer) 1
-ld-chces16:6379> zrange marks 0 -1
+ld-chces16:6379> zrange marks 0 -1        # zrevrange (for reverse range)
 1) "another78"                            # lexical since scores are same
 2) "sam"
 3) "adi"
@@ -257,7 +259,7 @@ ld-chces16:6379> zrange marks 0 -1 withscores  #show scores as well
 6) "86"
 7) "dee"
 8) "92"
-ld-chces16:6379> zrangebyscore marks 70 90   #select elements by score range
+ld-chces16:6379> zrangebyscore marks 70 90   #select elements by score range. Can use +inf for infinity. Also have zrevrangebyscore for reverse. TO implement SQL WHERE clause
 1) "another78"
 2) "sam"
 3) "adi"
@@ -369,6 +371,7 @@ ld-chces16:6379> pfcount hll
 ld-chces16:6379> get hll
 "HYLL\x01\x00\x00\x00\x04\x00\x00\x00\x00\x00\x00\x00\\{\x80Dv\x80P\xb1\x84K\xfb\x80BZ"
 
-
+# KEY <pattern*>  - list all keys
 # SCAN - iterate over keys in current redis DB
 # SSCAN/HSCAN/ZSCAN for set/hash/sorted-set
+# WATCH <key>  & MULTI - to implement SQL transactions which will discard changes by other clients to watched key. MULTI gives you transactions where you can SET the key and call EXEC to commit (nil return value means not committed; 

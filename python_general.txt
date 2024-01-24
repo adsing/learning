@@ -1,7 +1,7 @@
 Learn:
- - polars
+ - concurrency: multi-threading, multi-processing, concurrent futures
  - asyncio
- - multi-threading and multi-processing
+ - polars
  - profiling with Scalene
 
 
@@ -13,20 +13,9 @@ Ternary:
 	a if a < b else b
 
 
-f-string (f"...{var}..."
-   f"{var=}"	# var=10
-   f"{var%2=}"	# var%2=0
-   f"{var=:FORMAT_STRING}"	# format string is related to type. Invokes __format__ method of class/type
-   	f"{now=:%y-%m-%d}"
-   	f"{float_number=:.2f}"
-   f"{var!a}"	# !a -> ascii (converts non-ascii e.g. unicode into \U)
-   f"{var!r}"	# !r -> print repr equivalent
-   f"{var!s}"	# !s -> print str (default)
-
-
 Enum: (unique) Symbolic names bound to a variable. Advantages: grouping, nice repr, type safe.
 	  If 2 names have same value then second serves as alias to first -- which is returned when accessing first or second such enum member.
-	  ALiases are not showin while iterating over enum.
+	  Aliases are not showin while iterating over enum.
 	  To force, unique values as well then use @unique.
 
 		from enum import Enum, auto, Flag, unique
@@ -114,9 +103,9 @@ Benchmarking:
 
 Faster code tips:
    - use itertools/collections e.g. count() instead of loops with var increment
-   - speed vs memory trade off (generator vs list) esp if only first elelement of list is needed then next(gen)
-   - numpy/numba
-   - code optimization e.g. right data struct/algorithm
+    - speed vs memory trade off (generator vs list) esp if only first elelement of list is needed then next(gen)
+    - numpy/numba
+    - code optimization e.g. right data struct/algorithm
    	- e.g. {}, [], () faster than dict(), list(), tuple() fn calls. Tuple faster than list
    	- unique elements of list while retaining order dict.fromkeys(mylist) but elements need to be hashable
    	- DRY vs calling too many fn (overheads).
@@ -138,30 +127,30 @@ Data containers : Class/DataClass/Dict/NamedTuple
 
 Dataclasses: provides __init__, __repr__ and __eq__ by default.
 
-from dataclasses import dataclass, field, astuple, asdict
-import inspect
+    from dataclasses import dataclass, field, astuple, asdict
+    import inspect
 
-@dataclass(frozen=True, order=True)			# order provides le/ge/lt/gt, frozen allows obj value to NOT be modified after initializations.
-							# Others: kw_args=True, match=True for structural pattern matching, slots=True
-class Comment:
-    id:int
-    txt:str
-    replies: list[str] = field(default_factory=list)	# list or any other fn that generates initial value. Factory is invoked if user doesn't specify this field while creating object. Can set "init=False" in field() to ensure that user can not provide this arg. "repr=False" to hide field from printing with repr. "compare=False" to skip the field
-    				# __post__init__(self) method can be used to set attributes that depend on other member attrib.
+    @dataclass(frozen=True, order=True)			# order provides le/ge/lt/gt, frozen allows obj value to NOT be modified after initializations.
+							    # Others: kw_args=True, match=True for structural pattern matching, slots=True
+    class Comment:
+        id:int
+        txt:str
+        replies: list[str] = field(default_factory=list)	# list or any other fn that generates initial value. Factory is invoked if user doesn't specify this field while creating object. Can set "init=False" in field() to ensure that user can not provide this arg. "repr=False" to hide field from printing with repr. "compare=False" to skip the field
+        				# __post__init__(self) method can be used to set attributes that depend on other member attrib.
 
 
-def main():
-    comment = Comment(1,"hoo")
-    print(comment)
-    # comment.id=2
-    # comment.set_id(2)
-    # print(comment)
-    comment.x = 100	# can't do if frozen
-    print(comment.x)
-    number, comment = astuple(comment)		# dataclass converts to tuple/dict
-    pprint(inspect.getmembers(Comment, inspect.isfunction))
-if __name__ == '__main__':
-    main()
+    def main():
+        comment = Comment(1,"hoo")
+        print(comment)
+        # comment.id=2
+        # comment.set_id(2)
+        # print(comment)
+        comment.x = 100	# can't do if frozen
+        print(comment.x)
+        number, comment = astuple(comment)		# dataclass converts to tuple/dict
+        pprint(inspect.getmembers(Comment, inspect.isfunction))
+    if __name__ == '__main__':
+        main()
 
 
 match statement (for structural pattern matching) from Py3.10.
@@ -174,6 +163,7 @@ Match patterns based on given sequence i.e. order is important.
 		case 3: pass
 		case _: pass
 		case other: print("unknown")
+
 
 Decorator:
 	Enhance/Modify behavior to existing fn. E.g. add time taken by existing fn; add logging/user behavior; authentication before fn calls.
@@ -231,7 +221,7 @@ Itertools: Creates iterators for efficient looping
 		- filterfalse(predicate, sequence): opposite of filter(which keeps elements where predicate is true), this keeps elements where predicate is false
 		- groupby(iterable, [key]): sub-iterators groups by value of key(v). E.g. for key, group in groupby(sorted('abbaab')): print key, list(value) # gives 'a' -> ['a','a','a'] and similar for 'b'
 		- isslice(sequence, [start, stop, step]): like slice/range for sequence
-		- pariwise(iterable): ABCD gives overlapping pairs of AB BC CD
+		- pairwise(iterable): ABCD gives overlapping pairs of AB BC CD
 		- starmap(function, sequence): gives sequence of fn(*seq[0]), fn(*seq[1]). i.e. fn args come from sequence (as sub-lists) and returns sequence of results
 		- takewhile(predicate, sequence): opposite of dropwhile, it gives the leading sequence while predicate is true
 		- tee(iterator, n): splits one iterator in N-iterators. Allows reuse/copy of iterator.
@@ -386,7 +376,7 @@ Generator: a fn that uses yield.
 	Returns iterable object (once), items are generated lazily so memory efficient when handling large datasets.
 	Generator fn uses "yield" instead of "return'.
 	For-loop uses iter.next() until StopIteration is hit.
-	for i in (x for x in range(10) if X%2==0):
+	for i in (x for x in range(10) if x%2==0):
 		print(f"Geneterated {i}")
 
 	Use generators to setup processing pipelines where each is fn that starts a for loop and does a yield.
@@ -402,12 +392,14 @@ Generator: a fn that uses yield.
 		g.next()		# advance to yield				item = yield   # send() sets item=item
 		g.send(item)	# send data to generator		yield some_value
 		g.close()       # shutting down processing	except GeneratorExit:   # close called/shutdown
-		g.throw(RuntimeError,'Broken')				except RuntimeError as e: # exception trown
+		g.throw(RuntimeError,'Broken')				except RuntimeError as e: # exception thrown
 													return "value"     # raises StopIteration with value=value
 
 	Delegate to sub-generator with "yield from <gen>". Allows stacking/sequencing of generators.
 
-	A coroutine (enter/exit & resume at many different points with send()) vs subroutine(where entry & exit path is fixed). A coroutine is for consuming data; while generators are for producing data.
+	A coroutine (enter/exit & resume at many different points with send()) vs subroutine(where entry & exit path is fixed). 
+	A coroutine is for consuming data; while generators are for producing data.
+
 
 collections.abc - Abstract base classes for collections
 	issubclass/isinstance works in one of 3 ways:
@@ -476,6 +468,7 @@ Abstract base class (abc):
 		def _set_x(self, val):
 			...
 		x = property(_get_x, _set_x)
+
 
 contextlib: for invoking tasks "with expr as target: <code block/suite>"
 	Set up runtime context by implementing enter/exit fn for a code suite.
@@ -551,6 +544,7 @@ contextlib: for invoking tasks "with expr as target: <code block/suite>"
 	Context managers tend to be One-shot (single use) context managers.
 	Re-enterant context managers example suppress(), redirect_stdout(), chdir(). threading.Rlock()
 	Re-usable (but no re-enterant) context managers (example ExitStack, threading.Lock)
+
 
 Descriptors:
 	Allow to customize attribute lookup, storage and deletion (by defining methods __get__, __set__, __delete__ and optional __set_name__)
@@ -757,6 +751,17 @@ JSON:
         No support for custom clases; no vulnerability while deserializing JSON.
 
 
+f-string (f"...{var}..."
+        f"{var=}"	# var=10
+        f"{var%2=}"	# var%2=0
+        f"{var=:FORMAT_STRING}"	# format string is related to type. Invokes __format__ method of class/type
+        f"{now=:%y-%m-%d}"
+        f"{float_number=:.2f}"
+        f"{var!a}"	# !a -> ascii (converts non-ascii e.g. unicode into \U)
+        f"{var!r}"	# !r -> print repr equivalent
+        f"{var!s}"	# !s -> print str (default)
+
+
 string:
         string.ascii_letters | ascii_lowercase | ascii_uppercase
         string.digits | hexdigits | octdigits
@@ -764,6 +769,7 @@ string:
         string.whitespace
         string.printable (letters + digits + punctuation + whitespace)
         string.capwords(s, sep=None)  # capitalize each word (unlike str.capitalize which does first char only) .. also removes lead/trail/multiple whitespaces.
+
 
         conversion flags: "More {var!r}"   # '!s' str(), '!r' repr() and '!a' ascii().
         # format ':...' is [[fill]align][sign]["z"]["#"]["0"][width][grouping_option]["." precision][type]
@@ -863,10 +869,17 @@ Packaging options: PyPI, setup.py, wheel
 	E.g. 	import mymodule.submodule.somepycode
 	invokes mymodule/__init__.py then mymodule/submodule/__init__.py then mymodule/submodule/somepycode
 
+
+Pyre : static type-checker from Facebook; pysa for security focussed tool
+    $ pyre init         # sets up .pyre_configuration & .watchmanconfog
+    
+
+
 VSCode settings:
  - install Python from market place (also installs pylint and pylance)
  - python.analysis.typeCheckingMode: off/basic/strict   *If you follow typing hints*
  - editor.formateOnSave + editor.codeActionsOnSave (source.organiseImports=true)
 
-Coding exercises in various languages (incl Python) with solutions: https://rosettacode.org/wiki/Category:Python
+Coding exercises in various languages (incl Python) with solutions: 
+    https://rosettacode.org/wiki/Category:Python
 David Beazley - https://github.com/dabeaz/blog

@@ -17,3 +17,24 @@ Fifth  NF: Should not be possible to describe table as join of 2 separate tables
 
 
 Why have denormalised data? For avoiding joins to speed up query in single table. Rish of inconsistent delete/update/insert.
+
+
+
+
+
+ACID - Atomicity (all or none - transaction), consistency (data conforms to schema/constraints), isolation (isolated via transactions; multiple trx executed simultaneously with same result if executed serially) & durability (transactions persisted ensure future reads will get this data).
+    ACID DB focus on availability & consistency and secondary consideration on partitioning.
+
+    
+BASE - Basically avaialble, soft-state eventual consistent.
+        Available all the time; system state may wary over time and data changes become consistent over time (different nodes get the same value)
+
+        
+CAP theorem:
+    A distributed/networked shared data system can gaurantee only 2 of 3 properties:
+    1. Consitency ~ same as having a single up-to-date copy of data; sequential updates
+    2. Availability ~ of that data for updates. Working nodes give a quick response for request.
+    3. Partition - system tolerance in case of failure
+    
+    NoSQL dbs have to choose between availability & consistency.
+    

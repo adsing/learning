@@ -1,1 +1,43 @@
 See code/python/pandas (Data manipulation + linear regresison)
+
+import numpy as np
+import pandas as pd
+
+# url = github raw csv
+tips = pd.read_csv(url)
+tips.head()
+# total_bill, tips, sex, smoker, day, time, size
+#  ##.##       #.#  M/F   Y/N   Sat-Sun Lunch/Dinner 2,3,4
+
+tips[['total_bill','tips','size','day']]
+is_dinner = tips.Dinner == 'Dinner'
+is_dinner.value_counts   # T ... F ...
+
+# tip >= 5.00 and Dinner
+tips[(tips.time == 'Dinner) & (tipss.tip >= 5.0)].head()
+
+# where time is null with isnull/notnull
+tips[tips.time.isnull()]
+
+# aggregate/group-by.  SQL count->size; SQL avg->mean
+## equivalent
+tips.sex.value_counts()
+tips.groupby('sex').size()
+tips.groupby('sex')['total_bill'].count()
+## multiple agg e.g. avg(tip), count()
+tips.groupby('day').agg({'tip':np.mean, 'day':np.size})
+tips.groupby(['day', smoker']).agg({'tip':np.mean, 'day':np.size})      # big daddy of above
+
+# join -> merge
+pd.merge(df1, df2, on='key_column')
+pd.merge(df1, df2, left_on='left_key_column', right_index=True)     # column & index match
+pd.merge(df1, df2, left_index=True, right_index=True)       # e.g. time series based data
+pd.merge(df1, df2, left_on='left_key_column', right_index=True, how='left')     # left outer (left|right|inner|outer)
+
+# union all -> concat
+pd.concat([df1, df2, ...])
+pd.concat([df1, df2]).drop_duplicates()         # SQL union to remove dups
+
+# can also pick which col/index to stack unstack e.g. df.stack(1)
+df.stack()  # make first column as last component of a multi-index
+df.unstack() # makes last index of a multi-index as the first column

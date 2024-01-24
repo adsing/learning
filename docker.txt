@@ -102,7 +102,10 @@ $ docker run -d --network mongo-network
 # stop & remove all containers & network from the manifest
 $ docker-compose -f mongo-docker-compose.yaml down
 
-
+$ docker compose up --build         # build and run
+# docker compose watch  # will watch current workspace and automatically build and deploy your app (to test env)
+        # specify develop watch action=sync and specify which folders to watch for & ignore
+    
 Docker volumes
 For data persistence (DB data or app state).
 Point/Mount hosts file system onto container's virtual file-system.
@@ -127,3 +130,12 @@ volumes:
     driver: local
     
 See https://gitlab.com/nanuchi/techworld-js-docker-demo-app/-/blob/master/docker-compose.yaml
+
+
+$ docker init
+# To setup docker on a project after it has been built
+# Detects projects and suggest OS/programming-language based images, user/port etc setup. Build Dockerfile; docker.compose and .dockerignore based on Q&A prompt.
+
+
+$ docker scout
+# container scan images for vulnerabilities
