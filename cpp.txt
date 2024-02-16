@@ -1,16 +1,43 @@
+Cpp coding guidelines: https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines
+
+Compiling:
+    $ g++ -std=c++14 -Wall -o code.out code.cpp
+    $ cpplint code.cpp    # linting
+
+Memory sections : code, global, stack/fn_locals & heap
+
 class X {
 	X();			// constructor default
 	~X();			// destructor (make it "virtual" if it will be inherited)
 
 	X(int x);		// user constructor
-	
+
 	X(const X &x);		// copy constructor
-	X& operator=(const X &x); // copy assignment operator	
-	
+	X& operator=(const X &x); // copy assignment operator
+
 	X(X &&x);		// move constructor
 	X& operator=(X &&x); 	// move assignment operator
 	}
-# If destructor or if resources are being locked (RAII) is specified then define all the above.	
+# If destructor or if resources are being locked (RAII) is specified then define all the above.
+# if you define a constructor (default constructor is not provided) then also define destructor.
+
+Typical class definition:
+class MyClass {
+    public:
+        MyClass(int);
+        ~MyClass();
+        void setMemberValue(int);
+        int getMemberValue();
+    private:
+        int member;
+        bool checkState();
+};
+
+new : throws exception if system if out of memory. Checking for null is outdated.
+delete : set ptr = nullptr after delete. Calling delete twice will crash code; but calling delete on nullptr is safe.
+    delete ptrObj;
+    ptrObj = nullptr;       // makes it safe for delete to be called N times on nullptr (skip if doing in destructor as object ceases to exist).
+
 
 Map: Key-value ordered pair. Also has unordered_map.
 
@@ -18,9 +45,9 @@ if (obj[key])  	# inserts element key into map obj. Instead use obj.at(key) that
 
 
 Map with structured binding usage:
-for(const auto & [key, value]: map_obj) { cout << key << value << '\n';} # using structured binding 
-instead of 
-for(const auto & item : map_obj) { cout << item.first << item.second << '\n';} # 
+for(const auto & [key, value]: map_obj) { cout << key << value << '\n';} # using structured binding
+instead of
+for(const auto & item : map_obj) { cout << item.first << item.second << '\n';} #
 
 
 Do not modify container (vector, map etc) while looping over it as it may get resized with insert (or delete) and m.end() may be updated
@@ -34,7 +61,7 @@ Use override in inherited class to indicate which method is over-ridden to avoid
 class Derived: public Base {
    public:
    	~ Derived() override {...}
-   	
+
 
 Class initializer list - initializes elements in the order defined in class definition.
 
@@ -47,28 +74,273 @@ Set to zero:
 	int x {};
 	int *xp = new int();
 	int *xp = new int{};
-	
 
-Constants:
-constexpr double PI {3.14159};	# constexpr at compile time vs const at run time
+auto x = 10;    # type inferred from initialized value (so must be initialized)
+auto area(int length, int width=1); # fn prototype where return value is determined by compiler and one default parameter
 
+Array N-d:
+int tictactoe[3][3] = { {0,0,0}, {0,0,0}, {0,0,0}};
+Reading N-char terminatd by '|':
+    char buffer[32];
+    cin.getline(buffer, 31, '|')  # 1 less than array size to store \0
+C-string fn in <string.h> e.g. strcpy(src, dest) or strncpy(src, dest, 31)
+For-each loop:
+    for auto item : arr2d { cout << item << endl; }
+
+
+Function polymorphism is when different fn have same name but type or # of paramters differ. Return type being different doesn't count. Also, be careful when you have default values specified as it makes that parameter optional will cause error when running. .
+
+enum COLOR {RED, GREEN, BLUE, YELLOW=100, ORANGE=200};
+COLOR color1 = RED;
+
+typedef unsigned long int STUDENT_ID;
+STUDENT_ID student1 = {123456789};
+
+constant:
+    1. const float fees = 0.0010;  // int total_fees = 1.0 + fees; ...will be computed at compile time as 1.0010.
+    2. #define FEES 0.0010        // no type (just string substitution in code)
+
+Constant:
+constant expressions fn must return non-void type. Return should be simple literal, other constants or const-expressions.
+    constexpr double PI {3.14159};	// constexpr cause computation at compile time vs const is constant or const-member-fn that can not change data members at run time
+    constexpr double get_pi() { return 22.0/7.0; }  // typically simple fn few lines or just return; must return a type and evaluate to constant on substitution.
+
+
+Constexpr variable must satisfy the following requirements:
+ 1. its type must be a LiteralType (2, 'hello')
+ 2. it must be immediately initialized
+ 3. the full-expression of its initialization, including all implicit conversions, constructors calls, etc, must be a constant expression
+
+Constexpr fn:
+  1. Cant' be virutal, coroutine (Cpp20),
+  2. Body contain static_assert, typedef, using declaration, one return stmt (no try-except or goto)
+
+
+const member function: Getter functions in a class are const as they don't modify object state.
+   int Vehicle::getSpeed() const;
 
 Constant Pointer vs Pointer to constant
+    const <type> *ptr;  // objects pointed by ptr is constant. Object can't be modified but pointer can be moved around. Can call only "const" methods that ensure object will not be modified
+    vs
+    <type> * const ptr;  // Pointer is constant. The object it points to can be modified but it can't be reassigned.
 
-const int a = 10;	// or int const a = 10; 		indicates int value is constant
-const int* ptr = &a;  	// or int const * ptr = & a;		indicates int value pointed by pointer is constant but pointer can be moved around
-*ptr = 5; // wrong
-ptr++;    // right
+    const int a = 10;	// or int const a = 10; 		indicates int value is constant
+    const int* ptr = &a;  	// or int const * ptr = & a;		indicates int value pointed by pointer is constant but pointer can be moved around
+    *ptr = 5; // wrong
+    ptr++;    // right
+
+    int a = 10;
+    int *const ptr = &a;  		// ptr (to int) is constant so int value pointed by it can be changed
+    *ptr = 5; // right
+    ptr++;    // wrong
 
 
-int a = 10;
-int *const ptr = &a;  		// ptr (to int) is constant so int value pointed by it can be changed
-*ptr = 5; // right
-ptr++;    // wrong
+int *p = nullptr;   // or NULL for pre C++11  or 0
+
+int *p = new int{3};    // init value of 3
+delete p;
+p = nullptr;
+
+this pointer - each class object has this as a pointer to object.
+    void Point::SetPoint(int x, int y) {
+        this->x = x;                    // ptr_obj->member is same as (*ptr_obj).member
+        this->y = y;
+    }
 
 std::unique_ptr and std::shared_ptr
 std::unique_ptr<UserClassName> ptr;	// cheaper to keep unique ptr that destruct when out of scope. Unique_ptr is better suited for multi-threaded programming
 std::shared_ptr<UserClassName> share_ptr = std::move(ptr);	// make unique_ptr into shared_ptr (does ref.counting and destroys when ref.count=0)
 
+Pointers & references:
+Pointers are variables that hold addresses of another object. Ideal to init and on delete set to nullptr.
 
-Cpp coding guidelines: https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines
+References are aliases to an object (they are implemented using pointers). **Must be initialized (cannot be null) & can not be reassigned.**
+Ensure you don't pass references back if original object is destroyed after going out of scope.
+Also passing a reference back to an object on heap(new) leads to complication of how to free the memory aliased by ref (create ptr; point to ref and delete it? then what's ref pointing to)...better to pass ptr back or create ref. object outside and modify in fn.
+Assigning a new value to a reference actually modifies the original value to which it's a references.
+Handy for returning/modifying multiple values from a function; and easier to read code with references over pointers.
+e.g. when functions return reference to local variables.
+    e.g. int A = 10;
+         int &ref = a;      // reference
+         int B = 20;
+         ref = B;       // same as A = B; gives A the same value as B
+
+inline member functions: request for putting function code inline where it's invoked for efficiency. Same can be achieved by putting member function definition and declaration together in .h/.hpp file.
+    inline int Vehicle::getSpeed() const { return speed; }
+
+Overloading: fn with different type or # or arguments
+Constructor can be overloaded but Destructor can't be as it has no parameters e.g. ~ClassType(){...}
+Constructors have an initialization stage and constructor body stage:
+    e.g. Point(): x(var_x), y(var_y) { /*  body of constructor */ }
+    Using initialization list is more efficient and the only way to do if references or constants are involved.
+
+CopyConstructor: provided by default; takes one arg i.e. reference to same class object.
+    If you create custom constructor or destructor then provide copy-constructor also.
+    Default behavior is to shallow-copy element wise - unsuitable if we have heap memory.
+    ClassType(const ClassType &ref) {...}
+
+Operator overloading:
+    returnType operator++ (param list) {}
+    e.g. for obj+1
+    ClassType& operator+(int x) { _value += x; return *this; }
+
+    ***
+    for prefix vs postfix increment/decrement (++obj vs obj++) differentiation,
+        for obj++, we pass an int argument to operator++ and return by value.
+        for ++obj, its just operator++() with no args and return by refernce...as shown below.
+    Limitations: can't overload native/built-in types; precedence orders stays same; can't make up new operators.
+
+    class Number
+    {
+        public:
+            Number& operator++ ()     // prefix ++
+            {
+               // Do work on this.   (increment your object here)
+               return *this;
+            }
+
+            Number  operator++ (int)  // postfix ++
+            {
+               Number result(*this);   // make a copy for result
+               ++(*this);              // Now use the prefix version to do the work
+               return result;          // return the copy (the old) value.
+            }
+    };
+
+Assignment operator
+operator=() ... needs to protect against self-assignment e.g. a=a.
+    Also for a=b where heap memory is involved; need to release memory currently used by a.
+    ClassType operator=(const ClassType & rhs) {
+        if (this == &rhs) return *this; // a=a
+        delete data;
+        data = new Heap;
+        *data = rhs.getData();
+        return *this;
+
+Class -> builtin type
+int() operator:
+    ClassType obj(10);
+    int x = obj;        // want x=10
+
+    // overload int to convert obj to int
+    operator unsigned int() { return value;}    // note no return type
+
+Inheritance - is-a, specialization (override/add-new features)
+    Mammal -> Canine -> Dog
+    Private members are not accessible to derived/child class; only protected/public are visible to child and protected is treated as private.
+    Class Dog : public Canine { /* public, protected, private */};
+
+    # public, protected, private inhertance
+    class A
+    {
+        public:
+           int x;
+        protected:
+           int y;
+        private:
+           int z;
+    };
+
+    class B : public A
+    {
+        // x is public
+        // y is protected
+        // z is not accessible from B
+    };
+
+    class C : protected A
+    {
+        // x is protected
+        // y is protected
+        // z is not accessible from C
+    };
+
+    class D : private A    // 'private' is default for classes
+    {
+        // x is private
+        // y is private
+        // z is not accessible from D
+    };
+
+
+    Constructors are called in order of inheritance (A->B->C); while destructors are called in reverse order (C->B->A).
+    Dog::Dog(int age, int weight):
+        Mammal(age),    // explicitly calling mammal constructor
+        breed(DEFAULT_BREED) {_weight = weight;}   // can not intialize base members if not in base-constructor. So first create object and then set value for members in body/construction phase
+
+    If derived class overrides any one method from base clas then it should ideally override any other "overloaded" member fn from base class i.e. having same name but different signature (# & type of args & const). Otherise derived class implementing one of many overloaded members of base class would effectively hide the other unimplemented overloaded base class methods. To access such hidden methods, use scope resolution i.e. BaseClass::method().
+        e.g. obj.BaseClass::method()
+
+
+Overloading: function overloading (same name but different # or type of args and/or const).
+             operator overloading (e.g. objA + objB)
+
+Polymorphism : many forms - runtime "overloading" - code that works on interface (base ptr/reference) and calls correct derived class fn (implmented via vPtr & vTable that points to correct method (base or derived) to be invoked. Virtual fn call have a level of indirection so the flexibility comes at a cost)
+Implemented by making methods virtual (member fn, destructor must be!, can't have constructors but can have clone methods e.g. of clone method when copy-constructor can't be made virtual
+    virtual BaseClass* clone() { return new BaseClass(*this);   // in base class
+    virtual BaseClass* clone() { return new DerivedClass(*this);   // in derived class (returned as ptr to base)
+
+  If new methods are added in derived class and they wished to be called through ptr to Base then it needs to dynamically casted and tested before using. The base ptr only knows about methods (virtual or not) in base class.
+  Derived *ptr = dynamic_cast <Derived *> (basePtr);   // basePtr->derived_new_method() not knownn
+  if (ptr)      // non-compatible type will fail
+        ptr->dervied_new_method()   // now this will work
+
+
+Abstract Class/DataType or Pure Virtual fn:
+    Class can not be instantiated; derived class should implement/override pure virtual fn. It's possible for derived class to add more interfaces and not defined the pure-virtual fn....but then we expect the grand-child dervied class to implement pure virtual fn so that objects can be instantiated.
+    Used to define the interfaces.
+    virtual void foo(args) = 0;         // no body implemented here; derived class must implement this
+
+
+Static member variables are shared by objects i.e. they belong to the class and not each objects.
+E.g. to track how many objects have been created.
+Like globals but scoped to be within the class.
+    1. Need to initialize static member
+        static int Robot::robotCount = 0;
+    2. Access via Class scope (Robot::robotCount) or object (obj.robotCount) if public
+
+Static method invoked by scoping with class:
+    Robot::StaticMethod();      // static void Robot::StaticMethod(){...}
+        usecase : static data is private and then static method can be accessor method
+        static method can not access non-static data (in object; while static method/data is in class)...also don't have "this" pointer and can't be const.
+
+
+Pointer to function:
+    long (*fp) (int);       // fp is point to function that takes int and returns long
+    // long * fp (int);     // fp is fn that takes int and return pointer to long
+    fp(10);                 // fn call ... same as saying (*fp)(10)
+
+    void (*ptrFuncArray[10])(int &, int &);         // Array of ptr to fn
+    ptrFuncArray[0] = add;
+    ptrFuncArray[0](10,20);
+
+    void printVals(void (*fp)(int &x, int &y), int a, int b);   // passing fn pointer & 2 ints by-value to fn printVals()
+
+    typedef void (*VPF) (int &, int &);     // typedef for above fn ptr that takes 2 int by ref
+    VPF add;
+
+    void (ClassType::*pMethod)(int, int);   // point to class method
+
+Friend fn allow another class to access private members of this class -- avoid as it breaks encapsulation.
+
+Numeric Literal Separator:: 1'000'000 or 0b1010'1010
+
+Lambda expression:: [scope] (arguments) -> return_type {..code..};
+    auto lambda_fn = []() { cout << "Hello" << endl;}
+
+Template
+
+    template <class T>
+    class UserClass{
+    public:
+      UserClass getData(T data, T* ptr, UserClass<T> userObj);
+    }
+
+Exceptions: try/catch...Exceptions are of type Class so we can define our own types
+    Exception catching is like a switch-statement...it will try to match each catch-clause listed after the try where the exception occured so can match more than one if exception is of type derived and we check for both Base and Derived exception.
+try {
+    // error prone code
+    }
+catch(MyExceptionClass x) { .. handle it ..};
+catch(MyDerivedExceptionClass x) { .. handle it again if it's type DerivedException ..};
+catch(...) { ... catch all ...}
