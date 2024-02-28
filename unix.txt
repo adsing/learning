@@ -17,10 +17,6 @@ log files (/var)
 
 home directories (/home) .
 
-Citadel specific:
-/auto - NFS mount
-/opt/citadel/ -- 3rd party
-
 From <https://wiki/display/ADST/Linux+101> 
 
 Boot sequence: load kernel into memory; init OS; system service apps come up (LDAP, NTP, DNS); other apps (web server & database server; networking; firewall; X display manager etc) & final - display login prompt.
@@ -518,7 +514,7 @@ Destination     Gateway         Genmask         Flags   MSS Window  irtt Iface
 0.0.0.0         10.32.242.1     0.0.0.0         UG        0 0          0 bond0
 
 Network Interfaces:
-$netstat -i
+$ netstat -i
 Kernel Interface table
 Iface       MTU Met    RX-OK RX-ERR RX-DRP RX-OVR    TX-OK TX-ERR TX-DRP TX-OVR Flg
 bond0      1500   0 219215904      0      0      0 230840408      0      0      0 BMmRU
@@ -527,7 +523,7 @@ eth1       1500   0   265641      0      0      0        0      0      0      0 
 lo        16436   0 51354919      0      0      0 51354919      0      0      0 LRU
 
 Group info for IPv4/v6:
-$netstat -g
+$ netstat -g
 IPv6/IPv4 Group Memberships
 Interface       RefCnt Group
 --------------- ------ ---------------------
@@ -610,7 +606,10 @@ max locked memory       (kbytes, -l) 64
 max memory size         (kbytes, -m) unlimited
 virtual memory          (kbytes, -v) unlimited
 
-
+Tools for monitoring:: Zabbix, Prometheus & Graphana, Datadog, sar
+Zabbix
+Prometheus & Graphana :: Prometheus mainly collects the Linux hardware and OS metrics exposed by *nix kernel and then stores as time-series data, using a pull model over HTTP. Grafana dashboards for data visualization with your Prometheus server.
+Datadog :: SaaS for monitoring unix hosts. Requires agent setup on box.
 sar:to monitor memory/swap space
 1. $ sar -r -s 10:24:00          #monitor memory from 10:24 today
 2. $ sar -S -s 10:24:00          #monitor swap space from 10:24 today
@@ -618,72 +617,51 @@ sar:to monitor memory/swap space
 4. /usr/local/bin/pdctop 10:24   #get a top-like interface at 10:24am
 
 
+CPU monitoring:
+$ top (CPU%, Memory, Swap), host time up, nice, state, per process (id, cmd, cpu, memory (total, virtual)
+	Output
+	top - 15:14:40 up 46 min,  1 user,  load average: 0.00, 0.01, 0.05
+	Tasks:  56 total,   1 running,  55 sleeping,   0 stopped,   0 zombie
+	Cpu(s):  0.0%us,  0.0%sy,  0.0%ni,100.0%id,  0.0%wa,  0.0%hi,  0.0%si,  0.0%st
+	Mem:   1019600k total,   316576k used,   703024k free,     7652k buffers
+	Swap:        0k total,        0k used,        0k free,   258976k cached
+
+	  PID USER      PR  NI  VIRT  RES  SHR S %CPU %MEM    TIME+  COMMAND           
+	    1 root      20   0 24188 2120 1300 S  0.0  0.2   0:00.56 init               
+	    2 root      20   0     0    0    0 S  0.0  0.0   0:00.00 kthreadd 
+
+$ htop (better CPU thread utilization)
 
 
+Network monitoring:
+$ ifconfig   -- list all network interfaces (card/wifi/local/docker) with IP/mask & RX/TX packets sent/received/dropped
+
+$ netstat -- list open sockets TCP/UDP (-tu) (-a listening & sending) (-s for summary shows per protcol (TCP/UDP recevied/sent/reset/dropped/buffer errors)
+
+$ nethogs -- PID, process, network card, sent/received in real-time (Active processes)
+	  PID USER     PROGRAM                      DEV        SENT      RECEIVED       
+	3379  root     /usr/sbin/sshd               eth0       0.485       0.182 KB/sec
+	820   root     sshd: root@pts/0             eth0       0.427       0.052 KB/sec
+	?     root     unknown TCP                             0.000       0.000 KB/sec
+
+	  TOTAL                                                0.912       0.233 KB/sec
 
 
+Memory monitoring:
+$ free		# total/used/free/shared/buffer
+$ vmstat	# 
+	procs -----------memory---------- ---swap-- -----io---- -system-- ------cpu-----
+	 r  b   swpd   free   buff  cache   si   so    bi    bo   in   cs us sy id wa st
+ 	0  0    256 3298216 476696 6782212    0    0     2    11   24    5  4  1 95  0  0
+	$ vmstat -w
+	--procs-- -----------------------memory---------------------- ---swap-- -----io---- -system-- --------cpu--------
+	   r    b         swpd         free         buff        cache   si   so    bi    bo   in   cs  us  sy  id  wa  st
+	   0    0          256      3340888       476732      6739560    0    0     2    11   24    5   4   1  95   0   0
 
-PDC -- takes snapshot every few seconds.
-
-[s_cesprd@lx-chcesp01]::[/home/s_cesprd]=>ps -ef | grep pdc
-s_cesprd  5694  5106  0 17:58 pts/27   00:00:00 grep pdc
-root     10484     1  0 Apr25 ?        00:13:41 /usr/bin/perl /usr/local/sbin/pdc3d --syslog
-root     28153 10484  0 00:04 ?        00:01:29 /usr/local/sbin/ps.pdc3 -eww --repeat 10 --format ppid,pcpu,pmem,uid,stat,rss,vsz,nlwp,pid,ucmd,command
-
-
-[s_cesprd@lx-chcesp01]::[/home/s_cesprd]=>pdc3 --format=memhog | tail
-# Top processes (by RSS) at Thu Apr 30 17:57:24 2015
-# RAM%    CPU% PID    User             Command
-18.00% 100.00% 9548   cesroot          /home/cesroot/bin/optionXGateway_exe -csAppName CIGOPTXGateway -csFamily US_OMM
- 1.20%   0.00% 12596  s_cesprd         /cigprod64/ces/zap/zap_cesprd/bin/zaplet_cesprd --cfgs:ctx CES.CES_US --cfgs:app Zaplet --cfgs:name Zaplet --cfgs:dir /cigprod64/ces/zap/zap_cesprd/config
- 0.90%   0.00% 10713  cesroot          /auto/ces_ort/cestp/mysql/bin/mysqld --basedir=/auto/ces_ort/cestp/mysql
-# Top processes (by RSS) at Thu Apr 30 17:57:34 2015
-# RAM%    CPU% PID    User             Command
-18.00% 100.00% 9548   cesroot          /home/cesroot/bin/optionXGateway_exe -csAppName CIGOPTXGateway -csFamily US_OMM
- 1.20%   0.00% 12596  s_cesprd         /cigprod64/ces/zap/zap_cesprd/bin/zaplet_cesprd --cfgs:ctx CES.CES_US --cfgs:app Zaplet --cfgs:name Zaplet --cfgs:dir /cigprod64/ces/zap/zap_cesprd/config
- 0.90%   0.00% 10713  cesroot          /auto/ces_ort/cestp/mysql/bin/mysqld --basedir=/auto/ces_ort/cestp/mysql
-
-
-[root@lx-njnasd-hfpo02 ~]# pdc3 --format=memhog --time='04/17/2015 16:48:14 -0500'
-#### Memhogs report for lx-njnasd-hfpo02
-# Top processes (by RSS) at Fri Apr 17 16:48:23 2015
-# RAM%    CPU% PID    User             Command
-81.59%   0.10% 10605  s_fixuser        /cigprod64/eramsv/po/6.2/bin/rh5a64g4/postOffice_exe -P*********** -SSPPOST1 -Us_bkrcon -n cesorders_postdb -c /logs/rrts/.//postOffice-log.20150417.SYB -d 04/17/2015 -a /logs/rrts/.//idAllocation.cfg
-15.30%  87.50% 13370  s_fixuser        /cigprod64/eramsv/po/6.2/scripts/postOfficeSybBcpFlat.pl -d /logs/rrts/./ -f /logs/rrts/.//postOffice-log.20150417.SYB -S IQPGMQS1 -H chpohost -B /dataprod/eramsv/po/IQ_BCP/cesorders_postdb/ -U s_bkrcon -P ****** -I cesorders_postdb
-0.00%   0.10% 3498   nobody           ./node64/bin/node ./startup.js   
-
-
-Running /usr/local/bin/pdc3 --format=memhog --time="10:30"
-#### Memhogs report for ld-chces06
-# Top processes (by RSS) at Tue May 19 10:30:05 2015
-# RAM%    CPU% PID    User             Command
-56.50%  14.40% 19065  s_cesqa          /auto/cesqa/devqa/APPS/mvs/mvs_ng_stabledev/bin/mvs -X MVS_NG_STABLEDEV -k CES -s 42035 -V current -z TEST_CES_MVS_NG_STABLEDEV_ld-chces06
-22.20%   0.00% 19744  s_cesqa          /auto/cesqa/devqa/APPS/queryservice/queryservice_fix_archive_2/bin/queryservice -c /auto/cesqa/devqa/APPS/queryservice/queryservice_fix_archive_2/config/queryservice_fix_archive_2.xml
-17.30%   0.00% 19782  s_cesqa          /auto/cesqa/devqa/APPS/queryservice/queryservice_fix_archive_3/bin/queryservice -c /auto/cesqa/devqa/APPS/queryservice/queryservice_fix_archive_3/config/queryservice_fix_archive_3.xml
-2.80%   2.00% 19710  s_cesqa          /auto/cesqa/devqa/APPS/queryservice/queryservice_ces_tc_otc_ord/bin/queryservice -c /auto/cesqa/devqa/APPS/queryservice/queryservice_ces_tc_otc_ord/config/queryservice_ces_tc_otc_ord.xml
- 
-Running /usr/local/bin/pdc3 --format=cpuhog --time="10:30"
-#### CPUhogs report for ld-chces06
-# Top 10 processes (by %CPU) at Tue May 19 10:30:05 2015
-# CPU%    RAM% PID    User             Command
-14.40%  56.50% 19065  s_cesqa          /auto/cesqa/devqa/APPS/mvs/mvs_ng_stabledev/bin/mvs -X MVS_NG_STABLEDEV -k CES -s 42035 -V current -z TEST_CES_MVS_NG_STABLEDEV_ld-chces06
-2.00%   2.80% 19710  s_cesqa          /auto/cesqa/devqa/APPS/queryservice/queryservice_ces_tc_otc_ord/bin/queryservice -c /auto/cesqa/devqa/APPS/queryservice/queryservice_ces_tc_otc_ord/config/queryservice_ces_tc_otc_ord.xml
-0.30%   0.20% 19691  s_cesqa          /auto/cesqa/devqa/APPS/queryservice/queryservice_ces_tc_otc_exec/bin/queryservice -c /auto/cesqa/devqa/APPS/queryservice/queryservice_ces_tc_otc_exec/config/queryservice_ces_tc_otc_exec.xml
- 
-Running /usr/local/bin/pdc3 --format=instances --time="10:30" --xfilter=executable:zabbix_agentd --xfilter=executable:mingetty
-#### Instances report for ld-chces06
-# Top multi-instance executables at Tue May 19 10:30:05 2015
-#Procs Thr/Proc Executable
-31     1.0      sshd
-9      1.0      ksh
-6      1.0      ssh
-6      1.0      sh
-5      1.0      bash
-4      1.0      sftp-server
-4      17.5     queryservice
-3      1.0      crond
-
-
+Disk monitoring:
+$ df -h		# filesystem mounts used/avail/mounted on
+$ du -h		# disk used
+$ ncdu		# ncurses du -- scans dir and gives text-graphical interface highlighint which sub-dir uses most space.
 
 LDD missing .so file
 =======================
