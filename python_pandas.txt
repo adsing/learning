@@ -1,7 +1,42 @@
 See code/python/pandas (Data manipulation + linear regresison)
 
+Pandas :: Series (list of same type). pd.Series
+          DataFrame (table of rows & columns with columns of same type). pd.DataFrame
+             A dataframe is a collection of Series
+Both Dataframe and Series have index.
+
 import numpy as np
 import pandas as pd
+pd.set_option('display.max_rows', 5)
+
+df = pd.DataFrame(data={'ColA': [100, 200], 'ColB': ['Bob','Sam'], 'ColC': [True, False],
+                  index=['row0','row1']}     # index is list of rows which defaults to [0,1,..]
+                  )
+s = pd.Series([1,3,5,7,9], index=[0,1,2,3,4], name='Odd')
+
+df.shape  # (rows, cols)
+df.head()
+df = pd.read_csv(filename, 
+                index_col=0,  # file has index so use that column
+                )
+df.colA     # or df["colA"]   ... returns Series
+df.iloc[0]  # index-based selection (row first, column second) ... gives first row
+df.iloc[:,0] # all rows (start:end), first column only 
+df.iloc[0:5, 0]     ## row 0 to 4 (5 excluded; python range-like excludes end)
+
+df.loc[0:5, 0]      ## # row index 0 to 5 (not 4! ... differs from iloc), col 0 only
+df.loc['row0']
+df.loc[0:5, "colA"]  # df.loc[0:5, ["colA","colB"]  or df.loc[ [0,1,2] : [0,1,2] ] # 3 rows, 3 cols
+# note: iloc index excludes ending range; while loc *includes* ending range (loc range can be non-numeric!). Also, iloc needs both row/index & columns in integer indices i.e. can't use column names
+
+df.set_index('colB')
+
+# condition & |
+# colA.isin(...) colA.isnull() colA.notnull
+df.loc[(df.colA == 'USA') & (df.colB == 'Chicago')]     # all cols for rows matching this condition
+
+df.ColNew = 'Singular'
+df.ColNew2 = range(len(df))
 
 # url = github raw csv
 tips = pd.read_csv(url)

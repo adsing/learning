@@ -4,13 +4,17 @@ AI vs ML
 
 AI is theory of building systems that act/behave like humans.
 
-ML is sub-field of AI that trains a model from past/input data to make useful prediction on new/similar data - the ability to learn without explicit programming.
+ML is sub-field of AI that trains a model from past/input data to make useful prediction on new/similar data - the ability to learn without explicit programming. Or build rules to transform input data to given output data.
+ML maps images/sound to a target. How far the prediction is from the expected result is the loss (aka loss function). The loss function is a feedback optimizer to tweak ML model's weights (using back-propogation algo).
+ML : python sklearn
 
 Subclasses of ML : Supervised vs Unsupervised models
 Supervised models have labelled data that's used as training dataset. Compare with real-world example for error and calibrate the model.
 Unsupervised models attempt to group/cluster data.
 
 Deep learning uses AI neural networks to process complex patterns. Many interconnected nodes that perform data processing and make predictions. Generally multiple layers of neural nodes. It is semi-supervised learning - the neural network is trained on a small labelled data (supervised) and large unsupervised data. (2010s)
+Deep learning is a layered/hierarchical representations learning - where each successive layer (i.e. neural network) adds to incrasing meaningful representation. Each layer has parameters/weights.
+Deep Learning: python PyTorch or TensorFlow (Keras to understand concept)
 
 Deep learning model types : Discriminative (classify data, trained on labelled data) and Generative (generates similar, new data to what it's been trained on based on probability distribution of trained data e.g. predict next word). Output is Number/Discrete/Probability.
 
