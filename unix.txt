@@ -83,6 +83,20 @@ User specific
 From <https://unix.stackexchange.com/questions/813/how-to-determine-where-an-environment-variable-came-from/154971#154971> 
 
 
+CPU Affinity with "taskset"
+==========================
+$ tasket -p <PID>
+Current affinity : f  (any of the 4 processors indicated by bits)
+$ tasket -cp <PID>
+Current affinity : 0-3 (4 CPU core machine - default to let all processors be used)
+
+# setting affinity
+$ taskset -p 0x3 <PID>   # use core 0 and 1
+$ taskset -cp --cpu-list 0,1 <PID> 
+
+# launch with predefined affinity
+$ taskset 0x3 <command>
+
 
 PS
 ===
@@ -165,6 +179,11 @@ Escape character is '^]'.
 ^]
 telnet> close
 
+Generating sequence of numbers:
+-------------------------------
+$ seq first increment last
+$ seq last
+$ seq -s',' 3 2 10       # 3,5,7,9
 
 
 GNU Parallel

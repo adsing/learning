@@ -1,6 +1,7 @@
 Learn:
  - concurrency: multi-threading, multi-processing, concurrent futures
  - asyncio
+ - More itertools - https://pypi.org/project/more-itertools/
  - polars
  - pydantic
  - profiling with Scalene
@@ -14,6 +15,29 @@ Args: positional or keyword
 Ternary:
 	a if a < b else b
 
+List:
+    lst.append(3) or lst.insert(1,100)  # index=1, item=100
+    lst.pop() or lst.pop(0)  vs lst.remove(value) # not returned! but ValueError if value is not found
+    lst.extend(lst2)
+    lst.clear() # remove all elements
+    lst.copy()  # shallow copy
+    lst.count(item)  # parse full list and return # of occurances
+    lst.index(item)  # first index of item; ValueError if not found  (better with "item in lst")
+    lst.reverse()    # in place
+    lst.sort(.. key, reverse) # in place 
+
+String: immutable
+    strng.index('substring')
+    strng.startwith('A) ... strng.endswith('Z')
+    lst = strng.split(',') ... strng = ','.join(lst)
+    "{} + {1} = {2}".format(2,3,5)  or f"{a}+{b}={tot}" # a=2, b=3, tot=5
+    "{} weighs about {:.2} kilograms ({:.3%} of Earth's mass). It is home to {:,} .".format(
+        planet, pluto_mass, pluto_mass / earth_mass, population,
+        )
+    
+Dict:
+    {key:value for key,value in zip(keys,values)}
+    #  keys(), values(), items()
 
 Enum: (unique) Symbolic names bound to a variable. Advantages: grouping, nice repr, type safe.
 	  If 2 names have same value then second serves as alias to first -- which is returned when accessing first or second such enum member.
@@ -43,7 +67,7 @@ Enum: (unique) Symbolic names bound to a variable. Advantages: grouping, nice re
 			print(v)
 	Access: TIF['AON'] by name; TIF(1) by value, TIF.AON.value
 
-	Enum similar to namedtuple. E.g. Animal = Enum('Animal', 'ANT BEE CAT DOG')
+	Enum similar to namedtuple. E.g. Animal = Enum('Animal', 'ANT BEE CAT DOG')-
 	To compare Enum to integers, use IntEnums (or StrEnums or IntFlags or StrFlags).
 
 
@@ -231,6 +255,8 @@ Decorator:
 
 	inc(3)
 
+    Decorator in class (__init__ sets fn & any args; __call__(*args) calls the fn). See Bruce Eckel's https://www.artima.com/weblogs/viewpost.jsp?thread=240845#decorator-functions-with-decorator-arguments
+
 
 Functools: Fn/Operations on callables (Fn, Class, Obj)
 	@cache - memoize - store return values for args
@@ -238,9 +264,10 @@ Functools: Fn/Operations on callables (Fn, Class, Obj)
 	@lru_cache(maxsize=N, typed=False) - args/kwargs must be hashable. Implemented with @cache_property but slightly slower as it needs to handle max_size limits.
 		- has additional data like cache_info() to show hits/misses/currsize.
 		- typically for expensive/recursive compute e.g. fibonacci or news web-page fetch
-	@total_ordering - adds le/ge/lt/gt methods based on 2 methods that user needs to give i.e. eq and one of le/ge/lt/gt
+	@cmp_to_key - convert to a key fn. Should return for a,b -1, 0 or 1 if < or = or > respecitvely. 
+	@total_ordering - adds le/ge/lt/gt methods based on 2 methods that user needs to give i.e. eq and one of le/ge/lt/gt. Used to provide __eq__ and __lt__ (or __gt__ or <= or >=)
 	@partial - simplifies fn args/kwards by pre-building partial fn object that has some args/kwargs supplied in advance so that partial fn is called with remaining args/kwargs. Similarly, @partialmethod for methods/property.
-	@reduce - apply fn to iterable with a default start value e.g. sum of series
+	@reduce - apply fn to iterable with a default start value (e.g. sum of series) and return the final value. itertools.accumulate returns each intermediate value (so returns an iterable) while reduce just gives the final value.
 	@wraps - calls update_wrapper that updates wrapper fn to look like wrapped function. Assigns __module__, __name__, __doc__, __annotations__, __qualname__. Updates __dict__. Used with decorators specially
 	@singledispatch - transform fn into single-dispatch generic fn (based on type of first arg only). Declare the default fn with @singledispatch and then register other variants based on type(s) with @fn.register(type). To check which fn will be called for a given type, test with fn.dispatch(type) .. gives address of fn (not name!).
 	@singledispatchmethod - like singledispatch on methods but applies on first non-self/non-cls arg.
@@ -251,9 +278,10 @@ Itertools: Creates iterators for efficient looping
 		- cycle(list_elements): cycle('0123456789')  ... 0123456789 0123456789 0123456789
 		- repeat(element, [n)]: repeat('xyx', 20)  ...xyz xyz
 	- terminating on shortest input sequence:
-		- accumulate(list, [func=sum]): accumulate([1,2,3], lambda x,y: x+y) gives 1,3,6 (get running totals/products/max)
-		- chain(list1, list2): chain any 2 iterables one after another
-		- chain.from_iterable(iterable): chain iterable of iterables
+		- accumulate(list, [func=sum]): accumulate([1,2,3], lambda x,y: x+y) gives 1,3,6 (get running totals/products/max). Also see functools.reduce() which gives the final result only.
+		- batched(iterable, n): batch data into n tuple where last tuple can be < n.
+		- chain(*iterables): chain any 2 or iterables one after another
+		- chain.from_iterable(iterable): chain iterable of iterables i.e. [iter1, iter2]
 		- compress(data_list, selector_list_bool): removes elements marked as false in selector list
 		- dropwhile(predicate, sequence): chopping leading sequence. i.e. predicate applied to "leading" sequence; drops leading sequence if initially predicate is true and once false, ignores predicate and generates till end of sequence.
 		- filterfalse(predicate, sequence): opposite of filter(which keeps elements where predicate is true), this keeps elements where predicate is false
@@ -269,6 +297,7 @@ Itertools: Creates iterators for efficient looping
 		- permutations(seq, length) all combinations but no repeats e.g. AA but can have AB and BA. Note: permutations are "ordered" combinations (i.e. in permutations order matters; in combinations it does not)
 		- combinations(seq, length) permutations but can't have AB == BA
 		- combinations_with_replacement(seq, length) allows AA
+
 
 Operator: efficient operator fn
 	- le, ge, lt, gt, eq, ne
@@ -349,6 +378,10 @@ Collections: container datatypes
 		Returns dict like object that has __missing__ method added (called by __getitem__) that invokes default_factory (if defined else KeyError) to setup a default value.
 		Note: default_factory is not called for d.get() but only for d['item'] (__getitem__)
 		Note: Py3.9 adds dict merge(|) and update(|=).
+		
+		DefaultDict of DefaultDicts:
+		    defaultdict(lambda: defaultdict(int))     # lambda can't be pickled
+		    defaultdict(defaultdict(int).copy)
 
 		Faster than an equivalent technique using dict.setdefault()
 			for k, v in s:
@@ -909,6 +942,11 @@ socket:
     s.bind(host, port)  # host can be '' to associate any IP
     s.listen(4)     # max 4 connect request
 
+round():
+    round(123_456.789) # 123456
+    round(123_456.789, 2) # 123456.79
+    round(123_456.789, -3) # 123000
+    
 Packaging options: PyPI, setup.py, wheel
 	Code that uses only std.library can be distributed as .tar.gz (called "sdist" package for Source Distribution Package). Typically, adds requirement.txt for other packages needed.
 
