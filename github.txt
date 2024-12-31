@@ -1,0 +1,86 @@
+Repo -> New as Private with README and .gitignore (type=python) and license (MIT).
+Issues - Milestone & Issues.
+    Milestone e.g. Oct-release, Nov-release.
+    Issues e.g. README is empty (title, desc, milestone, labels like bug
+Projects -> Avatar - your projects (new) : Team Planning, Feature Release, Kanban, Bug tracker, Iterative Developement, Product Launch, Raodmap, Restroperspective
+
+Project swimlanes (Todo, Inprogress, Done...can add more lanes). Each lane has +Add Item (draft). ... convert to issue (assign repo, label and milestone). Assign issue to assignee.
+    Projects have workflows like Item Closed (set status = Done when issue is closed) and Pull request merged
+
+
+Fork a repo & Link to your project (or create a new project):
+    copy only main branch
+    Settings:
+        - template repo?
+        - default branch (main or master)
+        - Features:
+            - Wiki host doc for repo
+            - Issues - integrate task tracking
+            - Sponsorship - to accept financial contri
+            - Preserve rep with Github Archive Program
+            - Discussion
+            - Projects - at repo owner level and linked to repo's project tab. Can be used cross-repo
+        - Pull requests
+            - merge commits;
+            - squash/rebase merges
+            - update pull branch/auto-merge/delete heead branch
+        - Pushes
+            - restrict how many branches/files can be updated
+    Code & Automation:
+        - Pages
+            - deploy from main /root folder to <user>.github.io/<repo_name>  # takes 5mins to deploy.
+    For issue create a branch:
+        - update the files
+        - "contribute" to create a pull request
+        - refer to issue with #<issue_number> e.g. #1
+
+IaC, CI/CD with Github Actions, Bicep template
+    .github/workflows/my-cicd.yml
+        buildNtest:     # uses resource-group (US-east & west-EU) and secret.azure_credentials
+            checkout repo
+            prep software like .net SDK
+            build, test and publish artifact
+            upload artifacts (code zip + bicep template?)
+        deploy:
+            download artifacts (code zip + bicep template?)
+            login into azure subscription using service principal
+            deploy app using bicep template
+
+        SUBSCRIPTION_ID=$(az account show --query id --output tsv)
+        echo $SUBSCRIPTION_ID    #  to store the value of your Azure subscription ID
+
+        # reate a Microsoft Entra ID service principal
+        # assign to it the role of Contributor in the scope of the subscription
+        az ad sp create-for-rbac --name "devopsfoundationslabsp" --role contributor \
+            --scopes /subscriptions/$SUBSCRIPTION_ID --json-auth
+
+        # enerate the name of the first App Service web app you'll be deploying
+        echo devops-webapp-eastus-$RANDOM$RANDOM
+        # gives devops-webapp-westeurope-33464148
+
+    Actions -> select workflow -> Run workflow
+        Deploy app in us-east and west-europe
+    LoadBalancer - Priority to US-east
+        DNS - http://devopsfoundtionstmprofile.trafficmanager.net
+
+        [ ~ ]$ nslookup devopsfoundtionstmprofile.trafficmanager.net
+        Server:         168.63.129.16
+        Address:        168.63.129.16#53
+        Non-authoritative answer:
+        devopsfoundtionstmprofile.trafficmanager.net    canonical name = eshoponweb-webapp-a6741b039cc5e.azurewebsites.net.
+        eshoponweb-webapp-a6741b039cc5e.azurewebsites.net       canonical name = waws-prod-blu-173.sip.azurewebsites.windows.net.
+        waws-prod-blu-173.sip.azurewebsites.windows.net canonical name = waws-prod-blu-173.eastus.cloudapp.azure.com.
+        Name:   waws-prod-blu-173.eastus.cloudapp.azure.com
+        Address: 40.71.11.146
+
+    Chaos Experiment to stop service on US-east for 10mins causes lookup to point to West-Europe server and US-East App server is down
+
+    $ nslookup devopsfoundtionstmprofile.trafficmanager.net
+    Server:         168.63.129.16
+    Address:        168.63.129.16#53
+    Non-authoritative answer:
+    devopsfoundtionstmprofile.trafficmanager.net    canonical name = eshoponweb-webapp-a6741b039cc5.azurewebsites.net.
+    eshoponweb-webapp-a6741b039cc5.azurewebsites.net        canonical name = waws-prod-am2-709.sip.azurewebsites.windows.net.
+    waws-prod-am2-709.sip.azurewebsites.windows.net canonical name = waws-prod-am2-709-7367.westeurope.cloudapp.azure.com.
+    Name:   waws-prod-am2-709-7367.westeurope.cloudapp.azure.com
+    Address: 20.105.232.31

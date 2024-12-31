@@ -1,29 +1,59 @@
+Rust Language
+    for speed & stablility
+
+Book -  https://doc.rust-lang.org/stable/book;
+        * https://rust-book.cs.brown.edu/ (with quiz);
+        rustup; run rustup docs --book
+    Chapters 2, 12, and 20 are project chapters; the rest are concept chapters.
+
 Install : curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+# Needs a linker (typically uses the one with C/C++ installed .e.g gcc/Clang. Also some Rust packages depend on C code so needs a C compiler)
 # installed version 1.74.1 in Dec 2023
 
-Update:: rustup update
-rustup is installer & version mgmt tool
+$ rustc --version
+rustc 1.80.0 (051478957 2024-07-21)
 
-cargo is compiler & pacakge manager for Rust language.
+Update:: rustup update stable
+Uninstall:: rustup self uninstall
+
+
+rustup : installer, version mgmt tool & documentation (rustup doc)
+rustc  : compiler
+cargo  : build system & pacakge/dependency manager
+rustfmt: code formatter
+
+"rustc file.rs"   - compiles the code and builds an executable for a single file (file.ext)
+"rustfmt file.rs" - formats the code
+
+$ cargo --version
+cargo 1.80.0 (376290515 2024-07-16)
+
+"cargo new <name>" - create package with "name" + git initialize. See Cargo.toml (name of 'cargo'; version/edition of Rust; and any dependency packages/crates).
+                    Put code under sub-folder "src". Top directory for README, configs
+"cargo check" - compile (only) your project *
+"cargo build" - build your project and create an executable (in "target/debug" sub-folder & Cargo.lock to track vesions of dependencies)
+"cargo build --release" - build for release/benchmarking (optimized version that's 10x smaller than debug version)
+"cargo run"   - build & run your project *
+"cargo test"  - test your project
+"cargo doc"   - build documentation for your project
+"cargo publish" - publish a library to crates.io
+
+"cargo add <crate_package>" - updates Cargo.toml and downloads any dependency for the crate package e.g. rand. Saves versions of dependent package in Cargo.lock for having a reproducible build.
+"cargo update" - determine latest (but compatible based on SemVer) version of dependencies & updates Cargo.lock
+
+"cargo fmt" - format the code (or rustfmt some_code.rs)
+"cargo fix" - fix compiler warnings
+"cargo clippy" - static code analysis
+
 Rust metadata & toolchain in ~/.rustup (RUSTUP_HOME)
 Cargo (CARGO_HOME) ~/.cargo
         ~/.cargo/bin has cargo | rustc | rustup
-
-
-"cargo build" - build your project
-"cargo run"   - run your project 
-"cargo test"  - test your project 
-"cargo doc"   - build documentation for your project 
-"cargo publish" - publish a library to crates.io 
-
-
-
 
 Code in /Desktop/github/code/rust
 
 $ cargo new --bin hello --vcs git
      Created binary (application) `hello` package
-     
+
 $ tree hello/
 hello/
 ├── Cargo.toml
@@ -80,11 +110,11 @@ $ tree
                 │   ├── qxkexfu97f5vg70.o
                 │   └── work-products.bin
                 └── s-gnig39yffx-17ldmq6.lock
-                
+
 $ target/debug/hello
 Hello, World!
 
-$ cat src/main.rs 
+$ cat src/main.rs
 fn main() {
     println!("Hello, world!");
 }
