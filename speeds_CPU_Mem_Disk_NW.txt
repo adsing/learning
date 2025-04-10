@@ -1,0 +1,23 @@
+See https://gist.github.com/jboner/2841832
+
+L1/Register     :  1 ns
+L2              : 10 ns
+L3/RAM          :100 ns   or    0.1  us
+
+C system call to kernel  : 1000ns or 1 us
+Context switch between user and kernel or memcpy : 10us
+HTTP request processing by ngix : 20us
+1MB memory sequential read      : 50us
+8k page read from SSD                : 100us
+8k page write to  SSD (10x read)     : 1000us or 1ms
+
+N/W (1K on 1Gbs)                     : 100 x N   us (Network congestion often delivers slower speed and 2019 network is slower than SSD)
+Redis read (including n/w latency of few 100 us) : 1 ms
+
+HDD Disk seek                       : 5-10ms
+NW across zones                     : 1-5ms
+NW across US/EU                     : 10-100ms
+1GB memory sequential read          : 50ms
+TLS handshake (multiple nw trips)   : upto 500ms
+1GB from SSD                        : 500ms
+
