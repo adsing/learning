@@ -1,0 +1,114 @@
+TOML - Tom's Obvious Markup Language
+files have .toml extension
+3 main complex types: arrays, tables(dict), array of tables
+"." creates sub-section e.g. sub-array or sub-table
+
+# comment
+# whitespace around key or value or = is ignored
+key = "value" # value can be string/int/float/boolean/date/time/datetime/array/inline table
+"quoted keys" = "other value"       # "key" is same as key.
+site."google.com" = true  # dotted keys are useful for grouping
+
+
+    name = "Orange"
+    physical.color = "orange"
+    physical.shape = "round"
+    site."google.com" = true
+maps to JSON
+    {
+      "name": "Orange",
+      "physical": {
+        "color": "orange",
+        "shape": "round"
+      },
+      "site": {
+        "google.com": true
+      }
+    }
+
+
+# This makes the key "fruit" into a table.
+fruit.apple.smooth = true
+# So then you can add to the table "fruit" like so:
+fruit.orange = 2
+
+
+strings:
+    'literal \n string' # No escapes e.g \n stays as-is
+    "basic"
+    """ multi   \    # causes whitespace to be trimmed (including new lines)
+        line
+    """
+    
+integer:
+    int1 = +100
+    int2 = -2_000_000
+    hex1 = 0xdead_beef
+    oct1 = 0x755
+    bin1 = 0b1010_1010
+    
+float:
+    f1 = -3.14
+    f2 = 3.14e+2
+    flarge = 123_456.789_123
+    
+inf/nan:
+    pos = +inf  # or inf
+    neg = -inf
+    ne = nan
+    ne2 = -nan
+    
+bool:
+    b1 = true # false
+
+date-time (or date or time)
+    odt  = 197900527 08:30:00
+    odt1 = 1979-05-27T07:32:00Z
+    odt2 = 1979-05-27T00:32:00-07:00
+    odt3 = 1979-05-27T00:32:00.999999-07:00
+    
+    
+Array:  any (same or mixed) data type in [.,..,...,] with optional terminating , and can span multiline
+    ints = [1,2,3,]
+    colors = ["red","blue","green"]
+    nested_mixed = [ [1,2,3], ["red","blue","green"] ]
+
+
+Table (or hash or dictionary): defined as header within [...]
+    A root table starts at the begining of the TOML document and ends just before the first table header (or EOF) ... so all key-values go in default top-level dict or till first dict/table is declared
+[table1]
+key1 = "value1"
+key2 = 123
+
+[dog."tater.man"]
+type.name = "pug"
+# JSON eq # { "dog": { "tater.man": { "type": { "name": "pug" } } } } 
+
+
+Inline table:
+    compact expression for tables that are specified with {...}. Must be on single line and terminating , is not allowed. These are fully contained i.e. can't add more keys/sub-tables outside braces.
+    point = { x=1, y=2}
+
+
+Array of Tables:
+    Definition 1 with double brackets repeating for each Table/Dict entry: 
+        [[product]]
+        name = "Hammer"
+        sku = 12345
+        [[product]] # empty table in array
+        [[product]]
+        name = "Nail"
+        sku = 54321
+        [[product.details]]     # subtable
+        material  = "iron"
+        # JSON equivalent
+        # {
+        #  "products": [
+        #    { "name": "Hammer", "sku": 738594937 },
+        #    { },
+        #    { "name": "Nail", "sku": 284758393, "color": "gray" },
+        #    "details" : [{"material":"iron}]
+        #  ]
+        # }
+        
+

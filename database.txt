@@ -2,7 +2,7 @@ Database basic
 
 Normal forms
 ------------
-First NF: 
+First NF:
 	1. Must have primary key
 	2. Repeating groups not allowed (e.g. "4 banana, 3 apples")
 	3. Relying on row order for information (e.g. data sorted by height but height is not a first class column)
@@ -25,16 +25,51 @@ Why have denormalised data? For avoiding joins to speed up query in single table
 ACID - Atomicity (all or none - transaction), consistency (data conforms to schema/constraints), isolation (isolated via transactions; multiple trx executed simultaneously with same result if executed serially) & durability (transactions persisted ensure future reads will get this data).
     ACID DB focus on availability & consistency and secondary consideration on partitioning.
 
-    
+
 BASE - Basically avaialble, soft-state eventual consistent.
         Available all the time; system state may wary over time and data changes become consistent over time (different nodes get the same value)
 
-        
+
 CAP theorem:
     A distributed/networked shared data system can gaurantee only 2 of 3 properties:
     1. Consitency ~ same as having a single up-to-date copy of data; sequential updates
     2. Availability ~ of that data for updates. Working nodes give a quick response for request.
     3. Partition - system tolerance in case of failure
-    
+
     NoSQL dbs have to choose between availability & consistency.
-    
+
+Merge SQL: Used to update target table with source table (e.g. staging data from ETL for SCD).
+    Instead of individual insert/update/delete a single stmt does the job - code consolidation/cleaner. Also lower IO since source is read just once.
+
+    See below for syntax and related insert/update/delete conditions.
+    You can add one WHEN-MATCHED/NOT-MATCHED condition one by one and incrementally build the query. Also can see the actions done using OUTPUT section with DELETED & INSERTED tables -- which can also be used as a result set to feed the ETL
+
+    MERGE target_table -- as tgt
+    USING source_table -- as src
+    ON merge_condition -- on (tgt.id = src.id)
+    WHEN MATCHED
+        THEN update_statement  -- update set colA=src.colA, colB=src.colB --or-- update set tgt.colA=src.colA, tgt.colB=src.colB
+    WHEN NOT MATCHED    -- or WHEN NOT MATCHED BY TARGET
+        THEN insert_statement   -- insert (colA,colB,colC) values (src.colA,src.colB,src.colC)
+    WHEN NOT MATCHED BY SOURCE
+        THEN DELETE             -- deletes from target
+
+    -- Optional: Checking the actions by MERGE statement
+    OUTPUT $action,
+    -- magic tables DELETED/INSERTED
+    DELETED.ColA AS TargetColA,
+    DELETED.ColB AS TargetColB,
+    INSERTED.ColA AS SourceColA,
+    INSERTED.ColB AS SourceColB,
+    -- based on src/tgt
+    src.ColA, src.ColB,  --tgt.ColA, tgt.ColA,
+    -- constant values
+    getdate(), '1/1/9999'
+    ;
+
+    -- see https://www.mssqltips.com/sqlservertip/2883/using-the-sql-server-merge-statement-to-process-type-2-slowly-changing-dimensions/
+    insert into target_tbl(colA,colB, start_date, end_date)
+    select ColA, ColB, start_date, end_date
+    from ( -- merge stmt like above ) as changes (action, colA, colB, start_date, end_date)
+    where action='UPDATE';
+

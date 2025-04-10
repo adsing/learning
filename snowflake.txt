@@ -1,0 +1,183 @@
+Snowflake
+
+Separates compute from storage.
+Cloud provider neutral (AWS/Google) - build to scale.
+Low/nil maintenance costs - no tweaking etc.
+
+Merge Stmt: insert/update/delete data on a target table from source table/query
+    MERGE INTO target_table USING source_table 
+    ON target_table.id = source_table.id
+    WHEN MATCHED THEN 
+        UPDATE SET target_table.description = source_table.description
+    WHEN NOT MATCHED THEN 
+        INSERT (ID, description) VALUES (source_table.id, source_table.description);
+
+
+show tables in schema identifier('my_schema');
+
+
+?Unistore model
+?Snowpark
+
+
+Horizon - governance solution to manage security, compliance, privacy, interoperability & data access.
+Marketplace - data/apps from other providers (e.g. private data from Bloomberg; public data from census).
+Snowgrid - connect data/apps globally
+Snowpark - AI/ML model; pipelines; runtimes for non-SQL code (Python, Java, Scala)
+Partner Network - 
+
+
+Data modeling:
+Inmon:
+    - a stable warehousing strategy
+    - data accuracy/consistency is the highest priority 
+    - All user-facing data marts are built on top of a robust and normalized data warehouse (snowflake)
+    - raw data -> clean -> DW (snowflake) -> mart for business groups -> report        
+
+Kimball:
+    - a dynamic warehouse strategy where quick development of useful data structures is the highest priority 
+    - star schema
+    - All user-facing data are built on top of a star schema which is housed in a dimensional data warehouse.
+    - raw data -> DW (Star) -> rpt
+
+Data Vault: 
+    - a fast and asynchronous warehousing strategy where agile development is the highest priority. 
+    - All user-facing data require another intermediary layer, such as a star schema structure.
+    - hubs are business entities, links connect hubs like mapping tbl, satellite have metadata on hubs/links that acts like a version control
+    - raw -> data lake -> staging -> DW (star : hub/links/satellite) -> rpt
+
+Connecting to SF: Set user/login; role; database; WH
+1. SnowSight (Admins can see costs for storage/compute; developers build query in worksheets see plans/stats/query_id; marketplace to search for public or paid datasets; Role/Account management; log support tickets).
+2. Command Line CLI (SnowSQL client)  .. also VS Code extension (DB viewer like)
+3. Snowflake python connector
+
+Warehouse - compute power (XSmall, S, M, L, XLarge default to 3-6XLarge).
+    Min 1 minute billing then per second billing.
+    Auto suspend and resume on query submission.
+    Computes resources required per query and reserves it. Query run in parallel till there are compute resources and then they start to queue (specify timeouts total vs queue; use multi-cluster warehouse to send query to a bigger WH. 
+    SHOW WAREHOUSES;            # DBA can CREATE WAREHOUSE
+    USE WAREHOUSE MY_XS;        # specify by user/connection/default when user was created
+
+
+Table structure :: micro partitioning & data clustering
+Micro partitioning 
+    ~ 50-500MB of cont. storage containing groups of rows mapped to individual micro partition whose data is organized in columnar fashion.
+    Large table can have many millions of partitions.
+    SF stores metadata about partitions e.g. range of columns, distinct values.
+    Benefit : automatic partitioning, smallish size ensures quick DML (e.g. delete can be metadata only op), query pruning, prevent skew, stored as columnar.
+
+Data clustering - better to have ordering in table - typically datetime-based. Micro-partitions pruned based on query (date-range & other args/params); then prune based on columns.
+A well clustered table does not overlap it's micro partitions but some invariably builds in as DML is done. Can set one or more columns as clustering key (data is co-located) and cluster for large tables where query will be impacted as it requires keeping clustering metadata & compute spent on clutering.
+    Cluster on most 3-4 columns you thing are often used in join, order-by, where clause. These columns should have distinct values that are (a) large enough to prune the table effetively (b)small enough to allow groups of rows in same micro-partition. So avoid timestamp with fine precision e.g. microsecond....rather do expr on such e.g. to_date(timestamp_field).
+     CREATE TABLE ... CLUSTER BY (col1, col2);
+
+
+Temporary or Transient tables:
+Temporary tbl for session only; not visible to other users/sessions. Similarly temporary stages. Such a table with same name as permanent tables takes precendence over normal/perm table and "hides" it.  CREATE TEMPORARY TABLE T ...;
+Transient tbl across session, available to all users with permission. Like permanent table but no Fail-safe period! SF also supports transient DB and schema.
+
+Both have time travel for max 1 day and no fail safe period; Perm tables have 7 day fail-safe and time-travel of upto 90 days.
+Possible to create zero-copy clone (that is no additional data is used...but any new insert into close goes into separate metadata for partition tbl that belongs to clone tbl only).
+
+
+External table - read-only data on external stage. SF stores some metadata like file metadata. version. Schema on-read. Can be used in join (but slower) so optionally build a materialized view to get faster joins. Can setup auto-refresh on external tables when underlying table is changed to refresh metadata. Can specify table format to specify table schema ahead of time (instead of schema on read). File format CSV, XML, JSON, Avro, Parquet with recommended size of 256MB each. Query results are cached for 24hr unless external tbl definition is changed or refresh is triggered. Meta data tables and views: EXTERNAL_TABLES view, EXTERNAL_TABLE_FILES (staged file included) 
+
+    COPY FROM @stage_name/object_file  INTO DB.Schema.table header=true, overwrite=true;
+    list @stage_name;
+    create or replace external table ext_tbl (name varchar(32) as (value:c1::varchar), .. ) with location = @stage_name file_format=my_csv_format; -- auto_refresh=true
+
+    Delta Lake - an open source table format on data lake with ACID, time travel, schema evolution etc support. Stored as parquet file. Create external table with TABLE_FORMAT=DELTA
+
+
+Iceberg tables: based on Apache iceberg open table format to ensure data in parquet etc wasn't corrupted. Supports ACID, schema evolution, hidden partition, table snaps. Data on external cloud storage. Ideal for data lakes not stored in SF. Store as parquet file format. No fail safe storage. Can do wrtie/DDL ops if metadata managed by SF but stored in external storage. If external catalog is not managed by SF then read only.
+    Limitations: no cloning etc
+
+    
+Hybrid tables: for OLTP workloads, primary/foreign/unique key constraints enforced whereas in normal table it's not enforced.
+    Use a row-based store (with columnar storage) and async copy to object store (for compute independence). Supports indexing that are updated in sync with a record write.
+    Good for high random read|writes instead of batched/continuous -or- retrieve few records with simple select instead of group-by etc.
+
+
+Search optimization service: A backend process that indexes your data to make query faster (esp marketplace data). Good for point query
+    // Defining Search Optimization on VARCHAR fields
+    ALTER TABLE wikidata_original ADD SEARCH OPTIMIZATION ON EQUALITY(id, label, description);
+    // Defining Search Optimization on VARCHAR fields optimized for Wildcard search
+    ALTER TABLE wikidata_original ADD SEARCH OPTIMIZATION ON SUBSTRING(description);
+    DESCRIBE SEARCH OPTIMIZATION ON wikidata_original;
+    // when comparing query performance exclude using the cache result with
+    ALTER SESSION SET USE_CACHED_RESULT = false;
+
+
+Views : projection of table(s) so restrict columns/rows/merge with other tables to show combined data. Can be resurisce view using recursive CTE.
+Materialized view: Stores a cache of data of view to allow faster query at expense of extra space. Can't be recursive.
+
+
+Data ingestion:
+1. INSERT statement to insert a record
+2. COPY-INTO to load a file
+    When data flow peaks & ebbs; choose warehouse to load accordingly.
+    Transactional file load i.e. all or none.
+3. Snowpipe load data files from stage (micro-batching even for a single file so transactional loading may be partial). Continuous loading, simpler & convinient (at 50% extra cost).
+    Works as a services on SF warehouse that scales up and down per demand.
+    Drop files into a stage and call REST end-point to notify filenames to be loaded (insertFiles); these get queued for loading
+    -or- Notify using cloud messaging 
+3b. Snowpipe streaming 
+4. Kafka Connector
+    Connect Kafka data stream to send records to Snowflake directly (trickle flow).
+    
+
+
+Snowpipe:
+    Load history stored in target table metadata (COPY-INTO 64 days; Snowpipe 14 days)
+    Transactions (COPY-INTO all or nothing; Snowpipe can split/merge files; partially loaded files can be split (ON ERROR copy option)
+    Compute resource (COPY-INTO uses active warehouse; Snowpipe uses Snowpipe warehouse)
+    
+    
+Dynamic Tables:
+
+
+
+
+
+Snowflake (youtube tutorials):
+    https://www.youtube.com/watch?v=AR88dZG-hwo&list=PLba2xJ7yxHB7SWc4Sm-Sp3uGN74ulI4pS&index=2
+
+#1 Intro/history:
+    - Cloud data warehouse (AWS/Azure/GCP) as a SaaS (auto-manages s/w upgrades; near zero maintenance) - single platform for multiple use-cases
+    - Workload isolation; separate compute & storage (charged separately S3 vs compute per sec)
+    - dynamic scaling
+    - ANSI SQL based
+    - time travel
+    - data sharing ?
+    - data clone (zero copy)
+    - non-snowflake user reader account ?
+    - security (role based access; encryption at rest/motion; column/row level masking)
+    - connectors JDBC/ODBC/Spark/Python/Go etc
+
+    Launched in 2015. Citadel 2018-19.
+    1st gen warehouse - on-prem, single/multi node server, SQL based. Drawbacks: Capacity limits for variable userload & variable compute needs, lacking support for structured/unstruct data.
+    2md gen warehouse - clouse, SQL based. Drawbacks: Unstruct data, user limits.
+    3rd gen Hadoop/Data lake - support struct/unstruct data; support more data & users but slow esp when used at scale; hard to manage clusters.
+    4th gen/current: cloud datawarehouse - all data struct/unstruct; concurrent user access; scales up/down; SQL.
+    
+    Ingest data (ETL/stream) from OLTP/Applications events/Web/Log/IoT
+    for data warehouse/lake/engineering/streaming/exchange/applications/science
+            (analytics/one-place-for-all-data/transform|ETL pipe/.../data valued shared/app/ML|AI)
+    to generate real-time analytics/batch reports and share data with internal/external customers securely.
+    
+#2 Free Trial (30d)
+    - Providers (AWS/Azure/GCP) and region. For multi-region SF, need multiple accounts (per region).
+    - Snowflake Edition based charges (Standard, Enterprise time-travel|multi-cluster WH|materialized views, Business Critial with extra security/ & recovery, VPS virtual private snowflake isolated from other accounts with no shared resource). Price $2/3/4/? per credit)
+    - Storage Commitment - On-demand ($40 TB/pm) or committed Capacity ($23 TB/pm)
+    - Web interface
+    
+    Trial account $400 credit or 30days.
+    Legacy Web UI:
+    Role - Account|Sys|Security|User Admin or Public. SysAdmin default
+    Help - download connectors/CLI
+    Databases - DEMO_DB, UTIL_DB
+    Shares - Inbound/Outbound by someone-else/you. Share -> Database shared e.g. SNOWFLAKE_SAMPLE_DATA
+    MarketPlace - Buy/Sell data
+    Warehouse - different WH; multi-cluster min/max & scaling policy
+    Worksheet - SQL query e.g. select current_region(), current_role() ... associated with Role, WH, Database, Schema.
+     

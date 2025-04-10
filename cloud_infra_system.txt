@@ -1,0 +1,24 @@
+system_design / infra / cloud (AWS)
+
+Get requirements (functional - what/how should it work) + (non-functional - not said but implied - e.g. high availability, low latency, scale)
+
+Scaling - ability to grow to keep up with increasing demand - typically by horizontal scaling (more nodes) or vertical scaling (bigger nodes).
+    Scaling is based on host CPU/memory consumption or user-defined (e.g. N objects created)
+
+Elasticity - ablity grow & shrink based on demand. Implies ability to scale up and down.
+
+High Availability (HA) - ability to get a response from system (even if system is indicating service down cleanly).
+    Requires redundancy built-in (duplicate host, dup n/w interface card, dup power supply, dup disk...)...duplicate system across AZ/Region.
+
+Elastic Load Balancer - distribute load on some policy (round-robin, round robing with affinity based on session or IP address for geographical proximity). Typically is combined with AutoScaling (where min & max nodes are defined...service scales up to max nodes if load increases).
+
+Database + cache typically go hand-in-hand to improve performance.
+
+Fan-out - distribution of one informaiton to multiple system/nodes.
+    - pull approach - When users downstream are high (e.g. twitter read for celebrety account) get computational/memory inefficient so each downstream user pulls the information when they login/need it.
+    - push approach - an update is applied/computer for all downstream receivers as soon as update is seen...even if some downstream users don't come online. When users downstream are low typically.
+ 
+CAP theorem - only two of 3 features are available in a distributed system. Typically, Partition-tolerance + availability.
+    Consistent - data is consistent across nodes on an update. One update is published everywhere at same time like single node DB server.
+    Avaialability - a request is given response (success/failure) ... even if it's not the latest data.
+    Partition Tolerance - system can operate even if one/some partition are lost.

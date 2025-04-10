@@ -1,0 +1,66 @@
+REST API
+    uniform interface
+    client server
+    stateless
+    cacheable
+    layered system
+    optional code-on-demand
+    
+URI: https://server.com/api/v2/users         # nounes e.g. orders, products, users
+
+Request: POST /users HTTP/1.1
+        Accept: "aplication/json"
+        Response: HTTP/1.1 200 OK    
+
+POST - create new resource
+GET  - select/get resource info
+PUT - update existingAWS manages the security of the cloud, specifically the physical infrastructure that hosts your resources, which include:
+
+    Physical security of data centers
+    Hardware and software infrastructure
+    Network infrastructure
+    Virtualization infrastructure
+
+Although you cannot visit AWS data centers to see this protection firsthand, AWS provides several reports from third-party auditors. These auditors have verified its compliance with a variety of computer security standards and regulations.
+DELETE - remove
+OPTIONS
+HEAD
+PATCH
+TRACE
+
+
+200s - success
+400s - failure
+500s - server error     # potentially retry if action is not "idempotent"
+
+"idempotent" - repeated fn calls have no state change (can't use for POST
+
+For large data: use limit and offset to send data by pagination
+    /products?limit=10&offset=50
+Versioning of API: allow backward compatibility when making breaking changes
+
+
+
+
+from fastapi import FastAPI     # documentaiton, serial/des, data validation
+app = FastAPI()         # API docs at http://localhost:8000/docs built in (extends as you add methods/paths to app
+
+@app.get("/")           # app.post|put|delete|options|head|patch|trace
+async def root():
+    return {"msg":"Hello"}
+    
+# put fixed path first i.e. @app.get("items/fixed_item") before "items/{item_id}"
+@app.get("/items/{item_id}")        # parameter item_id
+async def read_item(item_id: int):  # enforces item_id to be an int (data parsing & validation supported (using pydantic) by FastAPI)
+    return {"item_id": item_id}
+    
+# use pydantic to declare data model/shape
+from pydantic import BaseModel
+class Item(BaseModel):
+    name: str
+    desc: Options[str] = None
+    price: float
+    
+@app.post("/items/")
+async def create_item(item: Item):      # Item is from request body (JSON->Pydantic object -> JSON)
+    return item.dict()

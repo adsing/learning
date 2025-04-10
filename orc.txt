@@ -1,0 +1,16 @@
+Orc - optimized row columnar
+
+2013 for Hadoop/Hive workloads; Supports ACID transactions in Hive.
+
+Orc data are independent stripes of data.
+Each file contains a few rows in columnar format; 
+Each file consists of 1 or more stripes; each stripe ~ 250MB (large enough for optimized reads).
+Separate RecordReaders can concurrently read the file.
+Data is compressed with snappy/zlib (better compression than Parquet).
+Predicate Pushdown - query condition is checked against metadata to determine if file should be scanned.
+
+Format : Index + Data + Footer
+
+Footer : metadata on file; statistics on each column (min/max/count/sum)
+
+Ideal for working with hive; compression is more important; reads > write.

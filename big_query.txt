@@ -1,0 +1,52 @@
+BigQuery
+
+Typical database is called "dataset" in a project.
+Dataset has many tables under it.
+
+# Client -> project -> datasets -> tables
+from google.cloud import bigquery
+client = bigquery.Client()
+
+dataset_ref = client.dataset("my_data_set", project="project_name_having_this_data_set")
+dataset = client.get_dataset(dataset_ref)
+
+tables = list(client.list_tables(dataset))
+for table in tables:  
+    print(table.table_id)
+
+table_ref = dataset_ref.table("my_table_name")
+table = client.get_table(table_ref)
+
+table.schema        # list of SchemaFields (name, field type, mode ie. Nullable?, description)
+            # SchemaField('by', 'string', 'NULLABLE', "The username of the item's author.",())
+
+# get rows with list_rows returning a RowIterator
+client.list_rows(table, max_results=5).to_dataframe()           # 5 rows only
+client.list_rows(table, selected_fields=table.schema[:1]).to_dataframe()    # first column only
+
+# select
+SELECT colA
+FROM `project.dataset.table`   # backticks
+WHERE colA = 'Value'
+
+query_job = client.query(sql_query)
+df = query_job.to_dataframe()
+
+# estimate size of query with QueryJobConfig
+config = bigquery.QueryJobConfig(dry_run=True)
+dry_run_query_job = client.query(sql_query, job_config=config)
+dry_run_query_job.total_bytes_processed
+
+# config to run query only if small data is consumed
+safe_config = bigquery.QueryJobConfig(maximum_bytes_billed = 1024*1024)  # 1MB scan limit
+safe_query_job = client.query(sql_query, job_config=safe_config)
+safe_query_job.to_dataframe()           # will raise InternalServerError if it exceeds the limit
+
+
+# group by - having - column alias
+
+# escape keywords with `..` e.g. column `by`
+
+# data YYYY-MM-DD format
+extract(DAY from DateCol)   # DAY WEEK MONTH YEAR DAYOFWEEK
+

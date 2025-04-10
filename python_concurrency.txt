@@ -2,10 +2,11 @@ Asyncio
 =======
 
 Allows to run tasks concurrently with a single thread.
+Ideal for web-server like situation with multiple thread requirement and high IO.
 
 Uses event loop that is a single thread where tasks are queued & monitored. Any task that needs to do IO is handed over to OS and some other task is worked on in event-loop while waiting for OS to return from IO (and continue from next instruction after). Repeat till there are no more tasks in queue.
 
-Threads/Tasks are not pre-empted. Task determines when they (await) give up control to go back to FIFO queue for task processing. "async" indicates that following fn/code will await (with exception of async generator or "asynch with")
+Threads/Tasks are not pre-empted (unlike in threading module which are OS threads). Task determines when they (await) give up control to go back to FIFO queue for task processing. "async" indicates that following fn/code will await (with exception of async generator or "asynch with")
 Easier to manage data in asyncio than in threads since pre-emption is ruled out.
 
 Coroutine - a fn that can pause execution (e.g. when encountering IO operation) and resume when blocking operation is completed. This allows python to run other code while fn waits for IO.
@@ -229,6 +230,7 @@ queue.Queue:
 
 
 ThreadPoolExecutor performs betters instead of mutually creating/starting/joining threads. Overall memory usage is less and faster 2X than manual approach.
+
     from concurrent.futures import ThreadPoolExecutor
     with ThreadPoolExecutor() as executor:
         future = executor.submit(fn, arg1, arg2)

@@ -1,0 +1,167 @@
+
+AWS Cloud Platform
+    Infrastructure as a service - they maintain server/backup/power/network
+    Platform as a service - provide different language/messaging/tools
+    Software as a service - emails (SES), queue (SQS)
+    Storage - S3 & EBS
+
+    Region (25 across world)
+    Availability Zone (physical separation connected with network) (typically 3 per region)
+    Some services are global (IAM Identity, Route53 DNS, Billing);
+                regional (S3, DB, VPC, ELB)
+                per AZ (EC2, RDS, EBS)
+Compute
+    EC2 (Elastic Compute Cloud) - base servers
+    
+Network
+    VPC (Virtual Private Cloud) at region level across AZ interconnected by local router (private addresses)
+    Direct Connect - Dedicated network
+
+Storage
+    S3 (Simple Storage Service) for files
+    EBS (Elastic Block Storage)
+
+Databases
+    RDS (Relational Database Service) - Postgres, SQL Server, MySQL, Aurora
+    
+DNS
+    Route 53 (Managed DNS service) - scales per demand
+    
+Load Balancer
+    ELB (Elastic Load Balancer) with Autoscaling EC2 (min capacity, max capacity to go to per demand)
+    ECS (Elastic Container Service)
+    
+App
+    API gateway for REST/WebSocket
+    SQS Queue
+    SNS Notificaiton
+    SES Email
+    Code (Commit|Build|Deploy|Pipeline)
+    
+Monitoring
+    CloudWatch
+    
+Infra as Code
+    CloudFormation
+
+ML/AI
+    Sagemaker for ML
+
+Data Lakes & analytics
+
+Serverless Computing (lambda) - compute without provisioning/managing servers
+
+Security
+    VPC
+    IAM - different user for write
+    Data encryption with KMS (Key Management service) for S3/EBS/RDS
+    Certification manager (ACM)
+    Firewalls (WAF) to prevent SQL-injection
+    Vulnerabilities are patched (Inspector runs report for each host)
+
+Dev & DevOps
+    Infra as code - CloudFormation (JSON/yaml based)
+    git - CodeCommit - for Dev/QS/SRE -- code drives Infra
+    CodeBuild - builds the source code & tests the code
+    CodeDeploy - puts it on EC2 hosts (Dev/QA/Prod)
+    CodePipeline (Commit; Build; Deploy)
+    CodeStar integrates CodePipeline with jira
+
+AWS Partners - help people get on AWS ()
+AWS Vendors - who put their s/w on AWS for customers to use
+
+Stability
+Bill per hr (or gb) - micro billing (based on Region e.g. Virginia & Oregon are cheapest; term based e.g. 3yrs; Spot resources based on bid but can be prempted).
+
+
+1. Design a simple app first
+    Build container image; register in Elastic Container Registry (ECR) and deploy to ECS (Elastic Container Service) where it's run as Task in response to event or as Service (always on & ability to scalre). ECS to launch one or more container as needed. ECS to launch on our EC2 instances or Fargate (Serverless container running service -- health monitored, up-to-date).
+    CodePipeline:: git repo & Dockerfile (CodeBuild) to build the image -> EC registry -> CodeDeploy (automate testing/rollback) -> EC service 
+2. Plan for failure of each service/app (computer/network/storage)
+    2a. Run in two or more AZs for physical isolation
+    2b. Elastic Load balancer direct requests to different EC2 instance and also detect if any EC2 instance/app is impacted
+    2c. Elastic Block Store is backed to S3 (versioning) -> replicate to another S3 region
+3. Plan for scalability
+    Autoscale EC2 istances based on demand (CPU, memory utilization or user-defined; predictive ML scaling forecast)
+4. Testing; CI/CD
+    Playbooks
+    Code pipeline (code chage into repo; build; test; deploy to staging for QA/integration/load; deploy to prod)
+    Canary testing to test endpooints and APIs
+
+Example for fb.com with 3 tier architecture (Web-app-DB):  https://www.youtube.com/watch?v=Z3SYDTMP3ME
+
+ Create a VPC for your network - separate public and private subnet network (host/services)
+    VPC at region level across AZ interconnected by local router (private addresses)
+    Internet gateway (IGW) connects public subnet (LoadBalancer ELB, NAT Network Address Translator for letting private subnet reach out to Internet, WebServer optionally) to external internet.
+    Private subnet (appnet, databases).
+    Local router interconnects public/private subnet.
+    Master DB in AZ1, Slave DB in AZ2 (sync replication)
+    
+    Hybrid solution :: 
+    a. Virtual Gateway can connect to Customer Gateway (Data-center) to create a VPN. Encrypted data flows over internet betwene AWS VPC and company's datacenter.
+    b. AWS Direct Connect :: Sites owned by Teleco's to allow customers to connect to AWS region centers -- for reliable bandwidth availability.
+    c. Client VPN endpoint to connect directly from Internet to AWS VPC.
+    
+    VPC Interconnection :: 
+    a. VPC peering connects VPC-A to VPC-B (same or different region).
+    b. Transit Gateway gives a hub-spoke model where multiple VPC are spokes.
+    c. VPC end point gateway allows (same) regional services like S3/RDS to connect to VPC (no need to go through Internet gateway). VPC end point interface for connecting to SQS/SNS/CloudWatch.
+    d. Private Link :: Software as a service when both provider VPC and you are in same region.
+
+ (DNS Route53 for fb.com + Elastic Load Balancer to distribute users to different web-apps)
+
+ Web server (external IP / login) 
+    ... EC2 hosts with EBS storage (EBS has size limits)
+    ...scaling with AutoScaling with ELB (Elastic Load Balancer or ngnix)
+
+ App server (business logic) ...scaling with AutoScaling
+    ... EC2 hosts
+    ... S3 storage (external to EC2) 
+    ... potentially have CDN (Content Delivery Network) using CloudFront
+    ... SES (Email), SNS (Notification), SQS (Queue)
+    ... monitoring health (CloudWatch)
+    ... Serverless compute for event based processing (e.g. compress uploaded file from one S3 to another)
+    ... REST API (API gateway - scalable)
+    
+ Relational DB (RDS) ... DB Cache (ElasticCache e.g. Redis)
+    ... for NoSQL - DynamoDB
+    .. ETL - Glue
+    .. datawarehouse (RedShift)
+    .. BI tools (QuickSight / Athena to pull data from S3 using SQL)
+    
+*Security* - shared between AWS & customer.
+    AWS - security "of" the cloud (physical data center, machines compute|storage|network)
+    Customer - security "in" the cloud (OS, app, access/identity, encryption) 
+IAM - Identity and Access Management
+    Root - link with MFA (multi factor authentication)
+    User  - person or application interacting with AWS services (use MFA)
+    Group  - groups of users
+    Policy - JSON doc to permission user/group allow/disallow action on a resource
+    Role - temporarily assumed roles (exception based; abandons previous access and takes new role)
+
+AWS Organizations - central location to manage AWS accounts; consolidated billing for all member accounts; hierarchical grouping of accounts (mimicing business units in your org) called Organiztional Units OU; control AWS service/API for user/groups using Service Control Policiies (SCP) for these OUs/individual accounts or root accout. 
+
+Compliance - staying upto standards and regulation (e.g. GDPR for EU biz; HIPPA for medical firms). Data centers build to different country/business standards. AWS Artifcat gives 3rd party compliance reports for the data centers.
+
+DDoS - multiple bots flooding requests to your service end points. (UDP floods - restrict IP & protocols with security groups at network level; SlowLoris attach - elastic load balancer ELB scales at region level)
+AWS Shield with WAF (web application firewall) - ML based removes past & new network flow.
+
+Encryption of data at rest/transit. E.g. DB server -> client over SSL.
+AWS Key Management Service - create/manage & use keys.
+AWS WAF Web application firewall - allow/block list of IPs for network traffic (works with ELB and CloudFront)
+Amazon Inspector - runs assessment on deviations from best practices. Network, EC2 & security assessment.
+Amazon GuardDuty - threat detection - looks at account metatadata, ML based anamoly detection.
+
+
+*Monitoring & Analytics*
+Monitoring - observing systems by logging/monitoring and create alerts.
+
+AWS CloudWatch - monitor AWS infra & apps using those resources e.g. CPU % of EC2 instances. Configure/Trigger an alarm when custom metric is hit. Integrates with SNS to send notifications. CloudWatch Dashboard aggregates the metrics.
+
+AWS CloudTrail - auditing tool; all requested to AWS is logged in CloudTrail engine (who, when, from where, response accept/deny). 15mins delay. "Insights" feature detects anamolies.
+
+AWS Trusted Adviser - automated advisor that evalualtes resources againast cost optimization, performance, security, fault tolerance and service limits and compares against best practices.
+
+
+*Pricing & Support*
+Free Tier: Always | 12 month | Trials. E.g. AWS Lambda serverless compute (1M per month always free) or Dyanmo DB for 25GB per month always free; AWS S3 free for 12m till 5GB, also EC2 for certain hours and limited CloudFront; Insepctor/LightSail trial for 1-3m.

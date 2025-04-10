@@ -1,0 +1,57 @@
+DBT - Data Build Tools
+
+Unbundle Data Pipeline
+
+Airflow (orchestrations; connect to data sources; transform data in DW; data quality checks)
+
+Primary around Transform (SQL + Jinja + Framework for best practices like version control/test schema|referential/repeatable)
+
+pip install dbt
+SQL models (tables), config (test/qa/prod), SQL-Jinja => Target SQL, target SQL run in different env)
+
+DB + DW design skills still required
+
+Lacks debugging functionality
+
+ELT vs ETL
+
+Data Sources -> Data Lake -> Staging Area (data clean up; column rename of trx data) -> Warehouse (golden truth source) -> Analytical wide tables
+
+Cleaning - e.g. datatype
+DeDuping - from multiple sources
+Restructuring - join sources to make it easy to report
+Filtering - remove records with DQ
+Aggregating - creating measures/aggregates
+Joining
+
+DBT - build your pipeline with SQL
+
+Data Loaders : FiveTran/Stich (Raw Data)
+Warehouse : DBT - orchestrate & push down code into DW (faster/secure)
+Consumers : BI/DataScience/Ad-hoc query (Transformed Data)
+
+DBT Core: open source data transformation (Jinja templating; CLI interface)
+    1. SQL Select (No create tbl/view/CTE)
+        Data model is single DB object (materialized as table/view/CTE/incremental or selective build)
+    2. Lineage graph/DAGs based on references
+        Expressing relations as {{ref}} e.g. select * from {{ref('MODEL_NAME')}} to differ between DEV/PROD etc using Jinja template.
+    3. Tests ensure model is accurate
+        test assumption in yml (column unique, not null, foreign key test)
+        A test failure prevents further downstream runs ($ dbt test)
+        Any SQL can be a test -- for extensibility
+    4. Document is accessible and easily updated
+        Description from .yml for model/columns (manual)
+        Model dependencies
+        Model SQL
+        Sources
+        Tests
+        Metadata info on columns/tables from db
+    5. Macros to write reusable/modular SQL
+        Jinja templates with if/for loops & environment variables
+        Like funcitons in programming languages e.g. cents to dollars; 
+DBT Cloud: Managed SaaS. IDE to develop & testing; job orchestrations; auth
+
+
+GreatExpectations :: Data expectation tool (open source)
+    e.g. value in colA must be between 1 and 10 -- based on business knowledge or historical trend
+    Data validation at each stage (sourcing, staging, transformation, final anlytical tbl).

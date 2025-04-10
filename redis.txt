@@ -1,6 +1,52 @@
 https://redis.io/documentation
 https://redis.io/commands#string
 
+ReDiS : Remote Dictionary Server
+Core Redis is In-memory key-value database for multiple types of data (string/hash/set/list etc).
+Modules in Redis e.g. RedisSearch, RedisGraph, RedisJSON, RedisTimeSeries.
+
+Redis is schema-less.
+
+Replicate data server (master + 2 replicas).
+
+Persisting data - use combination of RDB (snapshot) + AOF(write ahead log)
+1. Snapshot of database (as a .rdb file). Snapshot in disk is great for DB restore
+2. AOF - append only file - all writes saved to a log continuously. Used to rebuild state on restart. Slower than snapshot but more reliable.
+Note - persist files on a separate server. E.g. on AWS EC2 store on EBS (Elastic Block Storage) and not on EC2 disk/memory.
+
+Extend capacity with "Redis on Flash" - extends RAM to Flash/SSD. Frequent data on RAM; infrequent data on flash/SSD.
+
+
+Scaling a redis database:
+1. Clustering - master with multiple replicas. Master to write and replicas to read. If master fails, one of replicas takes over.  Replicas can be on same server but ideal to setup on another node.
+    High availability - operational DB even when one host fails. E.g. replica is promoted to master/primary (each primary shard has a replica). All primary and replicas are interconnected. Configure how many fellow shards need to agree when to failover primary - have odd # of primary and 2 replicas per shard. One group will be bigger/majority - in which case minority can not trigger a failover.
+    
+2. Sharding - partition the data horizontally (e.g. A-G, H-M, N-R, R-Z)
+    Algorithmic sharding where key is hashed and then modulo N to determine which host has the key. Issue is if hosts/shards are added/removed causing a mismatch with modulo fn step. Redis uses logical unit called Hashslot which sits between a key and as shard. Each database has 16K hashslots - divided evenly between hosts in cluster. So it's modulo hashslot (not shards N). We move hashslots between instances as more hosts are added/removed.
+
+Best: Target multiple nodes (in differnt regions) with multiple replicas with data sharded.
+Regional clusters are synced (compressed binary stream); each region is seviced by nearby cluster. Each data type has it's own conflict resolution rule when cross-region clusters have conflicting writes from different regions.
+
+
+Streams - data struct that behaves as a Append-Only-File with timestamped entries that are immutable. Entries are like hash (key-value pairs; no schema).
+    Producers -> generate stream of Events (EventID -> DataStruct) -> Consumers (Real-time, DBWriter)
+    Stream is linked to a redis key (example "checkins). Adding entry to stream:
+    redis> XADD stream_key * key1 value1 key2 value2  # * tells add key and associate with unique key of timestamp+seq.no
+    "171201221-0"                       # timestamp_ms-sequence#
+    redis> XRANGE starttimestamp_ms endtimestamp_ms  count 10 # returns 10 oldest first
+    redis> XREVRANGE  endtimestamp_ms  starttimestamp_ms      # recent entries first...note timestamp is end_ts start_ts
+    redits> XRANGE stream_key -+ COUNT 5    # return first and last 5 records from stream 
+    
+    # read stream continuously blocking when there is no more output from producer
+    redis> XREAD STREAMS stream_key 0       # return all ids > 0 (all data from stream) ... use last key_id to request for next batch
+    redis> XREAD COUNT 1 BLOCK 5000 STREAMS stream_key 0    # get 1 record, block for 5sec for record key > 0
+    
+    # data trimming strategy (remove older entires)
+    redis> XTRIM stream_key MAXLEN 10000    # keep only 10K records in stream and delete older entires
+    redis> XADD stream_key MAXLEN 10000 * key1 value1 key2 value2  # specify while adding to restrict len to 10k (more common)
+    redis> XLEN stream_key    # tells length of stream that has been setup
+    
+    
 On dev host (ld-chces16):
 $ cd ~/docs/temp/redis-5.0.4
 $ src/redis-server --protected-mode no

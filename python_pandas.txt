@@ -27,7 +27,8 @@ df.iloc[0:5, 0]     ## row 0 to 4 (5 excluded; python range-like excludes end)
 df.loc[0:5, 0]      ## # row index 0 to 5 (not 4! ... differs from iloc), col 0 only
 df.loc['row0']
 df.loc[0:5, "colA"]  # df.loc[0:5, ["colA","colB"]  or df.loc[ [0,1,2] : [0,1,2] ] # 3 rows, 3 cols
-# note: iloc index excludes ending range; while loc *includes* ending range (loc range can be non-numeric!). Also, iloc needs both row/index & columns in integer indices i.e. can't use column names
+# note: iloc index excludes ending range; while loc *includes* ending range (loc range can be non-numeric!). 
+# Also, iloc needs both row/index & columns in integer indices i.e. can't use column names
 
 df.set_index('colB')
 
@@ -37,6 +38,89 @@ df.loc[(df.colA == 'USA') & (df.colB == 'Chicago')]     # all cols for rows matc
 
 df.ColNew = 'Singular'
 df.ColNew2 = range(len(df))
+
+df.rename(columns={'old_colA':'new_colA', ... })
+df.rename(index={0:'firstRecord', 'old_indxA':'new_indxA', ... })   # df.set_index('colA') is more common
+# giving name to index/columns
+df.rename_axis("wines", axis='rows').rename_axis("fields", axis='columns')
+df.rename_axis("colA", axis='rows')  # colA is index now ... axis='columns' means it would be the header
+
+pd.concat([data_US, data_CN, data_MX])      # concat on axis...axis='row'/'index' or not specified i.e. rows double..with potentially duplicate in index values
+
+pd.concat([data_US, data_CN, data_MX]), axis='columns')     # sideways aligned based on columns with column names being duplicaed (to have unique columns names, use join or merge)
+
+df1.join(df2, lsuffix='_left', rsuffix='_right')  # combine based on common index (can set explicit index before join e.g. df.set_index(['colA','colB'])
+
+
+# summary
+df.col.describe()  
+# string -> count, unique, top, freq
+# int -> count, mean, min, max, 25-50-70%
+df.col.count(), df.col.min/max/mean() 
+df.col.unique()         # gives list of unique values
+df.col.value_counts()   # count for each unique value desc
+
+# map & apply (map for single column transform; apply for row i.e. multiple/all columns transform)
+df.colA_mapped = df.colA.map(lamba x: x - pre_computed_value)
+
+df_new = 
+df.apply(fn, axis='columns')            # df.apply(fn, axis='index')
+def fn(row):                            # def fn(col):
+    row.X = row.X + 2                   #     col.index0 = col.index0 + col.index1
+    row.Y = row.Y + (row.X+row.Y)/2     #     return col
+    ...
+    return row
+    
+df.colA.idxmax()   # idxmin()....return index of highest value of colA (or computation) and then to get another/mapped column
+e.g. bargain_wine = reviews.loc[(reviews.points / reviews.price).idxmax(), 'title']
+# Create a variable bargain_wine with the title of the wine with the highest points-to-price ratio in the dataset.
+
+# filter description for field given and return their counts when present
+fields = ['tropical','fruity']
+data = []
+for f in fields:
+    data.append(reviews.description.map(lambda s: f in s).sum())
+descriptor_counts = pd.Series(data, index=fields)
+
+
+#group by  -- counts(size), 
+# pick out the best wine by country and province
+df.groupby(['country','province']).apply(lambda df: df.loc[df.point.idxmax()])
+# agg to get colA_min|max|len by country
+df.groupby(['country']).colA.agg(["len", "min", "max"])
+
+# multi-index (e.g. index from multi-column groupby)
+# Need 2 level of labels to get value... easiest to reset_index() to make these multi-level index as cols
+
+# sorting
+df.sort_values(by=["colA","colB"], ascending=False)
+df.sort_index()
+
+# type          astype(...) int64/float64/object (string)/categorical/timeseries.
+df.colA.dtype   or df.index.dtype
+df.dtypes
+df.colA.astype('float64')
+
+# pd.isnull() or pd.isnotnull() ... and fillna("Value") of fillna(method="bfill"|"ffill", limit=5)
+# fillna() is deprecating method=ffill|bill and instead use fn ffill() and bfill()
+df[pd.isnull(colA)]     # show records with colA = NaN
+df.colA.fillna("unknown")
+df.colA.dropna()        # not recommended to just drop data
+df.dropna()             # remove rows if any column value is NaN
+df.dropna(axis=1)       # remove columns if any value is NaN
+df.colA.fillna(method='bfill', axis=0).fillna(0)
+total_missing_values = df.isnull().sum().sum()   # first sum is by columns, so needs another sum for series of sum-of-columns
+total_values = np.product(df.shape)
+
+
+# is value missing because it was not records and needs to be patched ...or... not applicable
+
+df.colA.replace("old_value", "new_value")
+
+
+# scaling (pounds to kgs); normalization (distribution mean is 0)
+
+
 
 # url = github raw csv
 tips = pd.read_csv(url)

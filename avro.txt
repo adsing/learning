@@ -1,0 +1,44 @@
+Avro
+
+Apache Avro - data serialization system.
+
+Schema : JSON like data schema/model (RecordType, [fields = name + type]).
+    Schema leads to robust, clear, compatible.
+    Schema evolution - Good support for adding/retiring columns.
+    Doesn't need a code generator e.g. like protobuffer/flatbuffers do.
+Maps to/from JSON.
+Binary format makes data compact.
+Further compression possible (gzip/xz//bzip/snappy).
+
+Data (msg-body) & Schema (msg-header) stored together! Caution on file size being too small. Advantage: can split bigger files (or likely merge smaller files)
+Handles complex data structs like array, maps, enums, unions.
+
+Ideal for write-heavy or read-all column workloads.
+
+Data:
+{
+  "time": 1424849130111,
+  "customer_id": 1234,
+  "product_id": 5678,
+  "quantity":3,
+  "payment_type": "mastercard"
+}
+
+Schema:
+{
+  "type": "record",
+  "doc":"This event records the sale of a product",
+  "name": "ProductSaleEvent",
+  "fields" : [
+    {"name":"time", "type":"long", "doc":"The time of the purchase"},
+    {"name":"customer_id", "type":"long", "doc":"The customer"},
+    {"name":"product_id", "type":"long", "doc":"The product"},
+    {"name":"quantity", "type":"int"},
+    {"name":"payment",
+     "type":{"type":"enum",
+	     "name":"payment_types",
+             "symbols":["cash","mastercard","visa"]},
+     "doc":"The method of payment"}
+  ]
+}
+

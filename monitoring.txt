@@ -1,0 +1,28 @@
+Monitoring
+
+Prometheus: 
+    Open source monitoring/alerting toolkit.
+    Collects and stored metrics as time series (TS) i.e. metric info is store with timestamp (of when recorded) along with optional key-value labels.
+
+    Features:
+        multi-dimension data model with TS data identified by metric and key-value labels
+        PromQL - query language
+        single server nodes are autonomous so reliable even when distributes network is out
+        Pull data over HTTP or push data via gateway to server
+
+    Works well for recording numeric TS data esp for micro-services with multi-dimension data.
+                reliable even when network outages as the server is standalone
+    Not good for 100% accurate data as it may occasionally drop some data.
+
+    So reliable but not 100% accurate.
+    UI on top is typically Grafana
+
+    
+Splunk:
+    capture, index, search, monitor, analyze machine generated data (e.g. logs)
+    web interface for query (Splunk Query Language)
+    UI is grafana
+    
+Grafana:
+    Visibility stack for making dashboards on data from Prometheus/splunk etc.
+    API to integrate with databases (Snowflake/Postgres), Kafka, Databog etc.

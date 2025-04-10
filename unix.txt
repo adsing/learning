@@ -182,6 +182,22 @@ $ seq last
 $ seq -s',' 3 2 10       # 3,5,7,9
 
 
+FILE / READELF / OBJDUMP 
+========================
+$ file <binary/file>	# reads file headers to determine file type (Code/Binary/Text) based on magic numbers, architecture supported. Importantly, the starting address that this code will jump to when running it from terminal
+
+
+readelf & objdump are part of "binutils"
+# To determine the ELF (Unix executable like windows.exe) properties like starting address, architecture built for
+$ readelf -h <binary>
+$ readelf -d <binary>   # show dynamic section
+
+
+# assembly code in binary
+$objdump -D <binary>
+$ objdump -D -M intel file.bin | grep main.: -A20
+# This performs disassembly on the file «file.bin», with the assembly code shown in Intel syntax. We then redirect it to grep, which searches the main function and displays 20 lines of its code. 
+
 GNU Parallel
 ===============
 parallel --dryrun -j32 -k --nice 20 --load 50% --noswap --resume-failed --joblog /tmp/parallel.log --results outdir -a input_dates.dat echo  #remove /tmp/parallel.log when done

@@ -42,6 +42,23 @@ o Efficiency
   - Cheap to create test/development environments with namespace (test/dev)
 
 
+K8s cluster has a control pane & many worker nodes.
+
+Worker nodes run pods i.e. groups of containers/microservices that belong to same application. 
+Pod can consiste of 1 or more containers.
+Wroker node consits of pods and: 
+ - kubelet daemon that talks to Control Pane's API server (whic pods to run & ensure desired pod state is maintained)
+ - kube-proxy that redirects network traffic to correct pod & provide load balancing for pods
+ - container runtime (runs containers on worker nodes by polling registry, start/stop containers & container resource manager)
+
+ControlPane has a REST API for user via UI/CLI to interest with and supports ReplicationController (run N instances of this pod) and MigrationController (that allows upgrade/rollback).
+Control plane has 
+ - etcd (distribute key-value DB to store clusters state), 
+  - Scheduler (schedule pods on cluster depending on available resources on worker nodes),
+  - ControlManager (running controllers that manage cluster state) e.g. ReplicationController, DeploymentController (rolling updates & rollbacks)
+ControlPane talks to worker nodes via APIServer.
+
+   
 Creating and running containers:
 ================================
 K8s platform for managing distributes applications. First, need to know how to put applications in container images.
@@ -120,3 +137,121 @@ Limiting resources used by container by exposing underlying Linux cgroup.
 $ docker run -d --name myapp --publish 8080:80  --memory 200m --memory_swap 1G --cpu-shares 1024 dockerhub.com/myaccount/myapp:v2
 
 $ docker rmi <tag or image>  #remove/delete image
+
+
+MicroK8s theory:
+================
+High Availability:
+3 types of nodes in a HA setup:
+    1. voter node: replicate DB & vote in leader election
+    2. standby nodes: replicate DB but don't vote for leader election
+    3. spare: don't replicate DB and don't vote for leader election
+Status lists the voter & spare nodes and whether HA is achieved or not.
+Master control pane runs on all nodes and can use "microk8s *" cmds on any node.
+If leader node crashes, a new one is elected within 5 sec. Do it gracefull with "microk8s leave" & "microk8s remove-node <node>".
+If a new node is made a voter node then you may have to install the add-ons 
+
+Strict Confinement: microk8s comes with a strict setup that block file/network etc access.
+
+Classic setup (default):
+    - Calico as CNI Networking Interface (configure image registry, 
+    - dqlite (instead of etcd) as data store
+
+ClusterAPI (CAPI) is API for cluster creation/config/mgmt as YAML file.
+    Abstracts away infra prvisioning, networking etc.
+    Runs on management clusters (and not provisioned cluster where workloads run). 
+
+Dual stack IPv4/IPv6:
+    Default setup to use IPv4
+    
+Add ons: Dashboard/DNS/Cert-manager/helm/ingress/metrics server/prometheus/registry & many from community (fluentd, argoCD, istio, traefik)
+
+MicroK8s v1.28 setup on localhost (ThinkPad):
+=========================================
+setup : 
+    sudo apt install microk8s --classic
+    sudo usermod -a -G microk8s $USER
+    sudo mkdir -p ~/.kube
+    sudo chown -f -R $USER ~/.kube
+    # microk8s start
+    microk8s status --wait-ready
+        microk8s is running
+        high-availability: no
+          datastore master nodes: 127.0.0.1:19001   # master control pane, replicate DB and participate in leader election
+          datastore standby nodes: none             # replicate DB but don't participate in leader election
+                                                    # spare nodes don't replicate DB or participate in leader election
+        addons:
+          enabled:
+            dashboard            # (core) The Kubernetes dashboard
+            ha-cluster           # (core) Configure high availability on the current node
+            helm                 # (core) Helm - the package manager for Kubernetes
+            helm3                # (core) Helm 3 - the package manager for Kubernetes
+            metrics-server       # (core) K8s Metrics Server for API access to service metrics
+
+
+$ alias ukubectl="microk8s kubectl"
+$ microk8s kubectl get all --all-namespaces
+...
+
+Deployment:
+$ kubectl create deployment nginx --image nginx
+# deployment/nginx created
+$ kubectl expose deployment nginx --port 80 --target-port 80 --selector app=nginx --type=ClusterIP --name nginx
+# service/nginx created
+
+$ ukubectl get all          # we see pod, service, deployment & a replica-set
+    NAME                       READY   STATUS             RESTARTS   AGE
+    pod/ngix-979d6455c-nlkzv   0/1     ImagePullBackOff   0          4m8s
+
+    NAME                 TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)   AGE
+    service/kubernetes   ClusterIP   10.152.183.1     <none>        443/TCP   19d
+    service/ngix         ClusterIP   10.152.183.163   <none>        80/TCP    2m14s
+
+    NAME                   READY   UP-TO-DATE   AVAILABLE   AGE
+    deployment.apps/ngix   0/1     1            0           4m8s
+
+    NAME                             DESIRED   CURRENT   READY   AGE
+    replicaset.apps/ngix-979d6455c   1         1         0       4m8s
+# replicaset is auto-created; pods have random suffix but same name as deployment; ngix is exposed on IP 10.152.183.163:80
+# note: deployment & pods are not ready so curl is not working
+
+$ curl 10.152.183.163       # didn't work - certificate error in logs
+    # Get "https://172.18.204.90:10250/containerLogs/default/ngix-979d6455c-nlkzv/ngix?tailLines=5000&timestamps=true": tls: failed to verify certificate: x509: certificate is valid for 172.18.206.232, 172.17.0.1, not 172.18.204.90
+
+$ microk8s reset    #shuts down all components & restarts clean
+$ microk8s stop     # when not using; can always start
+
+
+Dashboard:
+$ microk8s enable dashboard     # enables
+    If RBAC is not enabled access the dashboard using the token retrieved with:
+        microk8s kubectl describe secret -n kube-system microk8s-dashboard-token    # token retrival
+    Use this token in the https login UI of the kubernetes-dashboard service.
+
+    In an RBAC enabled setup (microk8s enable RBAC) you need to create a user with restricted
+    permissions as shown in:
+    https://github.com/kubernetes/dashboard/blob/master/docs/user/access-control/creating-sample-user.md
+
+$ microk8s dashboard-proxy  # didn't work as certifcate is not authorized for my IP (172.18.204.90)
+
+    Dashboard will be available at https://127.0.0.1:10443
+
+    Use the following token to login: eyJhbGciOiJSUzI1NiIsImtpZCI6InAyRTVmUmRoQmtFeGhJb3lzUEhQMXVaYjNGRHFrVlRKRmYzVU5WalJiNHMifQ.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9uYW1lc3BhY2UiOiJrdWJlLXN5c3RlbSIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VjcmV0Lm5hbWUiOiJtaWNyb2s4cy1kYXNoYm9hcmQtdG9rZW4iLCJrdWJlcm5ldGVzLmlvL3NlcnZpY2VhY2NvdW50L3NlcnZpY2UtYWNjb3VudC5uYW1lIjoiZGVmYXVsdCIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VydmljZS1hY2NvdW50LnVpZCI6IjVkNDM3NjU2LWViODAtNDJhYi1iZjc1LTE3NGIzZmRlNmI5YSIsInN1YiI6InN5c3RlbTpzZXJ2aWNlYWNjb3VudDprdWJlLXN5c3RlbTpkZWZhdWx0In0.aA3f18MDKn3_tUbRraWzl3NZMmt0VlQiSaK1C8FDrxziyDDcowqX_aglVMMQiWcWyUVqujRh2jVKu2IRjaDmCj-2LbSbogjcMjsexOGcs9bw9X6SwWB_1MdsOt7_fvxt2a3raDOc5x1NVr0gKQvZUebWfGKsloSTa9g7l8LcwoiMjnch9qpFQ_og1_-MnDEWSYnOYab0upUOPNYs_jFTjM1Cix6LJYOF544w0Icwj-Wsx9FlYxGTsqejJbFhNMm4qRfXz7vGa5duhagxc7WTqo75hLxfCLqxcJHeZj8IB_7sg6gbugR0_abLJRw4yBSeXPBnFV835izVJH2LWX9_lQ
+
+    error: error upgrading connection: error dialing backend: tls: failed to verify certificate: x509: certificate is valid for 172.18.206.232, 172.17.0.1, not 172.18.204.90
+## edit and add IP to /var/snap/microk8s/current/certs/csr.conf.template .. didn't work
+## sudo microk8s refresh-certs -e ca.crt  ... starts browser but certificate error exists (not erroring out atleast)
+
+
+$ microk8s kubectl -n kube-system describe service kubernetes-dashboard | grep Endpoints
+     10.1.19.168:8443
+Open firefox to https://10.1.19.168:8443 and enter token
+
+
+
+Helm:
+======
+ -  as a package manager (like apt) for K8s i.e. packaging collection of yaml of K8s and distributing them. Bundle of yaml files is called Helm Chart.
+ - as a templating engine. App made of multiple microservices (where each app name/port/image is different else everything is same). Define common blue print for all microservices in an app and replace dynamic values with placeholders like {{.Values.container.name}} these values come from a "values.yaml" file or through CLI with --set flag. Good for CI/CD.
+ -  
+  

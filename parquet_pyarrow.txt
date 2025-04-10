@@ -1,6 +1,10 @@
 https://parquet.apache.org/documentation/latest/
-Parquet (columnar data storage file format) 2014
+
+Apache Parquet (columnar data storage file format) 2013 
 Supports complex/nested data structs with efficient encoding/compression techniques.
+Integrates well with Spark (default data format).
+Self-describing i.e. contains metadata with schema & file structure.
+More efficient for reading & analytical querying.
 
 ------------------------------------------------
 Interoperability - Language independent(more Java than C++); encoding library; Java convertors (parquet to avro/proto). Works with Hive/HAWQ/Drill/Pig (query engines) + Spark/MapReduce (frameworks) + Avro/Proto (Data models).

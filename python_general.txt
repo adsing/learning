@@ -1,16 +1,33 @@
 Learn:
  - concurrency: multi-threading, multi-processing, concurrent futures
  - asyncio
+ - callbacks
  - More itertools - https://pypi.org/project/more-itertools/
  - polars
  - pydantic
  - profiling with Scalene
- - typing (mypy|pyre)
- - FastAPI/OpenAPI
+ - typing (mypy|pyre|pyright)
+ - FastAPI/OpenAPI -- https://realpython.com/fastapi-python-web-apis/ see REST.txt
+ - dbt 
 
-Args: positional or keyword
-	def fn(positional_only_args, /, positional_or_keyword, *, keyword_only):
+Python objects are destroyed when their reference counts = 0.
+import sys
+sys.getrefcount(x)  # adds one ref.count as it accesses the variable.
 
+
+globals()   -- namespace at module level
+locals()    -- namespace local 
+LEGB rule : Locals, Enclosed, Global, Built-in, else NameError
+To change global variable in a local scope:
+    global var_x
+    var_x = 10    # now this will change global var_x
+To change enclosing variable (not global) in local scope (e.g. for nested fn):
+    nonlocal var_y
+    var_y = 'abc'
+
+Callable: both function and classes can be called .e.g foo(), MyClass().
+    If class implements __call__, then obj() is callable 
+callable(lambda x:x) == callable(MyClass)
 
 Ternary:
 	a if a < b else b
@@ -22,6 +39,7 @@ List:
     lst.clear() # remove all elements
     lst.copy()  # shallow copy
     lst.count(item)  # parse full list and return # of occurances
+    lst.find(item)   # -1 if not found else index 0..len(lst)-1 ...safer that index. Also lst.rfind()
     lst.index(item)  # first index of item; ValueError if not found  (better with "item in lst")
     lst.reverse()    # in place
     lst.sort(.. key, reverse) # in place 
@@ -29,15 +47,23 @@ List:
 String: immutable
     strng.index('substring')
     strng.startwith('A) ... strng.endswith('Z')
-    lst = strng.split(',') ... strng = ','.join(lst)
+    lst = strng.split(',') ... strng = ','.join(lst)  # also regex=re.compile('_,')  regex.split(data) for multiple separator splitting
+    str.strip()     ... remove leading/trailing space
+    str.strip('[]') ... remove [ and ]
     "{} + {1} = {2}".format(2,3,5)  or f"{a}+{b}={tot}" # a=2, b=3, tot=5
     "{} weighs about {:.2} kilograms ({:.3%} of Earth's mass). It is home to {:,} .".format(
         planet, pluto_mass, pluto_mass / earth_mass, population,
         )
+    eval(str)  # my_list = eval("[1,2,]")    to convert an IO string into python variable(s)
+    exec(code_str)  # doesn't return anything, just executes the code
     
 Dict:
     {key:value for key,value in zip(keys,values)}
-    #  keys(), values(), items()
+    #  keys(), values(), items()  ... are views on dictionary data structs and not lists.
+    dict.get(key, default_value)  vs dict.setdefault(key,default_value) will return value if key exists otherwise unlike .get() will add to dictionary key:default_value pair.
+    
+    Sets are implemented as dictionary (without values).
+    Common operations | union, & intersection, - difference, ^ symmetric difference, <= subset, < strict subset (not =), >=,> superset
 
 Enum: (unique) Symbolic names bound to a variable. Advantages: grouping, nice repr, type safe.
 	  If 2 names have same value then second serves as alias to first -- which is returned when accessing first or second such enum member.
@@ -51,9 +77,19 @@ Enum: (unique) Symbolic names bound to a variable. Advantages: grouping, nice re
 			RED=1			# attribute .name=RED and .value=1
 			GREEN=2
 			BLUE=auto()
+			
+            def __str__(self):  # can define methods as well
+                return self.name.lower()    # RED -> red
+            # name|value are read-only and should not be modified in methods
+            
+		rgb = RGBColors(2)
+		rgb         		# repr:: <RGBColors.GREEN: 2>
+		print(rgb)          # str :: RGBColors.GREEN
+		# note type, name|value attributes, ability to iterate on enumeration members
+		type(rgb)           # type::  RGBColors
+		rgb.name, rgb.value # GREEN, 2
+		for x in RGBColors: print(x)   # RGBColors.RED, RGBColors.GREEN, RGBColors.BLUE
 
-		RGBColors(2)		# repr:: <RGBColors.GREEN: 2>
-		print(RGBColors(2)) # str:: RGBColors.GREEN
 
 	Similar to Enum, is Flag (bitset)
 		class TimeInForce(Flag):
@@ -70,6 +106,59 @@ Enum: (unique) Symbolic names bound to a variable. Advantages: grouping, nice re
 	Enum similar to namedtuple. E.g. Animal = Enum('Animal', 'ANT BEE CAT DOG')-
 	To compare Enum to integers, use IntEnums (or StrEnums or IntFlags or StrFlags).
 
+
+Function:
+    Python evaluates function when they are defined and have a side effect that any mutable default arguments are created at time of evaluation.
+    So don't use [] or {} as default args instead default them to None and in function definition, initialize to mutable data struct if None.
+    
+    Fn. always return a value - None, user-specified scalar (which can be None, literal or a tuple for multiple values...limit to 5).
+    When returning multiple values, consider maintaining readability of code i.e. don't refactor and shrink the fn just for the sake, it should logically blend itself in terms of code & return values.
+
+    # typing  .. list|tuple|MyClass or list[MyClass] or tuple[MyClass, int] 
+    #           or tuple(float, ...) for multiple floats... better Sequence[float] for tuple/list
+    #           or dict[str, int] or dict[str, list[MyClass]], set[int] 
+    #           or set[int | str] ... set containing int or str
+    def foo(s:str, n:int = 1) -> str:
+        """ Foo takes string input and returns string with N-copies of original (Summary, args, returns, raises if any) """
+        return s * n
+    foo.__doc__   # Foo takes string input and returns string with N-copies of original
+
+
+Args: positional or keyword
+	def fn(positional_only_args, /, positional_or_keyword, *, keyword_only):
+
+
+Exception handling: try-except-else-finally
+try:
+    # code that can raise exception (keep it short)
+except ValueError as x:
+    # handle exception (only one matching except block is processed)
+    # exception is saved to sys.exception() first and then falls into except-suite of code
+    # can raise another exception here....code outside this block or code in stack frame to handle it
+    # x goes out of scope here
+except IndexError as x:
+    # handle specific type of exception
+    # x is an object that is highly likely to have "args" attributes. Other attributes are specific to Exception-type/class
+    # can chain and raise another exception as shown below...traceback preserves both the exception
+    # "raise ValueError("Value is incorrect too") from x" 
+    # raise         # re-raise the same exception (same as "raise x") e.g. typically logging.exception(x) and delegate by re-raising to higher-level code for handling
+except Exception as x:
+    # catch-all exception
+    # if this part is missing and exception is not handled it will rise up to caller (which can be OS and your code will be terminated)
+else:
+    # else exeucted only if no exception raised from try block
+finally:
+    # always executed (try->else->finally) or (try->except->finally) or (try->finally and then unhandled exception if any is raised)
+    #  If there is a saved exception it is re-raised at the end of the finally clause. If the finally clause raises another exception, the saved exception is set as the context of the new exception. If the finally clause executes a return, break or continue statement, the saved exception is discarded
+    
+Anti pattern to avoid: ignoring all exceptions silently
+    try:
+        ...
+    except:     # or except Exception as e:
+        pass
+    
+except* goes with ExceptionGroups (one message but multiple Exception classes) and each matching except* block is invoked
+except * <ExceptionClass> as x:
 
 Size of:
    import sys
@@ -89,23 +178,42 @@ Size of:
 
 
 # OOP
+task = Task()       
+# 2 step calls __new__ and __init__. New is rarely defined and returns object of Class after allocating memory. Initialization of member variables is done in __init__ which returns nothing
+# calls task = Task.__new__(Task) and Task.__init__(task)  -- register var. in namespace locals()/globals()
+# on del task, calls Task.__del__(task) -- which decrements the ref.count
+
 class Person:           # user defined type i.e. type(Person) is class 'type' so UDF is an instance of class type like type(p1) = class Person
-    counter = 0         # class variable/methods are shared by all instances
-    version = "1.0.1"
-    @classmethod        # class methods typically used to create objects (from string etc). called as Person.create_anonymous()
+    # class variable/methods are shared by all instances
+    counter = 0
+    _version = "1.0.1"         # _ protected; __private (mangled to _Class__private_method)
+    @classmethod        # class methods typically factory methods used to create objects (from string/dict etc). called as Person.create_anonymous()
     def create_anonymous(cls):      # note: says "cls" not "self"
-        return Person('Anonymous')
+        counter += 1                # can access other class attributes or methods
+        return cls('Anonymous')     # same as "Person('Anonymous')"
     def __init__(self, name):
-        self.name = name
+        self._name = name
         self.counter += 1  # or Person.counter or self.__class__.counter
     def greet(self):
         return f"Hello {self.name}"
     # static methods to group methods together; not specific to class or instance
     @staticmethods
     def copyright():      # not touching any class/obj data but kept here for logical grouping. called as Person.copyright(). Note: no self/class as argument
+    # read only attributes with @property as obj.name (like an attribute aka a property of obj)
+    @property
+    def name(self):
+        return self._name
+    @name.setter        # @{property_name}.setter
+    def name(self, value):
+        if value not in VALID_VALUES:
+            raise AssertionError(f"Invalid value {valu}. Valid values are {VALID_VALUES}")
+        self._name = value
+    # __repr__ (format matches code for creating object throught eval..use !r for raw string) & __str__ (print/f-string ..use !s for string representation) ... !r gives "str" while !s gives str.
+    def __repr__(self):
+        return f"Person({self.name!r})"
 
- class SpecialPerson(Person):           # single inheritance
-    def__init__(self, name, speciality):
+ class SpecialPerson(Person):           # single inheritance (__private methods are not accessible in subclass but _protected and regular are accessible in subclass)
+    def__init__(self, name, speciality):        # if __init__ is not defined then parent's __init__ called automatically...but since we define in subclass, we need to determing if super()'s init needs to be called or not
         super().__init(name)            # init Parent first with super()
         self.speciality = specialiity
         print("Copyright 2020...blah blah")
@@ -114,7 +222,7 @@ class Person:           # user defined type i.e. type(Person) is class 'type' so
 
 p1 = Person('Adi')
 print(p1.counter)     # class attribute
-getattr(p1, 'attrib', 'new_attrib_required')        # check if it has attribute "attrib" and if not, return "new_attrib_required"
+getattr(p1, 'attrib', 'new_attrib_required')        # check if it has attribute "attrib" and if not, return "new_attrib_required" ... looks up in __dict__ first and then in __getattr__ (lazy eval)
 p1.new_attrib = 10    # attribute added dynamically to this object instance only
 # setattr(p1, 'new_attrib', 10)
 
@@ -122,7 +230,8 @@ p1.new_attrib = 10    # attribute added dynamically to this object instance only
 # delattr(Person, 'new_attrib')
 print(id(p1))         # get memory locaion of object with id()
 
-
+sp = SpecialPerson('X')
+SpeciallPerson.mro()        # method resolution order :: (SpecialPerson, Person, Object) in this order
 
 __slots__ can be used to save memory taken by objects + restrict from adding more member variable (obj.NewVar).
 The instance loses __dicts__.
@@ -181,11 +290,28 @@ Data containers : Class/DataClass/Dict/NamedTuple
 
 	@dataclass
 	class Pet:
-	   legs:int
-	   noise:str
+	   noise:str        # type required ... Pet.__annotations__ gives {'noise': <class 'str'>, 'legs': <class 'int'>} 
+	   legs:int = 4     # default value members at end
 
 	Pet = namedtuple("Pet","legs noise")
+	p1 = Pet(4, "woof")
+	p2 = Pet._make([2, "tweet"])
 
+Note: on __repr__. Representation returned should allow the object to be recreated. E.g. Vector(3,4) and not Vector('3','4'). For this use raw representation e.g. return f"Vector({self.x!r}, {self.y!})"
+
+
+    Lazy attribute eval with __getattr__(self, attr) and/or with @property (prefer @property):
+        "expensive" class data member is evaluated only when used/invoked
+        def __getattr__(self, attr):            # don't set self.expensive_attr in __init__ (__getattr__ is called when lookup in __dict__ fails)
+            if attr == "expensive_attr"
+                fetched_attr_value = self.get_expensive_attribute()
+                setattr(self, attr, fetched_attr_value)             # attr is added to obj and expensive call is not made again
+                return fetched_attr_value
+        @property
+        def attr(self):
+            if self._attr is None:
+                # do expensive fetch and self._attr = data
+            return self._attr
 
 Dataclasses: provides __init__, __repr__ and __eq__ by default.
 
@@ -200,6 +326,11 @@ Dataclasses: provides __init__, __repr__ and __eq__ by default.
         replies: list[str] = field(default_factory=list)	# list or any other fn that generates initial value. Factory is invoked if user doesn't specify this field while creating object. Can set "init=False" in field() to ensure that user can not provide this arg. "repr=False" to hide field from printing with repr. "compare=False" to skip the field
         				# __post__init__(self) method can be used to set attributes that depend on other member attrib.
 
+    class SpecialComment(Comment):
+        special_comment: str = ''   # BaseClass fields come before DerivedClass when initializeing ... if base class has any defaults then all sub-class fields must have defaults too as defaults come at end when initializing
+    
+    c = Comment(99, 'text', [])
+    sc = SpecialComment(100, 'text', [], 'special comment')    
 
     def main():
         comment = Comment(1,"hoo")
@@ -214,19 +345,90 @@ Dataclasses: provides __init__, __repr__ and __eq__ by default.
     if __name__ == '__main__':
         main()
 
+    frozen=True for dataclasses makes the members immutable. So for inheritance, a derived class can not be frozen if it's base class is not frozen....but a frozen base class can be inherited by a frozen/non-frozen derived class
+    
 
 match statement (for structural pattern matching) from Py3.10.
 Can match single value (int/str) or other type like list/dict and other objects
-Match patterns based on given sequence i.e. order is important.
+Match patterns based on given sequence i.e. order matters as matching stops after first match.
 	match var:
 		case 0: pass
 		case 1|2: pass
 		case 3 if condition: pass	#  with if condition
 		case 3: pass
-		case _: pass
+		case _: pass        # default if none matched
 		case other: print("unknown")
+		
+Can be used to match other sequence (not iterators) by "destructuring"...for str/bytes/bytearray convert to tuple/list e.g. tuple(input_str_record)
+    match recrd:
+        case [name, _, _, (lat, long)] if long <= 0:        # if-guard and can use 
+            print(f"{name} has negative longitude")
+        case [name, _, _, (lat, long)]:         # _ to match one item and can occur many times
+            print(f"{name}")
+        case [name, *_, (lat, long)]:           # *_ for matching n-items
+            print(f"{name} with many args")
+        case _:
+            raise ValueError("Unexpected format")
+            
+Can add type info for runtime validation:
+        case [str(name), _, _, (float(lat), float(long))]:
+            print(f"{name}")
+        case ['lambda', [*params], *body]:      # *body matches many "body"; [*params] ensures it's a list with n-items...because we can't have same pattern repeat (except _ which can repeat)
+        
+            # can have only one * per sequence pattern so need to nest to show that there can be 0-n params and parmas is a list (an inner sequence) and *body outer seq
+        case ['define', [Symbol() as name, *params], *body] if body:
+            return eval(name(*params))
+            # fn def with name of type Symbol, n-args
+            
+Ellipsis object: ... passed to fn or slice e.g numpy 4D matrix x[i,...] is same as x[i, :, :, :]
+
+list sorting with Tim sort and takes 2 args: reverse and key
+    l.sort()        # in-place
+    new_l = sorted(l)
+    Concatenate (+) and Extend (+=)
+    
+    # Bisect provides binary serch
+    >>> bisect.bisect((1,3,5,7,9), 4)
+    2
+    
+    Other options:
+    1. array.array when storing large number of integer/floats. Same operations as list (and to|fromfile() but memory efficient structure.
+        memoryview allows handling of array slices without copy (based on Numpy w/o math support)
+            memv = memory( array.array('h', (-1,0,1, -2,0,-2) )
+            unsigned_octets = memv.cast('B')
+            unsigned_octets.tolist()
+            matrix_2d = memv.cast('h', [2,3])  # or could be [3,2]
+            matrix_2d.tolist()
+    2. deque when inserting/deleting from both ends of list (thread-safe FIFO as append & popleft are atomic).
+        queue - threadsafe SimpleQueue, Queue, LifoQueue, PriorityQueue. When queue is full then new inserts block.
+        multiprocessing has JoinableQueue for task mgmt.
+        asyncio - for async task mgmt (Queue, LifoQueue, PriorityQueue, JoinableQueue)
+        heapq - heappop/heappush to maintain heap queue aka priority queue.
+    3. set when doing "x in set"
+    4. Numpy - advanced array or matrix operations
 
 
+Dict: Underlying hash map used by set, frozenset as well.
+    Unpacking: **dict_obj : can be used in fn calls for kwargs and in declaring dict.
+    Merge(|) and Update(|=) e.g. d1 |= d2
+
+    Pattern matching with match/case : matches dict (regardless of order) if required keys occur i.e. will match even if there are additional keys - which can be captured with **extra (but not **_ as it would be redundant).
+        e.g. match json_data:
+                case {'api':'v2', 'type': type, 'data': data, 'authors': [*names]}:
+                    print(type, data, names)
+
+    ABC interfaces: Collections <- Mapping <- MutablabeMapping. Also UserDict for deriving from.
+    
+    Keys must be hashable i.e. hash(obj) works and doesn't change during life of object. Implements __hash__() and __eq__() to compare. Mutable containers are not hashable. hash() is seeded so value varies between python processed but is constant within a process.
+    
+    dict
+    defaultdict
+    OrderedDict  od.move_to_end(key)
+    *all of above*:
+        dict.fromkeys( iterator, [init_value]) e.g. dict.fromkeys(range(10), 1)
+        dict.popitem()      # pops last inserted item
+        dict.update( [(k1,v1), (k2,v2) ]) or dict.update(mapping)
+     
 Decorator:
 	Enhance/Modify behavior to existing fn. E.g. add time taken by existing fn; add logging/user behavior; authentication before fn calls.
 	Address cross-cutting concerns (impacts multiple fn).
@@ -471,6 +673,9 @@ Generator: a fn that uses yield.
 	A coroutine (enter/exit & resume at many different points with send()) vs subroutine(where entry & exit path is fixed).
 	A coroutine is for consuming data; while generators are for producing data.
 
+    yield from <expr>
+    Coroutine can return to immediate caller only so all logic crammed into one fn. To support refactoring/separate fn call ( e.g. yield from f(x)  within the coroutine).
+    Alternative would have been to create & iterate over a "sub"-generator (for val in gen2: yield val) but can't interact with send/throw/close
 
 collections.abc - Abstract base classes for collections
 	issubclass/isinstance works in one of 3 ways:
@@ -478,6 +683,7 @@ collections.abc - Abstract base classes for collections
 	2. registering as virtual subclass. e.g. Sequence.register(MyClass) where MyClass does not inherit from Sequence
 	3. by presense of specific dunder methods
 
+    Preferablly use isinstance with collections.abs interfaces defined below.
 	Avaialble ABC (with abstract methods):
 		Container (__contains__)
 		Hashable  (__hash__)
@@ -784,6 +990,7 @@ array - compact representation of numeric/char array (same type restriction vs l
 
 
 copy: shallow/deep copy compound objects
+    Shallow copy doesn't copy mutable objects while deepcopy does copy mutable objects (list).
 	Deep copy can run into recursion so it maintains a memo dictionary of objects already copied.
 	A class needs to implement __copy__(x) and __deepcopy__(x, memo_dictionary).
 	Stuff that can't be copied e.g. stack frame/trace, socket, file
@@ -818,14 +1025,71 @@ pickle:
 
 
 JSON:
-        text format; human readable; inter-operable outside python.
+        strucutred text format; human readable; inter-operable outside python.
         No support for custom clases; no vulnerability while deserializing JSON.
+        
+        keys must be "string" .. values can be string, number, boolean, array, object or null. Pythons' int/float are both mapped to number in JSON. 
+        Note: tuples are converted to array i.e. lose their immutablility.
+        
+        Python <-> JSON
+        'txt' becomes "txt"
+        1 in key becomes "1"
+        None becomes null
+        False becomes false
+        
+        j_data = json.dumps('["a": {1: "A"}, "b": null ]')
+        json.load(j_data)
+        
+        to dump user defined types, specify instructions for serializaiton:
+        data = json.dumps(obj, default=lambda x: x.__dict__)    # serialize the python dict for the object.
+        other options for dumps: (1) indent=2 (2) sort_keys=True
+        
 
+keyword: list/test for python's keywords
+    >>> import keyword
+    >>> dir(keyword)
+    ['__all__', '__builtins__', '__cached__', '__doc__', '__file__', '__loader__', '__name__', '__package__', '__spec__', 'iskeyword', 'issoftkeyword', 'kwlist', 'softkwlist']
+    >>> keyword.kwlist
+    >>> keyword.softkwlist
+    ['_', 'case', 'match']
+    >>> keyword.iskeyword('case')
+    False
+    >>> keyword.iskeyword('if')
+    True
+
+
+%format:
+    "format %d %.2f string" % (tuples int, float)
+
+str.format():
+        format_str.format(args)
+        "Hello {}! Today is {}".format('friend','Monday')                               # placed based on arg position
+        "Hello {0}! Today is {1} and I last saw you on {1}".format('friend','Monday')   # position based arg reused with #s
+        "Hello {name}, today is {day}".format(name='friend', day='Monday')              # dict based uses keys that is more readable
+        "Point has x={0.x} and y={0.y}".format(Point)                   # attributes referenced. Similarly for list as 0[1..n]
+        Format spec ...after ':'
+            {:f} or {:.4f} or {:2e}  # 4 digit precision float or in scientific notations
+            {:,d}                   # comma separated d:integer, b:binary, o:octal, x:hex
+            # alignment < > ^ (left, right, center)
+            # numbers align right and strings align left by default
+            "foo{:>7d}bar"      # right align in 7 spaces this integer
+            
+            {name:_>7d}         # *** applies to str.format() and f-string  ***
+            # name or positional arg or nothing
+            # : format specifier
+            # _ padding
+            # > right alight
+            # 7 width (minimum)
+            # d means integer type
+            
+            Note: in logging module expect message as logging(format_str, *args)
+                    do this "logging.info('Value is %d and %s', int_data, str_data)" 
+                    and NOT this "logging.info('Value is %d and %s', int_data, str_data)" 
+                  as it leads to unneccesary string computation if logging level is set higher
 
 f-string (f"...{var}..."
         f"{var=}"	# var=10
         f"{var%2=}"	# var%2=0
-        f"{var=:FORMAT_STRING}"	# format string is related to type. Invokes __format__ method of class/type
         f"{now=:%y-%m-%d}"
         f"{float_number=:.2f}"
         f"{var!a}"	# !a -> ascii (converts non-ascii e.g. unicode into \U)
@@ -882,6 +1146,7 @@ re: for regular expression
                 so a*a will match a* with all string 'aaaa' and final a will fail to match and regex match fail. Same as (?>a*)
         (...) remember the matched string and access via \1 in rest of pattern
         (?P<name>...) & (?P=<name>)  instead of using \1 use python variable name <name> and reuse with P= in pattern. e.g. (?P<quote>['"]).*?(?P=quote)
+            e.g. parsing $143.56  r'^\$(?P<dollars>\d+)\.((?P<cents>)\d\d)$' ... accessed by match.group('dollars')
         (?=...) or (?!...) : matches if ... matches next. e.g. 'Isaac (?=Asimov)' will pass only for 'Isaac Asimov' but not for 'Isaac A'
         (?<=...) Positive Lookbehind Assertion. .e.g (?<=abc)def will match abcdef as it will match deg and then lookback to ensure last 3 char are abc.
         (?iMaS...) match pattern but ignore-case multi-line ascii dot-all(S)
@@ -914,21 +1179,51 @@ re: for regular expression
         re.sub(patter, replace, text, count=0, flags=0)  # replace can be str (with \1) or fn(match_obj)
         re.escape(text) - escape special characters
 
-        match object:
-        match.expand("a\g<1>c")    # abc where b was group1
-
+        match object: evaluates to true if a match if found
+        match.group()   # value matched (once)
+        match.span()    # index range
+        match.start() and match.end()   # index values of match
+        
+        Match returns multiple groups then match.groups() evals to True and each match item in match.group(0)/group(1)... 
         match.group() or match.group(0) gives whole string matched
         match.group(1) or match.group([1,2]) gives the groups matched as \1 \2
-        match.lastindex # gives the max group so you know how many group(N) to search for
-
+        
         # groups
         match.groups()   # gives all groups as a tuple of string
-        match.groupdict()       # for group-named based with (?P<name>)
         match.start() | .end() | .span() returns the indicies of match in input text.
-        # group-names
+        # group-names (?P<group_name>pattern)
         match = re.match(r"(?P<first_name>\w+) (?P<last_name>\w+)", "Malcolm Reynolds")
         match.group('first_name')
+        match.groupdict()       # for group-named based with (?P<name>)
 
+        match.expand("a\g<1>c")    # abc where b was group1
+        match.lastindex # gives the max group so you know how many group(N) to search for
+
+
+logging: flexible and thread-safe
+    used via basic interface or via logger objects
+    Basic Interface:
+        import logging                      # default logging level set to warning and above (warning | error | critical); default to StreamHandler to stderr; default Formatter
+        logging.basicConfig(level=logging.INFO)         # called once from main thread; so one place to control logging level to manage signal-to-noise ration
+                                            # other basicConfig options: format | filename | filemode   (default to stderr in 'w' mode; use 'a' with files to be safer)
+                                            # format="Level:%(levelname)s, time:%(asctime)s, msg:%(message)s"
+        logging.warn("Warning msg")         # gives "WARNING:root:Warning msg"  root refers to root logger ... determined by "format" with options for levelname, messae, pathname, funcName, lineno, asctime, name (of logger)
+        # log levels: debug | info | warning | error | critical  (e.g. logging.DEBUG)
+        logging.debug("X=%d, input was=%s", x, input_str)       # format_str, *args   ... don't do format_str % args
+        
+    Loggers: logging objects & handlers & streams
+            default stream to stderr buy can wrtie to files/streams like stdout/multiple files|streams/log remotely via REST API...by managing different handlers)
+            
+        logger = logging.getLogger()        # logger.name = root
+        logger.setlevel(logging.DEBUG)      # set to lowest level so that handlers can select higher levels
+        logger.hasHandlers()                # False
+        # handler
+        log_file_handler = logging.FileHandler("log.txt")       # or logging.StreamHandler(sys.stdout)  for stream should support write() and flush()  # others RotatingFileHandler, SocketHandler# HTTPHandler, QueueLister & Hnadler for across thread/process logging
+        log_file_handler.setLevel(logging.INFO)     # inherits from root handler otherwise and has to be tighter/stricter level than root.
+        logger.addHandler(log_file_handler)         # ..create and add more handlers with more specific setups
+        # formatter
+        fmt = logging.Formatter("%(asctime)s:%(levelname)s:%(funcName)s:%(lineno)d::%(message)s")
+        log_file_handler.setFormatter(fmt)
 
 socket:
     Domains/Family: AF_INET (IPv4), AF_INET6 (IPv6) and  AF_UNIX (unix sockets - uses OS instead of network so for IPC only)
@@ -972,13 +1267,84 @@ Python project on Github (2016) - https://github.com/karpathy/sqlitedict
 -- New change requires update ChangeLog.md, bump up version (setup.py, code.py), test (pytest tests), git tag v{version} && git push origin --tags
 
 
+Black | mypy | pytest | flake8 | isort
+From https://github.com/realpython/codetiming/blob/main/CONTRIBUTING.md
+1. Code style with black :: python -m black src/ tests/
+2. Static type hint with mypy :: mypy --strict src/ tests
+3. testing with pytest :: pytest
+4. code issues with linter like flake8 :: python -m flake8 src/ tests/
+5. imports sorted with isort :: python -m isort src/ tests/
+
+
+
+TDD/testing:
+    Start by writing test case first and ensure it fails. Then change code to fix it. Make sure you are not breaking any previous test cases.
+    Populat modules unittest (builtin) & pytest.
+
+    # python -m unittest test_code.py     ... order in which tests run is ad-hoc. Fixture (setUp/tearDown called for each testcase). Substests improve reporting on which value in list gives error
+    import unittest
+    from mymodule import MyClass
+    class TestMyClass(unittest.TestCase):       # must start with Test<..> and inherit from unittest.TestCase
+        def test_somefn(self):                  # methods start with test_
+            self.assertEqual(10, MyClass().foo(100))
+            self.assertTrue(MyClass().value)    # assertIs, assertIn, assetIsInstance  (also methods ending in ...Not
+        def test_other_fn(self):                # each test method should be self-contained ... test fixture aka setUp & tearDown executed before & after each test method...even if test fails, tearDown is called; error in setup/teardown cause
+            with self.assertRaises(ValueError): # Exceptions captured in "with self.assertRaises"
+                MyClass().convert2int("P")       test to fail
+            ...
+        def test_listValues():
+            check_inputs = [ (1,2,3), (4,5,'a'), ('a','b','c') ]
+            for inp in check_inputs:
+                with self.subTest(value_checked=inp)            # output logs will show failed test saying "valued_checked=(4,5,'a') failed"
+                    self.assertTrue(MyClass().init(inpt))
+
+
 Pyre : static type-checker from Facebook; pysa for security focussed tool
     $ pyre init         # sets up .pyre_configuration & .watchmanconfog
 
 
+Python binding with C (Python API), C++ (pybind11, SWIG), Rust (py03)
 
+
+Python verisons:
+2024: 3.13 coming out in Sept
+2023: 3.12
+        https://docs.python.org/3.12/whatsnew/3.12.html
+        C-API change to support (per interpreter GIL)
+        f-string (quote reuse, span multiple lines with comments)
+        comprehensions (list/dict/set) inlined (used to be fn calls)
+>>      generic classes (C++ templates like e.g. class myList[T]:  def foo(self) -> [T]:)
+>>      @overide decorator where subclass overrides base class method (method name checked)
+        type (soft-keyword) aliases (type Point = tuple[float, float])
+         
+2022: 3.11
+        Faster CPython (25% improvement)
+>>      ExceptionGroups & except* - group & raise and handle multiple exceptions simultaneously
+>>      tomllib module
+        TypeVar variadic generics in typing
+        types added: Self (classmethod returns self); LiteralString
+        Error highlighting
+        
+2021: 3.10
+        match (e.g. match http_status case 200|201: "ok" case 404: "Not founf" case _: "All else")
+        typing X|Y (union of types)
+        type aliases
+
+2020: 3.09
+        dict merge: dict1 | dict2 
+        str.removeprefix/removesuffix('suffix)
+        typing: list/dict/set list[str] 
+
+2019: 3.08  :: end of life 2024
+        f-string "{var=}"
+        walrus operator := 
+        position args (pos_only, /, pos_or_kw, *, kw_only )
+            def fn(positional_only_args, /, positional_or_keyword, *, keyword_only)
+        
 VSCode settings:
- - install Python from market place (also installs pylint and pylance)
+ - install Python from market place (also installs 
+            pylint(static code anaylsis for errors/conventions)
+            pylance(pyright based for static typing checks)
  - python.analysis.typeCheckingMode: off/basic/strict   *If you follow typing hints*
  - editor.formateOnSave + editor.codeActionsOnSave (source.organiseImports=true)
 

@@ -5,12 +5,13 @@ Container abstraction of OS with its own env/files/port (compared with VM where 
 
 
 $ docker pull <image_name_from_hub/registry>  	# docker pull redis:latest
+$ docker scout quickview <image_name>       # check for vulnerabilities
 $ docker images 		# show images (name, tag, image_id, size, created on)
 
 $ docker run <image name/id> 			# docker run redis (will pull from repo if not locally available)
 $ docker run -d --name ima<image>				# run in detached mode, returns container id
 $ docker run -d -p 63790:6379 redis		# publish container port 6379 to localhost 63790
-$ docker start|stop|restart <container_id>	# to debug a stopped container
+$ docker start|stop|kill|restart <container_id>	# to debug a stopped container
 
 #debug
 $ docker logs <container id/name>			# 
@@ -20,9 +21,10 @@ $ docker ps -a			# show all containers (running or exited -- which can be restar
 
 Out layer of image should be what changes (Copy code & run).
 
+
 # Dockerfile
-FROM IMAGE
-WORKDIR /app
+FROM IMAGE                       # typically OS:version e.g. ubuntu:bullseye-20240211
+WORKDIR /app                     # create directory and CD into ti
 
 RUN groupadd -r temp_group && useradd -g temp_group temp_uer # add temp group & user
 RUN chown -R temp_group:temp_user /app
@@ -30,12 +32,20 @@ USER temp_user
 
 ENV PYTHONPATH=/app
 COPY myapp /app
+EXPOSE 8000                         # expose port
 # RUN python3 /app/app.py			# Instead of RUN, use CMD or
-CMD ["python3", "/app/app.py"]			# Entry point command (just one CMD vs many RUN; where RUN is used to do 
+CMD ["python3", "/app/app.py"]		# Entry point command (just one CMD vs many RUN per container)
+
+# additional cmds
+VOLUME /db/data                 # data that needs to be used after container is shudown or across containers
+LABEL version="1.1"             # Labels for metadata
+HEALTHCHECK --interval=30s --timeout=10s \      # health check to ensure container is running OK
+    CMD curl -f http://localhost:8000 || exit 1
+
 
 # Jenkins CI can build the image like so
-$ dockerfile build -t py-app:1.0 .
-$ docker images		# push to repo for others to use (e.g. QA team/deployment)
+$ dockerfile build -t py-app:1.1 .
+$ docker images		# push to repo/registry for others to use (e.g. QA team/deployment)
 $ docker run py-app:1.0
 $ docker rm <container_name>	# remove container ("stop" it first)
 $ docker rmi <image_name>	# remove image
@@ -74,7 +84,7 @@ mongo
 $ docker logs mongodb		# verify it's ready to accept connections
 
 
-Docker Compose (YAML): Command structured as a YAML to run containers
+Docker Compose (YAML): Command structured as a YAML to run containers (typically multiple containers that are part of an app .e.g frontend/backend/database)
 # mongo-docker-compose.yaml - all container services on same network
 version:'3'		# docker compose version 3
 services:		# list of services that run in the containers
@@ -139,3 +149,81 @@ $ docker init
 
 $ docker scout
 # container scan images for vulnerabilities
+
+
+
+Kubernetes (K8s) - container orchestration (Start/Stop/Monitor/ResourceControl/AbstractInfra)
+ - Improved maintenance, monitoring and automation (self healing apps -- auto-restart/auto-sclae/auto-replicate)
+ - faster release cycles (with CI/CD)
+ - scaling & load balance, rolling updates, toggle traffic to different version
+ - containers ensure app behavior is consistent
+ - add storgae for stateful apps
+ - expose container to other containers/internet/clusters
+NOT a platform-as-a-service, K8s:
+ - doesn't limit type of supported apps & require dependency handling framework
+ - doesn't require apps to written in specific languages or dictate on language/config
+ - doens't build or deploy code (helps build CI/CD)
+ - doesn't provide middleware (msg), database or storage (can be integrated)
+ - doesn't specify logging/monitoring/alerting
+Machines are either workers or control pane (manage workers and monitor system). More than one control pane are possible in a large system.)
+
+Dashboard/kubectl talk to API that manages scheduler/controller that manage workers with (kubelet, kube-proxy, docker).
+The nodes run all serices required to run "pod" (single application instance or The smallest unit in the Kubernetes object model that is used to host containers). Control plane's uses etcd (a Key-Value store) 
+
+
+Kubelet : An agent that runs on each worker node in the cluster and ensures that containers are running in a pod.
+
+Kube-proxy : Enables communication between worker nodes, by maintaining network rules on the nodes.
+
+Kubectl : A command-line tool for controlling Kubernetes clusters.
+
+
+
+MicroK8s - Lightweight Kubernetes
+https://ubuntu.com/kubernetes/install
+ - single node or multi-node (3 nodes makes it HA)
+ - default setup
+ - automatic updates
+ - zero ops experience
+ - works with cloue
+ - helm/juju/jaas to automate operations; CoreDNS/flannel for networking; GPU; KubeFlow for AI/ML; monitoring with Graphana/prometheus/elastic/fluentd/Kabana
+ 
+ Use cases:
+ 1. DevOps CI/CD: Build containerized apps locally with gitlab; test on another k8s host; deploy in prod. Ability to stop/reset the K8s env.
+ 2. AI/ML pipelines: (enable kubeflow & CPU acceleration) - multiuser environment.
+ 
+ 
+LXD to spin 3 machines; install microK8s; connect other 2 microK8s to the first one to create a cluser.
+# may need to sudo to run these cmds
+sudo snap install microk8s --classic
+
+sudo usermod -a -G microk8s $USER   # Add user to microk8s group
+sudo chown -f -R $USER ~/.kube
+
+su - $USER      # become a super user to run (each time else use sudo)
+
+systemctl status microk8s
+microk8s status <--wait-ready>
+microk8s start
+microk8s reset
+microk8s stop
+
+microk8s enable dashboard dns ingress   # enable services like dashboard, dns
+microk8s dashboard-proxy        # access dashboard
+
+microk8s add-node               # cmd to run from other nodes to join them to this cluster
+
+# helpful alias mkctl=”microk8s kubectl”
+microk8s kubectl get all --all-namespaces       # all objects from all namespaces
+microk8s kubectl get all -n kube-system         # all objects from kube-system namespace
+microk8s kubectl get nodes                  # list of current nodes in cluster (single node)
+
+microk8s kubectl apply -f myapp-deployment-rolling.yaml  # create deployment through yaml file with rolling updates
+microk8s kubectl create deployment <deployment_name> --image=deployment_name:v1
+microk8s kubectl get all --all-namespaces   # created under default namespace
+microk8s kubectl scale deployment <deployment_name> replicas=3    # 3 deployments on 3 hosts
+microk8s kubectl expose deployment <deployment_name> --type=nodePort --port=80 --name <deployment_name_service>
+microk8s kubectl describe pods (| rs | deployment)          # list all posds with image details, labels
+microk8s kubectl delete pod <pod_name>          # will restart a new pod (different name) since we specified 3 replicas
+microk8s kubectl delete rs <replicationset_name> # delete replication set..dpeloyment script should restart a new rs
+microk8s kubectl port-forward -d default service/<dpeloyment_name>_service 10800:80 --address 0.0.0.0
