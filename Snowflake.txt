@@ -1,0 +1,39 @@
+
+TASKS:
+=======
+Snowflake task -> fn (SQL/StoredProc/SnowflakeScript)
+Task Graphs (DAG) expect slight delay between parent task ending and child task starting
+
+Task Admin Role
+
+Create Task (suspended)
+ - compute : WH (based on avg. run times which includes queue-wait time) or serverless (auto-resize per workload based on recent runs...to max XXL).
+        For serverless, tasks run time should be stable and for better adherence to timing as WH size can scale up. So for batched loads, might prefer to have tasks on WH with custom schedule & auto-resume/suspend to control cost.
+ - schedule : N-minute or cron-based timing with only one task instance running. If task running when next scheduled time comes, then that run is skipped. DST can cause 1am run twice while 2am not run. Alternative use UTC TZ.
+ - session parameters
+
+Manual execution (role with global EXECUTE MANAGED TASK perm)
+ - create or replace task if not exists my_task <warehouse='Small' | user_task_managed_initial_warehouse_size='Small'> <schedule=10 minute | using cron <...>>
+      allow_overlapping_execute=T/F <session_param=value, sp2=v2> user_task_timeout_ms=100 
+      suspnd_task_after_num_failures=10 error_integration=integ_name task_auto_retry_attempts
+    after task_parent, task_parent2  
+ - create task ... clone
+ 
+ - execute task <my_task>              : must own the task & have WH usage perms & have EXECUTE TASK perm. Runs with owners perms
+ - execute task <my_task> retry last   : re-exec the last failed task of task-graph with name=my_task (restarting from where task failed). The graph will have some task in failed/cancelled state & graph must not be modified since last run; must be done within 14 days.
+
+    Triggered task when stream detects new/changed data in tracked table or when task is resumed to consume what's already in stream.
+    Checking stream has_data is based on metadata so doesn't use compute until data comes and needs to be processed.
+
+Resume task
+ - versioning of task runs
+ - auto suspend on failures
+ - task history
+ - cost
+ 
+ 
+ 
+ 
+NT: Separation between light/consistent data loads vs heavy/batched loads (esp file based or PADS gated data). Trigger on PADS stream append or on fixed time/Alteryx load triggers.
+
+NT: For PADS data source, we can run on stream append-only when updated (small table to check) will trigger a run (parent-child task group). Need to queue subsequent run.

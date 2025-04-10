@@ -735,7 +735,7 @@ Abstract base class (abc):
 			...
 		@my_abstract_property.setter
 		@abstractmethod
-		def my_abstract_property(self, val):
+		def my_abstract_property(self, val):        # same name as setter  @attrib.setter -> def attrib(self, value):
 			...
 		## another way to set (abstract) property
 		@abstractmethod

@@ -1,0 +1,136 @@
+DevOps & SRE - Site Reliability
+
+# EdX.org - LinuxFoundationX LFS162x
+# Introduction to DevOps and Site Reliability Engineering
+
+DevOps are chefs cooking and making dishes (new feature + improvements); monitors cooking for issues; tests the dish made
+SRE are assistants providing the kitchen, ingedients, utensils, machines needed to do the job; monitors kitchen for any issues; manage any spills/keep it clean; 
+
+Version Control: Git, GitHub          --, GitLab, Bitbucket.
+CI/CD Pipelines: GitLab CI/CD         -- , Jenkins, CircleCI, Travis CI.
+Containerization: Docker, Kubernetes.
+Infrastructure as Code: Terraform (OpenTofu)    -- , Ansible, CloudFormation.
+Monitoring and Logging: Prometheus, Grafana     --, ELK Stack (Elasticsearch, Logstash, Kibana), Splunk.
+Collaboration: Slack, Microsoft Teams, Jira, Confluence.
+
+
+Aims to address:
+1. Siloed teams and Communication Gaps (Understand others work; Collaboration)
+2. Manual and Slow Processes (Automate Deployments and infrastructure changes; Automation)
+3. Scalability and Flexibility (handle surges, variable load)
+4. Visibility and Tracking tools (detect, diagnose, address with monitoring/feedback tools)
+5. Culture of Blame and Finger-Pointing (Process over people)
+6. CI (integrate code into repo; with automate builds and tests to identify issues early)
+7. CD (Deploy after tests pass - quick & reliable)
+8. IaC (repeateable & scalable infra deployments)
+9. Security checks inbuilt into dev/deployment process
+
+Early Influence:
+1. Agile - 1990s - faster delivery & team integration
+2. Automation of manual tasks
+3. Cloud computing - flexible environments
+4. Agile applied to Infrastructure
+5. CI/CD
+6. Tools & Platforms
+7. Awareness & adoption
+
+Next influences:
+1. AI (low/no code)
+2. Security first
+
+Cloud:
+     Provides scale, rapid POCs, pre-built tools e.g. DB, ML.
+       IaaS (AWS EC2/VMs/Compute - virtualized resources over internet like compute, storage, netwroking)
+       PaaS (AWS Beanstalk/GoogleApp Engine - Tools that allow hosting an app without worrying about underlying server/OS/network/storage)
+       SaaS (Gmail/DropBox - consume app via thin clients like browser wihout worrying about underlying install/infra)
+       FaaS (AWS Lambda/Azure Functions - execute functions in response to events without managing servers)
+       Public/Private/hybrid/multi cloud -- private clouse (OpenStack, VMWare vSphere), Hybrid(Azure hybrid Cloud)
+     
+     Services:
+        Compute - VMs/Containers on Kubernetes
+        Storate - Object Storage (AWS S3), Blob Storage, Elastic File Systems
+        Database - structured data - AWS RDS, Azure SQL DB and NoSQL options
+        Networking - Virtual networks - AWS VPC; Content Delivery Networks aka CDNs like CloudFlare
+        Identity/Secuity - Protect resources/data e.g. AWS IAM, Azure Active Directory, Key Vaults
+        ML/AI - NLP etc
+        Serverless - FaaS - AWS Lambda/Azure functions - run code without worrying about cloud infra
+        Devops/CI/CD - CI GitLab/Jenkins; Kubernetes/Docker
+        Big Data & Analytics - Snowflake/BigQuery - large dataset processing
+        IoT
+        
+     AWS EC2 and S3 in 2006-07. Google and Microsoft followed.
+ 
+ 
+Containers/Kubernetes for deploying and orchestrating.
+    VMs have the burden of OS but also completely isolated; while containers share OS.
+    VM runs on a Hypervisor (abstract H/W) - Hardware/Machine. Able to run different OS on same H/W (good use case of testing). Complete Abstraction of environment.
+    Ideal for legacy app that need are not compatible with containers; good for across OS testing on same H/W. For higher security gaurantees in finance/healthcare.
+
+    Containers - lightweight compared to VM. Multiple containers share OS so less resources used. Faster start/stop time so easy to deploy/update/rollback for CI/CD. Common OS vulnerability.
+    Ideal for quick dev/testing; micro-services.
+    
+    History of containers:
+        2020 - Docker alternatives e.g. Podman, containerd more flexible
+        2017 - Docker's container runtime given to CNCF (Cloud Native Computing Foundation)
+        2015 - Open Container Initiative (OCI) - define OC formats and runtimes.
+        2014 - Orchestration - Docker Swarm, Apache Mesos, Hashicorp Nomad for deploying, scaling, mgmt
+        2013 - Docker - CLI based container tool with container images.
+        2008 - Linux Containers LXC used cgroups & namespaces to provide process & resource isolation
+        2000 - FreeBSD Jails - lightweight virtualization of isolation of process, filesustem and netowrk.
+        1970 - chroot - a process can have it's own view of file system
+       
+    Docker components:
+        Docker or the Engine: create/manage containers. 3 modules:
+            containerd - container runtime for execution/mgmt of container 
+            runC - core of containerd is based on OCI standard to create/spawn conatiainers so handles container lifecycle.
+            libcontainer - replaced by containerd. Was the execution library
+        Client - CLU tool to interest with the deamon engine.
+        Images - lightweight, standalone packages that include App and it's dependencies. Stored in registry like Docer Hub to sharing/distribution
+        Registry - Docker Hub - public registry for sharing/distro of images
+        Compose - docker-compose.yml allows for setting up multiple containers that one application might need
+        Swarm - orchestration for deploy/scaling
+        Networking/Storage drivers - allow containers to communicate with each other & external networks.
+        
+    Podman - opensource OCI based tool for managing container/pods esp where Security is a concern. 
+        Different architecture from Docker e.g. no daemon so non-root user can run containers (no root priviledges so more secure). 
+        Container process managed by kernel; not daemon. 
+        CLI is compatible with Docker.
+        Same image format as Docker.
+        Aligns with kubernets by managing pods where groups of containers have same N/W, IPC, PID namespace.
+        Multiple networking modes: host, bridge and container networking.
+        Security - reduces risk by not having daemon, rootless mode.
+    
+    Orchestration with Kubernetes/Docker Swarm. Older Apache Mesos/Nomad.
+        Automate mgmt - 
+            Deployment of containers to different nodes in cluster
+            Sclaing containers/apps up/down
+            Monitoring health and auto-restart to ensure uptimes
+            Netowrking - communicate with each other and external network
+        Streamline complex workflows
+            use CI/CD to build, test and deploy containerized apps
+        Improved resource utilization by runing containers only when needed
+        Enforcing consistency
+        Enabling multi-cloud deployments
+    
+    Kubernetes (k8s): Open source; scalable for 1000s containers; flexible in supporting multiple contianer runtimes/images (not for VMs). 
+                    From Google's Borg in 2014 to CNCF.
+        Deploy, scale, load-balance, service discovery, health monitoring, security, self-healing.
+        Components:
+            Control Pane node - manage cluster state & config. global decision maker like scheduling, responding to cluster events (new pods/replicas)
+                API Server- handle/validate requests
+                Cluster Data Store etcd - persistes cluster config in key-value db (current vs desired state)
+                Controller - regulate the state of cluster by node mgmt/replication/end-points
+                Scheduler - assigns pods to nodes based on resource availability, constraints, policies for even load distribution.
+            Worker nodes (Minions) - machines running containers that are managed by control plane.
+                Kubelet - agent interacts with control pane's node API server. Ensures pods are running and reports to control pane about status
+                Container Runtime - manages entire container lifecycle. e.g. containerd.
+                Kube Proxy - responsible for local cluster networking. implements IPTables to handle routing/load-balancing. It's an addon.
+            Pod - smallest deployable unit - single instance of a running process in a cluster. Pods can have 1 or more containers (that share network and storage).
+            ReplicaSet - manages pods lifecycle by ensuring required replicas for a pod are running. Can increase/decrease pods as per config.
+            Deployment - declarative application updates (current state -> desired state) to help with deployment/rollbacks
+            Service - defines a set of pods and policy to access them. Allows communication between pods of a cluster.
+            Volume - storage/persistence for containers across pod restarts
+            Namespace - split a cluster into multiple virtual clusters
+            ConfigMap & Secret - manage config and sensitive info e.g. password/API keys from app code
+            Dashboad - Web UI for managing the cluster
+            
