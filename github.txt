@@ -1,3 +1,89 @@
+<source from https://githubtraining.github.io/training-manual>
+RemoteRepo      LocalHistory        Staging     WorkingDirectory
+ |---- clone ------>|-----------------------------------|
+                                        |<--- add ------|
+                    |<----- commit -----|
+ |<---- push -------|
+ |--- fetch ------->|
+ |---- pull ------>|--------------- merge  -------------|   pull = fetch + merge
+
+ * add/commit are local operations
+
+ Code - repo/history of all files
+ Issues - bug/feature requests
+ PullRequests PR - change to repo
+ Projects - Board for work item tracking
+ Wiki -
+ README.md - explains the project. badges to explain code-covertage/testing status
+ CONTRIBUTING.md - describe process for contributing - e.g. when someone creates a PR
+ ISSUE_TEMPLATE.md - template of starter test for reporting issues (similarly PR template)
+ Packages - published packages e.g. containers/docker/pip/maven
+ .github - special folder that triggers/worksflows; PULL_REQUEST_TEMPLATE.md, release.ynl, dependabot,yml (dependencies and security alert) + code scan.
+ Insights - graphs, top contributors
+
+ Markdown:
+  #header, ##header2
+  *ListItem or -ListItem
+  **bold**
+  -[] checklist
+  @mention
+  #PR_number
+
+Github Pages - host free/static site
+
+Github Flow:
+    - main/master/trunk
+    - create feature branch
+        - changes create new commits and main vs feature have diverged
+        - create PR for review (earlier for team comments/visibility/adjustments, keep as draft PR)
+        - pull often from main/master to keep it current
+        - perform test and if all passes then merge to master;
+            or deploy from pull request n deploy to test and then merge. In case of issues, rollback is master.
+        - merge to master
+
+Git configs:
+    system - to ALL user
+    global - to a given user (git config --global--list; git config --global user.name "AD Singh") need to have user.name and user.email setup
+    local - to specific repo (git config --list)
+
+$ git checkout -b new_feature_branch  # old way of creating branch
+$ git switch -c new_feature_branch    # explicitly for dealing with branches -c
+$ git branch --all
+ new_feature_branch                 # local only branch since no remote/origin/<branch_name> exists
+ * main
+ remote/origin/HEAD -> origin/main  # current branch is main
+ remote/origin/new_feature_branch   # remote for newly created local feature branch
+ remote/origin/main
+ remote/origin/feature_1_branch     # other branches on remote
+ remote/origin/bugfix_1_branch
+
+$ git add some_new_file             # adds to stage. also git add . (all files)
+$ git commit -m 'updates ...'       # creates commit and adds to history
+$ git fetch                         # get changes from remote ... in case remote has changed
+$ git push                          # push our changes to remote
+
+Pull request:
+    base: main
+    compare: feature_branch
+    able to merge or conflicts
+    title/description with TL;dR brief and  keywords closes/fixes/resolves #1 (issue #1 ..issues linked to milestone)
+    add reviewers (autoadd designated code-owners to review list)
+    Can create as draft review
+    Pull request template.md
+    Checks tab - CI/CD workflows e.g. unit-test/linting/security scan
+    File changed tab - changes to file...and place for approval
+
+Invite collaborators - for writing to repo; code review
+Code review - Approve, Request Change, Comment.
+
+Two stage commit:  working->stage    stage->index/local      history/commit
+
+Files state:
+    untracked files   (new or untracked)
+    modified          (added to git but modified)
+    staged            (saved in stage)
+    commit            (saved locally as a commit aka snapshot)
+
 Repo -> New as Private with README and .gitignore (type=python) and license (MIT).
 Issues - Milestone & Issues.
     Milestone e.g. Oct-release, Nov-release.
