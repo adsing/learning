@@ -47,7 +47,7 @@ Data Vault:
     - raw -> data lake -> staging -> DW (star : hub/links/satellite) -> rpt
 
 Connecting to SF: Set user/login; role; database; WH
-1. SnowSight (Admins can see costs for storage/compute; developers build query in worksheets see plans/stats/query_id; marketplace to search for public or paid datasets; Role/Account management; log support tickets).
+1. SnowSight (Admins can see costs for compute/storage/data-transfer and use budget/resource monitors for usage monitoring and credit usage management notify/suspend resource (allow current query or abort it); developers build query in worksheets see plans/stats/query_id; marketplace to search for public or paid datasets; Role/Account management; log support tickets).
 2. Command Line CLI (SnowSQL client)  .. also VS Code extension (DB viewer like)
 3. Snowflake python connector
 
@@ -114,9 +114,11 @@ Materialized view: Stores a cache of data of view to allow faster query at expen
 
 Data ingestion:
 1. INSERT statement to insert a record
-2. COPY-INTO to load a file
+2. COPY-INTO to load a file (batched data bulk load)
     When data flow peaks & ebbs; choose warehouse to load accordingly.
     Transactional file load i.e. all or none.
+    File first loaded into STAGE - where files for loading are first placed. Stage is a DB object in schema and typically kept in separate DB. CREATE STAGE (URL, access_setting).
+    Often stages are on EXTERNAL cloud provider (Azure/AWS/GCP based blob) - note on cross cloud provider/region data transfer charges.
 3. Snowpipe load data files from stage (micro-batching even for a single file so transactional loading may be partial). Continuous loading, simpler & convinient (at 50% extra cost).
     Works as a services on SF warehouse that scales up and down per demand.
     Drop files into a stage and call REST end-point to notify filenames to be loaded (insertFiles); these get queued for loading
@@ -138,6 +140,7 @@ Dynamic Tables:
 
 
 
+Udemy - Snowflake - The complete masterclass (16hr) by Nikolai Schuler
 
 Snowflake (youtube tutorials):
     https://www.youtube.com/watch?v=AR88dZG-hwo&list=PLba2xJ7yxHB7SWc4Sm-Sp3uGN74ulI4pS&index=2
@@ -174,6 +177,9 @@ Snowflake (youtube tutorials):
     Trial account $400 credit or 30days.
     Legacy Web UI:
     Role - Account|Sys|Security|User Admin or Public. SysAdmin default
+        OrgAdmin (Org-wide vs AccountAdmin at account level)
+        AccountAdmin -> SecurityAdmin -> UserAdmin -> Public   (SecurityAdmin manages GRANT/REVOKE priviledges)
+                   |--> SysAdmin -> CustomRoles                (SysAdmin to create WH/DB objects and owns all Custom Roles; UserAdmin for create USER/ROLE; PUBLIC default role  typically with no-access)
     Help - download connectors/CLI
     Databases - DEMO_DB, UTIL_DB
     Shares - Inbound/Outbound by someone-else/you. Share -> Database shared e.g. SNOWFLAKE_SAMPLE_DATA
