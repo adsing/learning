@@ -2,7 +2,7 @@ $ git init   #create a git project under VC
 
 Git has 3 stages/parts:: working dir -> staging area -> repo
 
-1. working dir :: create/eidt/delete files  (possible to have untracked files)
+1. working dir :: create/edit/delete files  (possible to have untracked files)
 2. staging area :: list changes made to working dir   $ git add            #add file to staging area
                                                       $ git status
                                                       $ git diff <filename>
@@ -91,7 +91,37 @@ We also learned the following commands
     git push origin <branch_name>: Pushes a local branch to the origin remote.
 
 
+# worktree - allow checkout of multiple branches of same repo in separate directories (some things are shared e.g. stash, config)
+# previously used git checkout or git switch to switch in same directory for different branches
+# worktree allows switch to new branch without having to checkin or stash your current changes to do say a hotfix
+# gotchas - can only checkout branch in one work-tree (not multiple); clean up discipline (no rm -rf but git worktree remove)
 
+$ git worktree list
+
+$ git worktree add -b hotfix-bug123 ../project-bug123 main   # creates branch hofix-bug123 in dir ../project-bug123 based off main
+$ git worktree add ../project-feature-A feature-A            # branch exists, create a directory off it
+
+git commit -am 'bug/feature done'
+git push 
+
+$ git worktree remove ../project-bug123
+$ git worktree prune
+
+# worktree advantages - allow AI agents to run in each worktree
+$ git worktree add -b agent/dark-mode ../myapp-dark-mode main
+$ cd ../myapp-dark-mode && claude "Add a dark mode toggle to the settings page"
+
+# review & commit or drop work
+$ git log agent/dark-mode --oneline
+$ git diff main agent/dark-mode
+
+# good -> accept
+$ git merge agent/dark-mode
+$ git worktree remove ../myapp-dark-mode
+
+# reject/discard
+$ git worktree remove --force ../myapp-dark-mode
+$ git branch -D agent/fix-dark-mode
 
 
 
