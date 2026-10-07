@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Svn</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: #1a1a2e;
+    color: #e0e0e0;
+    min-height: 100vh;
+}
+header {
+    background: #16213e;
+    border-bottom: 2px solid #0f3460;
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+header a {
+    color: #e94560;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+}
+header a:hover { text-decoration: underline; }
+h1 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #53d8fb;
+    letter-spacing: 0.03em;
+}
+main {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 24px;
+}
+pre {
+    background: #0d1117;
+    border: 1px solid #21262d;
+    border-radius: 8px;
+    padding: 20px 24px;
+    overflow-x: auto;
+    font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+    font-size: 0.85rem;
+    line-height: 1.65;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+.cmd  { color: #7ee787; }          /* $ shell commands */
+.cmt  { color: #8b949e; }          /* # comments */
+.hdr  { color: #f0c040; font-weight: bold; }  /* section headers */
+.url  { color: #79c0ff; }
+</style>
+</head>
+<body>
+<header>
+  <a href="../html/index.html">&#8592; Index</a>
+  <h1>Svn</h1>
+</header>
+<main>
+  <pre>Centralized version control system - users do local checkouts (private copy).
+Access via file system, SSH or HTTP(S).
+SVN server hosts the repositories.
+
+Trunck &amp; branches.
+Tags - label a certain point in history (e.g. releases) &amp; are easier to find than commits.
+HEAD is the latest revision.
+Revision # increments with each commit.
+
+<span class="cmd">$ svn checkout https://svn_server/project/MYPROJECT/repositories/subversion</span>
+<span class="cmd">$ svn info   #gets Revision #, current dir, svn dir/URL</span>
+
+$svn add &lt;files&gt;
+<span class="cmd">$ svn status    #files added/modified</span>
+$svn commit -m &#x27;first checking&#x27; &lt;files&gt;
+
+$svn update        #update local files from repo HEAD (new/updated) 
+$svn log &lt;file&gt;    #history
+
+$svn diff &lt;file&gt;    #diff between repo and local file
+$svn diff -r 34:35 &lt;file&gt;      #between repo revisions
+
+### rollbacks   ###
+$svn revert   &lt;file&gt;            #remove local file and get file from repo (HEAD).
+$svn merge -c -&lt;revision_number&gt; .  #…followed by a commit   
+#(reverse merging) merge called with cherry-pick merge option for a specific version from SOURCE(. means use URL of repo) to TARGET(defaults to .)
+
+#branch - merge to trunck the dev branch
+$svn merge ^/dev_branch 
+
+#resolving conflicts while merging
+$svn update &lt;file&gt;   #reports conflict with &lt;&lt;&lt;&lt;&lt;&lt; file1  and followed by &gt;&gt;&gt;&gt;&gt;&gt;&gt; file2 .
+After removing conflicts manually, 
+$svn resolve --accept=working &lt;file&gt;
+
+(above is from https://deveo.com/svn-tutorial/#what-is-version-control)</pre>
+</main>
+</body>
+</html>

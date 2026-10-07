@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Json</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: #1a1a2e;
+    color: #e0e0e0;
+    min-height: 100vh;
+}
+header {
+    background: #16213e;
+    border-bottom: 2px solid #0f3460;
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+header a {
+    color: #e94560;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+}
+header a:hover { text-decoration: underline; }
+h1 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #53d8fb;
+    letter-spacing: 0.03em;
+}
+main {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 24px;
+}
+pre {
+    background: #0d1117;
+    border: 1px solid #21262d;
+    border-radius: 8px;
+    padding: 20px 24px;
+    overflow-x: auto;
+    font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+    font-size: 0.85rem;
+    line-height: 1.65;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+.cmd  { color: #7ee787; }          /* $ shell commands */
+.cmt  { color: #8b949e; }          /* # comments */
+.hdr  { color: #f0c040; font-weight: bold; }  /* section headers */
+.url  { color: #79c0ff; }
+</style>
+</head>
+<body>
+<header>
+  <a href="../html/index.html">&#8592; Index</a>
+  <h1>Json</h1>
+</header>
+<main>
+  <pre>JSON data - unstructured so more flexible
+  Predictable structure makes it easier to query JSON
+
+<span class="hdr">Postgres types:</span>
+- json (preserves whitespace and dups in keys)
+- jsonb (binary representation of parsed JSON and does not preserve whitespace/dups in keys); limit to mapped postgres type e.g numeric limits
+
+JSON -&gt; Postgres type
+====    =============
+string  - text     (as single quote &#x27;...&#x27;  and not &quot;...&quot;)   #double quote string refers to column name in postgres? TBD
+numeric - numeric
+boolean - boolean  (as true/false)
+null    - (none)   (not NULL)
++ Arrays and objects/dicts (which have keys as strings) 
+
+select &#x27;5&#x27;:json;
+select &#x27;[1, 2.0, true, null]&#x27;::jsonb;
+select &#x27;{&quot;k1&quot;:1,&quot;k2&quot;:2.0,&quot;k3&quot;:[true,false],&quot;k4&quot;:null}&#x27;::jsonb;
+
+Containment (@&gt;) - nested!
+select &#x27;[1,2,3]&#x27;::jsonb @&gt; &#x27;3&#x27;::jsonb;
+-- array on right is contained in array on left (ordering/dups insignificant)
+select &#x27;[1,2,3]&#x27;::jsonb @&gt; &#x27;[3,1,1]&#x27;::jsonb;
+--nested array not checked unless right array is also nested 
+select &#x27;[1,[2,3]]&#x27;::jsonb @&gt; &#x27;[2,3]&#x27;::jsonb;   --false
+select &#x27;[1,[2,3]]&#x27;::jsonb @&gt; &#x27;[[2,3]]&#x27;::jsonb;
+--same with nested objects
+select &#x27;{&quot;foo&quot;:{&quot;a&quot;:&quot;b&quot;}}&#x27;::jsonb @&gt; &#x27;{&quot;a&quot;:&quot;b&quot;}&#x27;::jsonb;
+select &#x27;{&quot;foo&quot;:{&quot;a&quot;:&quot;b&quot;}}&#x27;::jsonb @&gt; &#x27;{&quot;foo&quot;:{}}&#x27;::jsonb;   --top level key and empty object is contained
+
+The general principle is that the contained object must match the containing object as to structure and data contents, possibly after discarding some non-matching array elements or object key/value pairs from the containing object. But remember that the order of array elements is not significant when doing a containment match, and duplicate array elements are effectively considered only once.
+An array may contain primitives like string/numeric.
+
+Existence (?)
+Check if given string appears as object key or array element or primitive. Does not consider object values! So not nested.
+--operator for integer ? does not exists
+--select &#x27;[1,2,3,4]&#x27;::jsonb ? 2;
+--select &#x27;[1,2,3,4]&#x27;::jsonb ? &#x27;2&#x27;;
+select &#x27;&quot;foo&quot;&#x27;::jsonb ? &#x27;foo&#x27;;
+select &#x27;[&quot;foo&quot;,&quot;bar&quot;]&#x27;::jsonb ? &#x27;bar&#x27;;
+select &#x27;{&quot;foo&quot;:&quot;f&quot;,&quot;bar&quot;:&quot;b&quot;}&#x27;::jsonb ? &#x27;bar&#x27;;
+select &#x27;{&quot;foo&quot;:&quot;f&quot;,&quot;bar&quot;:&quot;b&quot;}&#x27;::jsonb ? &#x27;b&#x27;;  --fail
+
+JSON objects are better optimized for containment/existence than arrays.
+
+<span class="hdr">-- example:</span>
+-- In json column docs, objects have &quot;tags&quot; key; search for tags key whose array values contain the objects {&quot;term&quot;:&quot;paris&quot;} AND {&quot;term&quot;:&quot;food&quot;}
+SELECT doc-&gt;&#x27;site_name&#x27; FROM websites
+  WHERE doc @&gt; &#x27;{&quot;tags&quot;:[{&quot;term&quot;:&quot;paris&quot;}, {&quot;term&quot;:&quot;food&quot;}]}&#x27;;
+OR
+SELECT doc-&gt;&#x27;site_name&#x27; FROM websites
+  WHERE doc-&gt;&#x27;tags&#x27; @&gt; &#x27;[{&quot;term&quot;:&quot;paris&quot;}, {&quot;term&quot;:&quot;food&quot;}]&#x27;;
+
+<span class="hdr">GIN index:</span>
+CREATE INDEX idxgin ON Table USING GIN (column);      -- default : eff top level key search + existence (?,?&amp;,?|) and path/value exists operator @&gt;
+CREATE INDEX idxgin ON Table USING GIN (column jsonb_path_ops);  --only @&gt; but very performant &amp; smaller sized (hash of keyys &amp; values)
+Also: BTREE and HASH index (used to check equality of JSON docs)
+
+CREATE INDEX idxgin ON Table USING GIN ( (column-&gt;&#x27;tag&#x27;) );  -- where column-&gt;&#x27;tag&#x27; ? &#x27;someValue&#x27;; uses this index
+
+
+
+
+
+https://docs.python.org/3/library/json.html 19.2
+
+JSON lint (format check) - https://jsonlint.com/
+
+Pretty print jason:: cat my.json | python3 -m json.tool  | pygmentize -l json    &lt;https://stackoverflow.com/questions/12943819/how-to-prettyprint-a-json-file&gt; 
+
+
+Java Script Object Notation
+Is subset of YAML 1.2
+Data Interchange format that is language independent
+Easy to read/write for humans &amp; machines
+
+Good for representing sparse data (e.g. hobbies of employees - DB support of JSON as column).
+
+JSON built on 2 structures - object/dictionary (key:value) and arrays
+Object: { key1 : value1 , key2 :  value2 }  #keys are stringified so json.loads( json.dumps(x) ) != x if non-string keys are present. Note: last element should not have a comma (python allows)
+Array : [ val1, val2, … ]
+
+Value is a &quot;string&quot;, &#x27;a&#x27;, 123, true/false or null or object or array.
+Numbers can&#x27;t be hexadecimal or octal representation.
+&quot;, \ are escaped.
+Lose tuple read-only information (converted to array and back to list).
+
+Watch for size &amp; nesting levels of JSON files.
+Large numbers may be represented in IEEE754 format causing loss of precision.
+
+<span class="hdr">Conversion table:</span>
+Python	JSON
+dict	object
+list, tuple	array
+str, unicode	string &quot;…&quot;
+int, long, float	number
+True	true
+False	false
+None	null
+Non-JSON compliant changes	(allow_nan = True)
+nan	NaN
+Inf/-Inf	Infinity/-Infinity
+Repeated object names	
+
+From &lt;https://docs.python.org/2/library/json.html#py-to-json-table&gt; 
+
+
+
+<span class="hdr">Python:</span>
+&gt;&gt;&gt; import json
+&gt;&gt;&gt; json.dumps([&#x27;foo&#x27;, {&#x27;bar&#x27;: (&#x27;baz&#x27;, None, 1.0, 2)}])
+&#x27;[&quot;foo&quot;, {&quot;bar&quot;: [&quot;baz&quot;, null, 1.0, 2]}]&#x27;
+&gt;&gt;&gt; print(json.dumps({&quot;c&quot;: 0, &quot;b&quot;: 0, &quot;a&quot;: 0}, sort_keys=True))
+{&quot;a&quot;: 0, &quot;b&quot;: 0, &quot;c&quot;: 0}
+&gt;&gt;&gt; json.dumps(&quot;\&quot;foo\bar&quot;)
+&#x27;&quot;\\&quot;foo\\bar&quot;&#x27;
+&gt;&gt;&gt; 
+From &lt;https://docs.python.org/2/library/json.html&gt; 
+
+Specialized object -&gt; dictionary -&gt; binary with hooks to convert binary &lt;=&gt; object 
+
+<span class="hdr">Specialized object decoding:</span>
+&gt;&gt;&gt; import json
+<span class="hdr">&gt;&gt;&gt; def as_complex(dct):</span>
+<span class="hdr">...     if &#x27;__complex__&#x27; in dct:</span>
+...         return complex(dct[&#x27;real&#x27;], dct[&#x27;imag&#x27;])
+...     return dct
+...
+&gt;&gt;&gt; json.loads(&#x27;{&quot;__complex__&quot;: true, &quot;real&quot;: 1, &quot;imag&quot;: 2}&#x27;, object_hook=as_complex)
+(1+2j)
+From &lt;https://docs.python.org/2/library/json.html&gt; 
+
+<span class="hdr">Specialized object encoding:</span>
+&gt;&gt;&gt; import json
+<span class="hdr">&gt;&gt;&gt; def encode_complex(obj):</span>
+<span class="hdr">...     if isinstance(obj, complex):</span>
+...         return [obj.real, obj.imag]
+...     raise TypeError(repr(obj) + &quot; is not JSON serializable&quot;)
+&gt;&gt;&gt; json.dumps(2 + 1j, default=encode_complex)
+&#x27;[2.0, 1.0]&#x27;
+
+
+SERIALIZE
+json.dumps(obj)    #to string                separators = (&#x27;,&#x27; , &#x27;:&#x27;) for item and key sep.
+json.dump(obj, fp) #to file pointer
+DE-SERIALIZE
+json.loads(str)  #to python object  from string              object_book=function that takes obj as dict …for custom decoders
+json.load(fp)      #from file                                                  parse_int|float|constants like Infinity/NaN
+                                                                                                supply a class (cls=myclass) that is subclass of json.Decoder
+
+Use Decoder/Encoder to extend functionality for JSON to support user-defined class.
+
+JSON.TOOL - pretty print + validate
+<span class="cmd">$ echo &quot; … &quot; | python -m json.tool  --outfile /tmp/a --sort_keys</span></pre>
+</main>
+</body>
+</html>

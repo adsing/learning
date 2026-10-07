@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Python Pandas</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: #1a1a2e;
+    color: #e0e0e0;
+    min-height: 100vh;
+}
+header {
+    background: #16213e;
+    border-bottom: 2px solid #0f3460;
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+header a {
+    color: #e94560;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+}
+header a:hover { text-decoration: underline; }
+h1 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #53d8fb;
+    letter-spacing: 0.03em;
+}
+main {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 24px;
+}
+pre {
+    background: #0d1117;
+    border: 1px solid #21262d;
+    border-radius: 8px;
+    padding: 20px 24px;
+    overflow-x: auto;
+    font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+    font-size: 0.85rem;
+    line-height: 1.65;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+.cmd  { color: #7ee787; }          /* $ shell commands */
+.cmt  { color: #8b949e; }          /* # comments */
+.hdr  { color: #f0c040; font-weight: bold; }  /* section headers */
+.url  { color: #79c0ff; }
+</style>
+</head>
+<body>
+<header>
+  <a href="../html/index.html">&#8592; Index</a>
+  <h1>Python Pandas</h1>
+</header>
+<main>
+  <pre>See code/python/pandas (Data manipulation + linear regresison)
+
+Pandas :: Series (list of same type). pd.Series
+          DataFrame (table of rows &amp; columns with columns of same type). pd.DataFrame
+             A dataframe is a collection of Series
+Both Dataframe and Series have index.
+
+import numpy as np
+import pandas as pd
+pd.set_option(&#x27;display.max_rows&#x27;, 5)
+
+df = pd.DataFrame(data={&#x27;ColA&#x27;: [100, 200], &#x27;ColB&#x27;: [&#x27;Bob&#x27;,&#x27;Sam&#x27;], &#x27;ColC&#x27;: [True, False],
+                  index=[&#x27;row0&#x27;,&#x27;row1&#x27;]}     # index is list of rows which defaults to [0,1,..]
+                  )
+s = pd.Series([1,3,5,7,9], index=[0,1,2,3,4], name=&#x27;Odd&#x27;)
+
+df.shape  # (rows, cols)
+df.head()
+df = pd.read_csv(filename, 
+                index_col=0,  # file has index so use that column
+                )
+df.colA     # or df[&quot;colA&quot;]   ... returns Series
+df.iloc[0]  # index-based selection (row first, column second) ... gives first row
+df.iloc[:,0] # all rows (start:end), first column only 
+df.iloc[0:5, 0]     ## row 0 to 4 (5 excluded; python range-like excludes end)
+
+df.loc[0:5, 0]      ## # row index 0 to 5 (not 4! ... differs from iloc), col 0 only
+df.loc[&#x27;row0&#x27;]
+df.loc[0:5, &quot;colA&quot;]  # df.loc[0:5, [&quot;colA&quot;,&quot;colB&quot;]  or df.loc[ [0,1,2] : [0,1,2] ] # 3 rows, 3 cols
+<span class="cmt"># note: iloc index excludes ending range; while loc *includes* ending range (loc range can be non-numeric!). </span>
+<span class="cmt"># Also, iloc needs both row/index &amp; columns in integer indices i.e. can&#x27;t use column names</span>
+
+df.set_index(&#x27;colB&#x27;)
+
+<span class="cmt"># condition &amp; |</span>
+<span class="cmt"># colA.isin(...) colA.isnull() colA.notnull</span>
+df.loc[(df.colA == &#x27;USA&#x27;) &amp; (df.colB == &#x27;Chicago&#x27;)]     # all cols for rows matching this condition
+
+df.ColNew = &#x27;Singular&#x27;
+df.ColNew2 = range(len(df))
+
+df.rename(columns={&#x27;old_colA&#x27;:&#x27;new_colA&#x27;, ... })
+df.rename(index={0:&#x27;firstRecord&#x27;, &#x27;old_indxA&#x27;:&#x27;new_indxA&#x27;, ... })   # df.set_index(&#x27;colA&#x27;) is more common
+<span class="cmt"># giving name to index/columns</span>
+df.rename_axis(&quot;wines&quot;, axis=&#x27;rows&#x27;).rename_axis(&quot;fields&quot;, axis=&#x27;columns&#x27;)
+df.rename_axis(&quot;colA&quot;, axis=&#x27;rows&#x27;)  # colA is index now ... axis=&#x27;columns&#x27; means it would be the header
+
+pd.concat([data_US, data_CN, data_MX])      # concat on axis...axis=&#x27;row&#x27;/&#x27;index&#x27; or not specified i.e. rows double..with potentially duplicate in index values
+
+pd.concat([data_US, data_CN, data_MX]), axis=&#x27;columns&#x27;)     # sideways aligned based on columns with column names being duplicaed (to have unique columns names, use join or merge)
+
+df1.join(df2, lsuffix=&#x27;_left&#x27;, rsuffix=&#x27;_right&#x27;)  # combine based on common index (can set explicit index before join e.g. df.set_index([&#x27;colA&#x27;,&#x27;colB&#x27;])
+
+
+<span class="cmt"># summary</span>
+df.col.describe()  
+<span class="cmt"># string -&gt; count, unique, top, freq</span>
+<span class="cmt"># int -&gt; count, mean, min, max, 25-50-70%</span>
+df.col.count(), df.col.min/max/mean() 
+df.col.unique()         # gives list of unique values
+df.col.value_counts()   # count for each unique value desc
+
+<span class="cmt"># map &amp; apply (map for single column transform; apply for row i.e. multiple/all columns transform)</span>
+df.colA_mapped = df.colA.map(lamba x: x - pre_computed_value)
+
+df_new = 
+df.apply(fn, axis=&#x27;columns&#x27;)            # df.apply(fn, axis=&#x27;index&#x27;)
+<span class="hdr">def fn(row):                            # def fn(col):</span>
+    row.X = row.X + 2                   #     col.index0 = col.index0 + col.index1
+    row.Y = row.Y + (row.X+row.Y)/2     #     return col
+    ...
+    return row
+    
+df.colA.idxmax()   # idxmin()....return index of highest value of colA (or computation) and then to get another/mapped column
+e.g. bargain_wine = reviews.loc[(reviews.points / reviews.price).idxmax(), &#x27;title&#x27;]
+<span class="cmt"># Create a variable bargain_wine with the title of the wine with the highest points-to-price ratio in the dataset.</span>
+
+<span class="cmt"># filter description for field given and return their counts when present</span>
+fields = [&#x27;tropical&#x27;,&#x27;fruity&#x27;]
+data = []
+<span class="hdr">for f in fields:</span>
+    data.append(reviews.description.map(lambda s: f in s).sum())
+descriptor_counts = pd.Series(data, index=fields)
+
+
+#group by  -- counts(size), 
+<span class="cmt"># pick out the best wine by country and province</span>
+df.groupby([&#x27;country&#x27;,&#x27;province&#x27;]).apply(lambda df: df.loc[df.point.idxmax()])
+<span class="cmt"># agg to get colA_min|max|len by country</span>
+df.groupby([&#x27;country&#x27;]).colA.agg([&quot;len&quot;, &quot;min&quot;, &quot;max&quot;])
+
+<span class="cmt"># multi-index (e.g. index from multi-column groupby)</span>
+<span class="cmt"># Need 2 level of labels to get value... easiest to reset_index() to make these multi-level index as cols</span>
+
+<span class="cmt"># sorting</span>
+df.sort_values(by=[&quot;colA&quot;,&quot;colB&quot;], ascending=False)
+df.sort_index()
+
+<span class="cmt"># type          astype(...) int64/float64/object (string)/categorical/timeseries.</span>
+df.colA.dtype   or df.index.dtype
+df.dtypes
+df.colA.astype(&#x27;float64&#x27;)
+
+<span class="cmt"># pd.isnull() or pd.isnotnull() ... and fillna(&quot;Value&quot;) of fillna(method=&quot;bfill&quot;|&quot;ffill&quot;, limit=5)</span>
+<span class="cmt"># fillna() is deprecating method=ffill|bill and instead use fn ffill() and bfill()</span>
+df[pd.isnull(colA)]     # show records with colA = NaN
+df.colA.fillna(&quot;unknown&quot;)
+df.colA.dropna()        # not recommended to just drop data
+df.dropna()             # remove rows if any column value is NaN
+df.dropna(axis=1)       # remove columns if any value is NaN
+df.colA.fillna(method=&#x27;bfill&#x27;, axis=0).fillna(0)
+total_missing_values = df.isnull().sum().sum()   # first sum is by columns, so needs another sum for series of sum-of-columns
+total_values = np.product(df.shape)
+
+
+<span class="cmt"># is value missing because it was not records and needs to be patched ...or... not applicable</span>
+
+df.colA.replace(&quot;old_value&quot;, &quot;new_value&quot;)
+
+
+<span class="cmt"># scaling (pounds to kgs); normalization (distribution mean is 0)</span>
+
+
+
+<span class="cmt"># url = github raw csv</span>
+tips = pd.read_csv(url)
+tips.head()
+<span class="cmt"># total_bill, tips, sex, smoker, day, time, size</span>
+<span class="cmt">#  ##.##       #.#  M/F   Y/N   Sat-Sun Lunch/Dinner 2,3,4</span>
+
+tips[[&#x27;total_bill&#x27;,&#x27;tips&#x27;,&#x27;size&#x27;,&#x27;day&#x27;]]
+is_dinner = tips.Dinner == &#x27;Dinner&#x27;
+is_dinner.value_counts   # T ... F ...
+
+<span class="cmt"># tip &gt;= 5.00 and Dinner</span>
+tips[(tips.time == &#x27;Dinner) &amp; (tipss.tip &gt;= 5.0)].head()
+
+<span class="cmt"># where time is null with isnull/notnull</span>
+tips[tips.time.isnull()]
+
+<span class="cmt"># aggregate/group-by.  SQL count-&gt;size; SQL avg-&gt;mean</span>
+## equivalent
+tips.sex.value_counts()
+tips.groupby(&#x27;sex&#x27;).size()
+tips.groupby(&#x27;sex&#x27;)[&#x27;total_bill&#x27;].count()
+## multiple agg e.g. avg(tip), count()
+tips.groupby(&#x27;day&#x27;).agg({&#x27;tip&#x27;:np.mean, &#x27;day&#x27;:np.size})
+tips.groupby([&#x27;day&#x27;, smoker&#x27;]).agg({&#x27;tip&#x27;:np.mean, &#x27;day&#x27;:np.size})      # big daddy of above
+
+<span class="cmt"># join -&gt; merge</span>
+pd.merge(df1, df2, on=&#x27;key_column&#x27;)
+pd.merge(df1, df2, left_on=&#x27;left_key_column&#x27;, right_index=True)     # column &amp; index match
+pd.merge(df1, df2, left_index=True, right_index=True)       # e.g. time series based data
+pd.merge(df1, df2, left_on=&#x27;left_key_column&#x27;, right_index=True, how=&#x27;left&#x27;)     # left outer (left|right|inner|outer)
+
+<span class="cmt"># union all -&gt; concat</span>
+pd.concat([df1, df2, ...])
+pd.concat([df1, df2]).drop_duplicates()         # SQL union to remove dups
+
+<span class="cmt"># can also pick which col/index to stack unstack e.g. df.stack(1)</span>
+df.stack()  # make first column as last component of a multi-index
+df.unstack() # makes last index of a multi-index as the first column</pre>
+</main>
+</body>
+</html>

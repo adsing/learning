@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cheatsheets</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: #1a1a2e;
+    color: #e0e0e0;
+    min-height: 100vh;
+}
+header {
+    background: #16213e;
+    border-bottom: 2px solid #0f3460;
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+header a {
+    color: #e94560;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+}
+header a:hover { text-decoration: underline; }
+h1 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #53d8fb;
+    letter-spacing: 0.03em;
+}
+main {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 24px;
+}
+pre {
+    background: #0d1117;
+    border: 1px solid #21262d;
+    border-radius: 8px;
+    padding: 20px 24px;
+    overflow-x: auto;
+    font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+    font-size: 0.85rem;
+    line-height: 1.65;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+.cmd  { color: #7ee787; }          /* $ shell commands */
+.cmt  { color: #8b949e; }          /* # comments */
+.hdr  { color: #f0c040; font-weight: bold; }  /* section headers */
+.url  { color: #79c0ff; }
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 12px;
+    margin-top: 8px;
+}
+.card {
+    background: #16213e;
+    border: 1px solid #0f3460;
+    border-radius: 8px;
+    padding: 14px 16px;
+    text-decoration: none;
+    color: #e0e0e0;
+    transition: border-color 0.15s, background 0.15s;
+    font-size: 0.9rem;
+}
+.card:hover {
+    border-color: #53d8fb;
+    background: #1e2a4a;
+    color: #53d8fb;
+}
+.subtitle {
+    color: #8b949e;
+    font-size: 0.8rem;
+    margin-top: 4px;
+}
+.section-title {
+    color: #8b949e;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin: 28px 0 10px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid #21262d;
+}
+</style>
+</head>
+<body>
+<header>
+  <h1>Cheatsheets</h1>
+</header>
+<main>
+<div class="section-title">Python</div>
+<div class="grid"><a class="card" href="python_general.html">Python General</a>
+<a class="card" href="python_concurrency.html">Python Concurrency</a>
+<a class="card" href="python_pandas.html">Python Pandas</a>
+<a class="card" href="python_numpy.html">Python Numpy</a>
+<a class="card" href="python_pytest.html">Python Pytest</a>
+</div>
+<div class="section-title">Data / Serialization</div>
+<div class="grid"><a class="card" href="database.html">Database</a>
+<a class="card" href="database_DBT.html">Database Dbt</a>
+<a class="card" href="big_query.html">Big Query</a>
+<a class="card" href="Snowflake.html">Snowflake</a>
+<a class="card" href="snowflake.html">Snowflake</a>
+<a class="card" href="redis.html">Redis</a>
+<a class="card" href="parquet_pyarrow.html">Parquet Pyarrow</a>
+<a class="card" href="avro.html">Avro</a>
+<a class="card" href="flatbuffers.html">Flatbuffers</a>
+<a class="card" href="protobuffers.html">Protobuffers</a>
+<a class="card" href="msgpack.html">Msgpack</a>
+<a class="card" href="orc.html">Orc</a>
+<a class="card" href="json.html">Json</a>
+<a class="card" href="toml.html">Toml</a>
+<a class="card" href="Markup_YAML_XML_etc.html">Markup Yaml Xml Etc</a>
+</div>
+<div class="section-title">Cloud / Infra</div>
+<div class="grid"><a class="card" href="aws.html">Aws</a>
+<a class="card" href="cloud_infra_system.html">Cloud Infra System</a>
+<a class="card" href="docker.html">Docker</a>
+<a class="card" href="kubernetes.html">Kubernetes</a>
+<a class="card" href="AirFlow.html">Airflow</a>
+<a class="card" href="kafka.html">Kafka</a>
+</div>
+<div class="section-title">DevOps / CI</div>
+<div class="grid"><a class="card" href="devops_sre.html">Devops Sre</a>
+<a class="card" href="jenkins.html">Jenkins</a>
+<a class="card" href="github.html">Github</a>
+<a class="card" href="git.html">Git</a>
+<a class="card" href="svn.html">Svn</a>
+<a class="card" href="monitoring.html">Monitoring</a>
+</div>
+<div class="section-title">Languages</div>
+<div class="grid"><a class="card" href="cpp.html">Cpp</a>
+<a class="card" href="cpp_17.html">Cpp 17</a>
+<a class="card" href="rust.html">Rust</a>
+<a class="card" href="scala.html">Scala</a>
+<a class="card" href="lisp.html">Lisp</a>
+</div>
+<div class="section-title">Finance</div>
+<div class="grid"><a class="card" href="finance_bonds.html">Finance Bonds</a>
+<a class="card" href="finance_futures.html">Finance Futures</a>
+<a class="card" href="finance_options.html">Finance Options</a>
+<a class="card" href="finance_swap.html">Finance Swap</a>
+</div>
+<div class="section-title">Software Engineering</div>
+<div class="grid"><a class="card" href="desgin_patterns.html">Desgin Patterns</a>
+<a class="card" href="REST.html">Rest</a>
+<a class="card" href="agile.html">Agile</a>
+<a class="card" href="agile_scrum.html">Agile Scrum</a>
+<a class="card" href="company_culture_mircosoft.html">Company Culture Mircosoft</a>
+<a class="card" href="agile.html">Agile</a>
+</div>
+<div class="section-title">AI / ML</div>
+<div class="grid"><a class="card" href="ai.html">Ai</a>
+<a class="card" href="machine_learning_intro_coursera.html">Machine Learning Intro Coursera</a>
+<a class="card" href="machine_learning_adv_algo_coursera.html">Machine Learning Adv Algo Coursera</a>
+</div>
+<div class="section-title">Reference</div>
+<div class="grid"><a class="card" href="speeds_CPU_Mem_Disk_NW.html">Speeds Cpu Mem Disk Nw</a>
+<a class="card" href="unix.html">Unix</a>
+<a class="card" href="todo.html">Todo</a>
+</div>
+<div class="section-title">Other</div>
+<div class="grid"><a class="card" href="97_things_engineering_manager.html">97 Things Engineering Manager</a>
+<a class="card" href="postgres.html">Postgres</a>
+</div>
+
+</main>
+</body>
+</html>

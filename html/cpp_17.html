@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cpp 17</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: #1a1a2e;
+    color: #e0e0e0;
+    min-height: 100vh;
+}
+header {
+    background: #16213e;
+    border-bottom: 2px solid #0f3460;
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+header a {
+    color: #e94560;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+}
+header a:hover { text-decoration: underline; }
+h1 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #53d8fb;
+    letter-spacing: 0.03em;
+}
+main {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 24px;
+}
+pre {
+    background: #0d1117;
+    border: 1px solid #21262d;
+    border-radius: 8px;
+    padding: 20px 24px;
+    overflow-x: auto;
+    font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+    font-size: 0.85rem;
+    line-height: 1.65;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+.cmd  { color: #7ee787; }          /* $ shell commands */
+.cmt  { color: #8b949e; }          /* # comments */
+.hdr  { color: #f0c040; font-weight: bold; }  /* section headers */
+.url  { color: #79c0ff; }
+</style>
+</head>
+<body>
+<header>
+  <a href="../html/index.html">&#8592; Index</a>
+  <h1>Cpp 17</h1>
+</header>
+<main>
+  <pre>Books based on https://stackoverflow.com/questions/388242/the-definitive-c-book-guide-and-list/
+1. A Tour of C++ (c++17 2nd ed; 3ed is for c++20)
+    - RECOMMENDS: Programming: Principles and Practice Using C++ (Second edition)
+2. Effective Modern C++ (C++14)
+3. C++ Concurrency In Action (3ed)
+
+<span class="hdr">Tool chains (PreProcessor + Compiler + Linker):</span>
+1. GCC v11 - C/C++/ObjC/Java/Go
+2. Clang/LLVM -  mainly C/C++/ObjC - modern/extensible
+
+<span class="hdr">Debugger:</span>
+1. g++ hello.cpp -o hello.binary -g    # -g for additional debug info
+2. gdb hello.binary
+	break fn_name | code.cpp:line_number
+	run
+	step
+	next
+	continue
+	info locals	# print locals
+	variable
+
+<span class="hdr">Assembly (ASM) code for a given C/C++ source code:</span>
+<span class="cmd">$ gcc -S -02 &lt;myfile.C&gt;         # optinally add -fverbose-asm option to get comments in assembly code</span>
+<span class="cmd">$ less myfile.s         # assembly code</span>
+
+Intermingling with C code - wrap C++ code in extern &quot;C&quot; {...c++ code..}.
+        Use ifdef __cplusplus to add &#x27;extern &quot;C&quot; { ... }.
+        extern_C allows C++ compiler to add decorated names to struct/class/fn to help C compiler link to these objects.
+
+Integer type : short, int, long, long long
+        int 4 bytes
+        Literal prefixes: 0b1010, 0xCOFFEE, 0777, 12345 (printf %b, %x, %o
+        Readability of large numbers: int million = 1&#x27;000&#x27;000;
+
+Floating-point type: float, double, long double (3.14f, 3.14, 3.14L and 3.14e-2)
+
+Char type: char, char16_t, signed char, unsigned char, wchar_t (fits largest unicode).
+        char ch = &#x27;a&#x27;;  // &quot;a&quot; is a string or c-style char *
+
+void type is empty set of value.
+        C++ doesnt allow void objects.
+        Used to indicate return type of a fn.
+
+std::byte type - when working with raw memory (type-less) in &lt;cstddef&gt;.
+        Safer than using char as you can&#x27;t do +.
+      
+size_t type - ensures that max.value is sufficient to represent max size (in bytes) of all objects.
+        Typically set to be same as long long int.
+
+sizeof(float) or sizeof(obj)
+
+<span class="hdr">Array:</span>
+        int array[10];
+        int array[] = {1,2,3,4,5};
+        del[] array;    //if allocated with new
+
+        char c_style_str[] = &quot;hello&quot;;   // \0 terminated string
+
+User-defined types: (scoped) Enum class, Struct (PODs classes), Union, Class        
+        enum class Colors { Red, Blue, Gree};
+        Colors c = Colors::Red; //typically goes with switch-case-break stmt
+        
+        POD - Plain old data class i.e. struct with members.
+        Efficient to copy/move &amp; tightly packed in memory.
+        Create members from largest size to smallest.
+        
+        Union - variant pod; only one member of struct can be populated.
+        
+        Classes - data encapsulated by access methods (get/set). Access controlled by private/public. Like struct but everything is private by default while in struct everything is public by default.
+        
+        initializing:
+                int a = 0;           // doesn&#x27;t work for struct/class
+                int a{};             // prefer braced initilization...init to default value e.g. 0
+                int a = {};          // prefer braced initilization...init to default value e.g. 0
+                int a;  // random value
+                int a(0);       // doesn&#x27;t work for struct/class...looks like fn call
+        Braced initialization 
+                - will setup (in order of declaration) any members with args passed in {}. Any args not passed are set to default value (0, 0.0, nullptr)
+                e.g. int array[5] = {1,2,3};    // last 2 elements are 0
+                - also raises warning on implicit narrowing. 
+                e.g. int x = {1/2};  //float to int ... narrowing
+                - initialize members of classes/struct
+                e.g. struct POD {
+                        bool started = false;
+                        int start_epoch_year {1970};
+                        char some_string[10] = {&quot;x&quot;};
+                        };
+
+Object allocation: get storage &amp; then call constructor.
+<span class="hdr">Types of storage:</span>
+1. Automatic - given &amp; released within code block {...}
+2. Dynamic - with new/delete (delete[] arr) from heap
+3. Static - allocated at beginning of program (or code block if local static var) and exists till end of program. Using keyword static (for internal linkage i.e. same translation unit.
+or extern (var is accessed from outside of translation unit).
+        Static class members are associated with class (not object which share this static var).
+        static thread_local int var = 100; // for static var in threads (copied per thread).
+
+Exceptions: use in rarely occuring cases e.g. out of memory/file-handles and use error return code for regular use.
+Use of exception leads to less coding (not checking too much for error cases) and hence, faster when they execute normally and penalty of slower exception execution only on error cases.
+try { throw std::logic_error(&quot;Bad logic&quot;); }
+catch (std::runtime_error &amp;ex) { cerr &lt;&lt; &quot;Runtime error code: &quot; &lt;&lt; ex.code() &lt;&lt; ex.what(); }
+catch (...) { cerr &lt;&lt; &quot;general exception&quot;;{ 
+std::exception - inherit from this class if you want user-defined
+        -- runtime_error
+                - system_error
+                - underflow/overflow_error
+        -- logic_error
+                - out_of_range
+                - length_error
+                - invalid_argument
+noexcept -- function specifier to indicate that no exception will be thrown by this code. Helps compiler optimize but if exception is thrown then std::terminate is called.
+noexcept is seen in Move Semantics i.e. move constructor and move assignment
+Alternatives to exception, use return code or use structured binding to return more than return code, return error msg etc.
+
+Copy : By default, memberwise copy (bits copy). Copy a=b means a is equivalent to b and modification on b will not impact a.
+    Need to take care when dynamic memory is allocated to members (deep-copy) - define your own copy constructor + copy assignment methods. If object should not be copied, declare their copy methods with &quot;=delete;&quot; to supress compiler from providing it&#x27;s own default ones.
+    else could cause same memory to be freed more than once leading to undefined behavior.
+        Class (const Class&amp; other);     // copy constructor with pass by const-reference e.g. Class var_a = {var_b};
+        Class&amp; operator=(const Class&amp; other);   // copy assignment e.g. var_a = var_b; Note - to cleanup any pre-existing memory allocted to var_a previously. First get more memory then delete current memory. 
+        //Also, check to ensure this!=&amp;other.
+   
+Move: Transfer ownership from one object to another without the expensive copy operation i.e.move.
+    Object moved is in &quot;moved-from&quot; state and only re-assign or delete ops are allowed on it.
+    lvalue - any value that has a name (variable name). lvalue reference is &amp;x (e.g.copyconstruct)
+    rvalue - anything that&#x27;s not a lvalue.             rvalue reference is &amp;&amp;x (move constructor)
+    std::move(lvalue) will change an lvalue to rvalue
+       Class (Class&amp;&amp; other) noexcept {   // move constructor not to throw exception else compiler default to copy
+             this.buffer = other.buffer; this.size = other.size;   // move resources 
+             other.size=0; other.buffer = nullptr;         // put in moved-from state (all zeros) 
+             }
+        Class&amp; operator=(Class&amp;&amp;other) noexcept {
+             if (this==&amp;other) return *this;
+             delete[] this.buffer;
+             this.buffer = other.buffer; this.size = other.size;
+             other.buffer = nullptr; other.size =0;
+             }
+
+Polymorphism : loosely coupled &amp; reusable code with different types - can be at compile-time or run-time.
+    Compile time concepts : Interface, Inheritance
+    
+    Interface : a fn signature that serves as contract with it&#x27;s users/callers. Implementation indepenedent. Done with pure virtual functions. Avoid inheritance (anti-pattern) but ok for interface setup &amp; user/caller should be made &quot;final&quot;.
+    Derived class references/pointers can be treated as if they were of Base class type so for lose coupling define interfaces with base class ref/ptr that are implmented by more specialized/inherited classes. Consumer code is only in base class ref/ptr (injected in constructor or by a set property or both!).
+        struct Logger {
+            virtual ~Logger() = default; // virtual as derived class refernces/ptr can call destructors correclty (vtables lookup incur one fn lookup call penalty
+            virtual void log_transfer(int from, int to, double amount) = 0; //pure virtual fn that dervied class must implement (denote with &quot;override&quot;)
+        }
+        
+        struct SpecialLogger : Logger {
+            void log_transfer(int from, int to, double amount) override {...} //implement
+        }
+    
+    Inheritance : promotes code reuse (or specialization/override)
+        
+<span class="hdr">C++ has 2 parts:</span>
+1. Core language (char/int; for/while)
+2. Standard Lib (cout/getline; containers like vector/map, iterators and algorithms)
+
+<span class="hdr">Types:</span>
+    bool, char, int, double, unsigned
+    sizeof(int) # machine dependent 
+    0b(binary), 0x(hex), 0(octal)
+    1&#x27;234&#x27;567&#x27;890   # readability
+    x ^ y           # xor
+    ~x              # bitwise complement
+    logical &amp;&amp;, ||, !
+
+<span class="hdr">variable init in {xx} -or- with = -or- both:</span>
+    int d1 = 2.3;
+    int some_value {123};       # preferred (will raise error)
+    int another_value = {567.8}; #this and first = will not raise error due to C-compatibility
+
+    vector&lt;int&gt; v = {1,2,3,4,5};
+
+    const int x = 5;    # const must be initialized
+    auto ch = &#x27;c&#x27;;      # avoids writing type (cleaner/easier to refactor). Detect based on value. use = or {} for init or return type from a function.
+    auto ans = sqrt(value);    # auto used in generic-programming
+
+<span class="hdr">scope:</span>
+    local - var. in fn or lambda (QQQ:?what&#x27;s lambda in C++?)
+    class - var in class but not in fn/lambda/enum
+    namespace - var not in fn/lambda/enum
+    global - if not one of the 3 above
+    temporaries - no names. e.g. object with new() or temporaries 
+
+<span class="hdr">constants:</span>
+    const (a promise not to change the value) - declares object/var/fn is constant after being inti. e.g. when data passed to fn as pointers/nces. Value of const evaluated at run-time.
+    constexpr (to be evaluated at compile time) - is fit for being used as const. For defining constants, data placed in read-only mem, for speed. Value of const evaluated at compile-time!
+When applied to fn, the fn should be simple
+
+        constexpr int x = 10;
+        const double v = sqrt(var);
+        double sum(const vector&lt;int&gt; &amp;);    # will not modify vector&lt;int&gt; passed by reference
+                // references defend against NULL dereference &amp; can&#x27;t be unseated so aboid unintentional pointer reassignment
+        
+        constexpr int square(int x){ return x*x;}
+        constexpr int v1 = square(var);     #var is not const at compile time so error. Arg could have been 17 or a const.
+        const int v1 = square(var);         #OK at run-time v1 will be a const.
+<span class="hdr">output:</span>
+    #include &lt;iostream&gt;     // alternatively #include &lt;iostream&gt; using namespace std; to stop repeating std:: each time (imports all var)
+    std::out &lt;&lt; &quot;Enter a values greater than &quot; &lt;&lt; some_value &lt;&lt; std::endl;
+    std::in &gt;&gt; new_value;
+
+functions (can have same name aka &quot;overloading&quot; but signature [return_type + args types &amp; #] must differ):
+    return_type function_name(args);
+    char&amp; String::operator[](int index);    //member fn of class String for operator[]
+    
+    
+    
+<span class="hdr">Makefiles + make to compile &amp; build project:</span>
+1. Binary depends on object (.o) files created after compiling and before linking
+2. The object files are then linked to create binary. So if only one source code changes then only one object file should be recreated and finally linked to form new binary.
+
+<span class="cmd">$ cat makefile</span>
+my_binary.exe: fileA.o fileB.o                 # Target my_binary_exe depends on these 2 .o files
+    g++ fileA.o fileB.o -o my_binary_exe       # Command used to link and generate the binary
+fileA.o: fileA.cpp
+    g++ -c fileA.cpp -o fileA.o
+fileB.o: fileB.cpp
+    g++ -c fileB.cpp -o fileB.o
+clean:                                          # remove any intermediate files
+    rm *.o my_binary_exe
+<span class="cmd">$ make          # build makefile and creates exe my_binary.exe</span>
+<span class="cmd">$ make clean</span>
+
+<span class="hdr">CMake:</span>
+<span class="cmd">$ cat CMakelists.txt</span>
+cmake_minimum_required(VERSION &quot;3.22&quot;)
+project(&quot;MyProjectA&quot;)
+add_executable(&quot;MyProjectA&quot; &quot;main.cpp&quot;)         # add executable to MyProjectA
+<span class="cmt"># can have more than one project in a CMakelists.txt</span>
+
+<span class="cmd">$ cat CMakelists.txt</span>
+cmake_minimum_required(VERSION &quot;3.22&quot;)
+add_subdirectory(&quot;thirdParty/3rdlibrary&quot;)
+
+project(&quot;main&quot;)
+set(CMAKE_CXX_STANDARD 17)
+add_executable(&quot;main&quot; &quot;src/main.cpp&quot;)         # add executable to MyProjectA
+target_include_directories(&quot;{CMAKE_PROJECT_NAME}&quot; PUBLIC &quot;${CMAKE_CURRENT_SOURCE_DIR}/include&quot;
+target_link_libraries(&quot;{CMAKE_PROJECT_NAME}&quot; PRIVATE 3rdlibrary)
+<span class="cmt"># target_compile_definitions</span></pre>
+</main>
+</body>
+</html>

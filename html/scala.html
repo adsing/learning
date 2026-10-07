@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Scala</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: #1a1a2e;
+    color: #e0e0e0;
+    min-height: 100vh;
+}
+header {
+    background: #16213e;
+    border-bottom: 2px solid #0f3460;
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+header a {
+    color: #e94560;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+}
+header a:hover { text-decoration: underline; }
+h1 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #53d8fb;
+    letter-spacing: 0.03em;
+}
+main {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 24px;
+}
+pre {
+    background: #0d1117;
+    border: 1px solid #21262d;
+    border-radius: 8px;
+    padding: 20px 24px;
+    overflow-x: auto;
+    font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+    font-size: 0.85rem;
+    line-height: 1.65;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+.cmd  { color: #7ee787; }          /* $ shell commands */
+.cmt  { color: #8b949e; }          /* # comments */
+.hdr  { color: #f0c040; font-weight: bold; }  /* section headers */
+.url  { color: #79c0ff; }
+</style>
+</head>
+<body>
+<header>
+  <a href="../html/index.html">&#8592; Index</a>
+  <h1>Scala</h1>
+</header>
+<main>
+  <pre>Online - https://scastie.scala-lang.org/
+
+ScaLa - scalable lang. (At time of writing March 2019, Scala 2.12 is available)
+Functional + OO (everythin is an object)
+
+Every fn is a value
+A value an object
+and hence, a function an object
+
+Runs on JVM (same run time platform a Java so both can co-exist)
+
+Allows concurrency.
+Domain specific language support (DSL)
+
+Closure − A closure is a function, whose return value depends on the value of one or more variables declared outside this function.
+var factor = 3
+val multiplier = (i:Int) =&gt; i * factor
+
+Traits − A trait encapsulates method and field definitions, which can then be reused by mixing them into classes. Traits are used to define object types by specifying the signature of the supported methods.
+
+Scala - runs in interactive mode or script mode
+
+<span class="hdr">Interactive:</span>
+&gt; println(&quot;Hello world!&quot;)
+
+<span class="hdr">Script-mode:</span>
+<span class="cmt"># HelloWorld.scala</span>
+object HelloWorld{
+  def main(args: Array[String]){
+    println(&quot;hello&quot;)    
+  }
+}
+
+<span class="cmd">$ scalac HelloWorld.scala    #gemerates a new class HellowWorld.class</span>
+<span class="cmd">$ scala  HellowWorld</span>
+
+Operators: +, ++, &lt;?&gt;, :::, 
+Mixed Identifiers: unary_+ or myvar_= (operator overloading)
+Identifier: ok if in `abc`
+
+Semicolon line delimit optional
+
+Packaage:  com.site.packagename
+import com.site.packagename
+import scala.xml._           //import everything in scala.xml package
+import scala.collection.mutable.HashMap
+import scala.collection.immutable.{TreeMap, TreeSet}  //import 2 objects
+
+
+applyDynamic is a trait that enabkes dynamic innvocations for any methods/args.
+<span class="hdr">method/args are re-written:</span>
+foo.method(x = &quot;blah&quot;) ~~&gt; foo.applyDynamicNamed(&quot;method&quot;)((&quot;x&quot;, &quot;blah&quot;))
+foo.method(x = 1, 2) ~~&gt; foo.applyDynamicNamed(&quot;method&quot;)((&quot;x&quot;, 1), (&quot;&quot;, 2))
+foo.field ~~&gt; foo.selectDynamic(&quot;field&quot;)
+foo.varia = 10 ~~&gt; foo.updateDynamic(&quot;varia&quot;)(10)
+foo.arr(10) = 13 ~~&gt; foo.selectDynamic(&quot;arr&quot;).update(10, 13)
+foo.arr(10) ~~&gt; foo.applyDynamic(&quot;arr&quot;)(10)
+
+Types: Byte/Short/Long/Int/Float/Double/Char/String/Boolean/Null/Unit(no value)/Any/AnyRef
+String in double quotes(&quot;....&quot;); char in single quotes.
+Multi-line : &quot;&quot;&quot;....&quot;&quot;&quot;
+
+<span class="hdr">Symbol literal:</span>
+&#x27;x = scala.Symbol(&quot;x&quot;)
+
+<span class="hdr">Variable declaration:</span>
+var or val VariableName : DataType = [Initial Value]    //var is variable (mutable) while val is a constant(immutable)
+e.g.
+val myVal = &quot;Hello, Scala!&quot;;   //Type inference; no need to define data type
+val (myVar1: Int, myVar2: String) = Pair(40, &quot;Foo&quot;)   //tuple
+
+
+<span class="hdr">Sample class with main:</span>
+<span class="cmt">#</span>
+import java.io._
+
+class Point(val xc: Int, val yc: Int) {
+   var x: Int = xc
+   var y: Int = yc
+   
+   def move(dx: Int, dy: Int) {
+      x = x + dx
+      y = y + dy
+      println (&quot;Point x location : &quot; + x);
+      println (&quot;Point y location : &quot; + y);
+   }
+}
+
+object Demo {
+   def main(args: Array[String]) {
+      val pt = new Point(10, 20);
+
+      // Move to a new location
+      pt.move(10, 10);
+   }
+}
+<span class="cmt">#</span>
+
+<span class="hdr">Inheritance/Extension of a class:</span>
+- use extends key word
+- inherit from one class only
+Two restrictions: 
+1. method overriding requires the &quot;override&quot; keyword, 
+2. only the constructor can pass parameters to the base constructor
+
+class Location(override val xc: Int, override val yc: Int, val zc :Int) extends Point(xc, yc){
+   var z: Int = zc
+
+   def move(dx: Int, dy: Int, dz: Int) {
+      x = x + dx
+      y = y + dy
+      z = z + dz
+      println (&quot;Point x location : &quot; + x);
+      println (&quot;Point y location : &quot; + y);
+      println (&quot;Point z location : &quot; + z);
+   }
+}
+
+Implicit class : whose methods can be called as such classes can&#x27;t be top-level class.
+They are defined inside other class/trait/object
+They take only one argument
+<span class="cmt">#</span>
+object &lt;object name&gt; {
+   implicit class &lt;class name&gt;(&lt;Variable&gt;: Data type) {
+      def &lt;method&gt;(): Unit =
+   }
+}
+
+Can not have singleton members; only objects e.g. see example with main.
+
+Access modifier - private, protected, public (default)
+Scope protection - limit to this, outer class or outermost class. private[scope] var x = Int 10;
+<span class="cmt">#</span>
+package society {
+   package professional {
+      class Executive {
+         private[professional] var workDetails = null
+         private[society] var friends = null
+         private[this] var secrets = null
+
+         def help(another : Executive) {
+            println(another.workDetails)
+            println(another.secrets) //ERROR
+         }
+      }
+   }
+}
+
+<span class="hdr">Loops:</span>
+if() {...} else {...}
+do-while &amp; while
+for (a &lt;-1 to 10; b &lt;- 2 to 20) {...}   #for( var x &lt;- List if condition; if condition2 ) {  yield a+b }
+
+<span class="hdr">break in a loop (is a bigger deal in scala):</span>
+//
+import scala.util.control._
+// create a Breaks object as follows
+val loop = new Breaks;
+// Keep the loop inside breakable as follows
+loop.breakable {
+   // Loop will go here
+   for(...){
+      ....
+      // Break will go here
+      loop.break;
+   }
+}
+
+
+<span class="hdr">Functions:</span>
+def functionName ([list of parameters]) : [return type] {  //return type can be Unit (same as void)
+   .. 
+   return [expr]
+}
+
+
+String immutable
+val greeting: String = &quot;Hello&quot;
+println( greeting.length() )
+var hello_you : String = greeting.concat(&quot; you!&quot;)
+var hello_you : String = greeting +  &quot; you!&quot;
+
+String formating with printf() or format()
+<span class="hdr">Interpolation:</span>
+1. s interpolation - interpolates ${..}
+ println(s&quot;Hello, $name&quot;)
+ println(s&quot;1 + 1 = ${1 + 1}&quot;)
+
+2. f interpolation: formatted string
+ println(f&quot;$name%s is $height%2.2f meters tall&quot;)
+ 
+ 3. raw interpolation: new lines remain &#x27;raw&#x27; \n
+  println(raw&quot;Result = \n a \n b&quot;)
+  
+  
+ Array - ordered collection of same type
+  var z:Array[String] = new Array[String](3)
+  // 2 D aRArray
+  // var myMatrix = ofDim[Int](3,3)
+  // vat intArray = Array[Int]
+  var z = new Array[String](3)
+  z(0) = &quot;Hello&quot;
+  z(1) = &quot;there&quot;
+  z(2) = &quot;!!&quot;
+  for (i &lt;- z):
+    print(i)
+ var newArray = concat(z, zz, zzz)
+ var intArray = range(0, 10)
+//See import Array._ for all array operations. 
+// copy, empty, iterate, fill, ofDim, tabulate
+
+
+Collection :: Lists, Sets, Maps, Tuples, Options, Iterators
+ - lazy or strict
+ - mutable or not
+ 
+ //////////////
+ 
+ Trait - encapulsated method+fields that can be reused by mixing with other classes.
+ Defined like a class excep that is uses &quot;trait&quot; instead fo class and no constructor parameters.
+ // if trait method not defined then its like an interface (abstract class)
+trait Equal {
+   def isEqual(x: Any): Boolean
+   def isNotEqual(x: Any): Boolean = !isEqual(x)
+}
+//
+class Point(xc: Int, yc: Int) extends Equal {
+   var x: Int = xc
+   var y: Int = yc
+   
+   //def isEqual(obj: Any) = obj.isInstanceOf[Point] &amp;&amp; obj.asInstanceOf[Point].x == y
+  def isEqual(obj: Any): Boolean = {
+    return obj.isInstanceOf[Point] &amp;&amp; obj.asInstanceOf[Point].x == x &amp;&amp; obj.asInstanceOf[Point].y == y
+  } 
+}
+//
+object Demo {
+   def main(args: Array[String]) {
+      val p1 = new Point(2, 3)
+      val p2 = new Point(2, 4)
+      val p3 = new Point(2, 3)
+      val p4 = new Point(2, 4)
+
+      println(p1.isNotEqual(p2))
+      println(p1.isEqual(p3))
+      println(p1.isNotEqual(2))
+      println(&quot;.....&quot;)
+      println(p3.isEqual(p1))
+      println(p3.isEqual(p2))
+      println(p4.isEqual(p1))
+      println(p4.isEqual(p2))
+   }
+}
+ 
+ 
+Value class (read more on this)
+ - to avoid allocating run time objects
+ - contains only methods
+ - can&#x27;t be extended further
+//
+trait Printable extends Any {
+   def print(): Unit = println(this)
+}
+class Wrapper(val underlying: Int) extends AnyVal with Printable
+object Demo {
+   def main(args: Array[String]) {
+      val w = new Wrapper(3)
+      w.print() // actually requires instantiating a Wrapper instance ... prints Wrapper@3
+   }
+}
+
+
+Pattern matching - case &lt;check&gt; =&gt; result
+ println(matchTest(&quot;two&quot;))
+ println(matchTest(1))
+ //
+ def matchTest(x: Any): Any = x match {
+      case 1 =&gt; &quot;one&quot;
+      case &quot;two&quot; =&gt; 2
+      case y: Int =&gt; &quot;scala.Int&quot;
+      case _ =&gt; &quot;many&quot;
+   }
+   
+
+Regex: 
+ pattern = string.r() to convert to RichString
+    e.g. val pattern = &quot;MyPattern&quot;.r 
+ import scala.util.matching.Regex
+ pattern findFirstIn inputStr
+ (pattern findAll inputStr).mkString(&quot;,&quot;)
+ 
+ 
+Exceptions : try {...} catch {...} finally {...}
+//
+import java.io.FileReader
+import java.io.FileNotFoundException
+import java.io.IOException
+//
+object Demo {
+   def main(args: Array[String]) {
+      try {
+         val f = new FileReader(&quot;input.txt&quot;)
+      } catch {
+         case ex: FileNotFoundException =&gt; {
+            println(&quot;Missing file exception&quot;)
+         }
+         
+         case ex: IOException =&gt; {
+            println(&quot;IO Exception&quot;)
+         }
+      } finally {
+         println(&quot;Exiting finally...&quot;)
+      }
+   }
+}
+
+
+Extractor - object that has a method called unapply (to match a value and take it apart). 
+  apply() is sued for building values .. optional method
+//
+object Demo {
+   def main(args: Array[String]) {
+      println (&quot;Apply method : &quot; + apply(&quot;Zara&quot;, &quot;gmail.com&quot;));
+      println (&quot;Unapply method : &quot; + unapply(&quot;Zara@gmail.com&quot;));
+      println (&quot;Unapply method : &quot; + unapply(&quot;Zara Ali&quot;));
+   }  
+   // The injection method (optional)
+   def apply(user: String, domain: String) = {
+      user +&quot;@&quot;+ domain
+   }
+   // The extraction method (mandatory)
+   def unapply(str: String): Option[(String, String)] = {
+      val parts = str split &quot;@&quot;
+      
+      if (parts.length == 2){
+         Some(parts(0), parts(1)) 
+      } else {
+         None
+      }
+   }
+}
+
+Automatic apply/unapply
+If an instance of class/object is followed by () then apply is applied automatically.
+When comparing an extractor obkect with match stmt, unapply will be executed.
+object Demo {
+   def main(args: Array[String]) {
+      val x = Demo(5)
+      println(x)
+
+      x match {
+         case Demo(num) =&gt; println(x+&quot; is bigger two times than &quot;+num)
+         
+         //unapply is invoked
+         case _ =&gt; println(&quot;i cannot calculate&quot;)
+      }
+   }
+   def apply(x: Int) = x*2
+   def unapply(z: Int): Option[Int] = if (z%2==0) Some(z/2) else None
+}
+//output
+//10
+//10 is bigger two times than 5
+
+<span class="hdr">File IO:</span>
+ // write to file
+import java.io._
+object Demo {
+   def main(args: Array[String]) {
+      val writer = new PrintWriter(new File(&quot;test.txt&quot; ))  ///
+      writer.write(&quot;Hello Scala&quot;)
+      writer.close()
+   }
+}
+ //read from console
+ object Demo {
+   def main(args: Array[String]) {
+      print(&quot;Please enter your input : &quot; )
+      val line = Console.readLine                      ///
+      println(&quot;Thanks, you just typed: &quot; + line)
+   }
+}
+ //read from file
+ import scala.io.Source
+object Demo {
+   def main(args: Array[String]) {
+      println(&quot;Following is the content read:&quot; )
+
+      Source.fromFile(&quot;Demo.txt&quot; ).foreach { 
+         print 
+      }
+   }
+}</pre>
+</main>
+</body>
+</html>

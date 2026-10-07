@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Toml</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: #1a1a2e;
+    color: #e0e0e0;
+    min-height: 100vh;
+}
+header {
+    background: #16213e;
+    border-bottom: 2px solid #0f3460;
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+header a {
+    color: #e94560;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+}
+header a:hover { text-decoration: underline; }
+h1 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #53d8fb;
+    letter-spacing: 0.03em;
+}
+main {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 24px;
+}
+pre {
+    background: #0d1117;
+    border: 1px solid #21262d;
+    border-radius: 8px;
+    padding: 20px 24px;
+    overflow-x: auto;
+    font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+    font-size: 0.85rem;
+    line-height: 1.65;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+.cmd  { color: #7ee787; }          /* $ shell commands */
+.cmt  { color: #8b949e; }          /* # comments */
+.hdr  { color: #f0c040; font-weight: bold; }  /* section headers */
+.url  { color: #79c0ff; }
+</style>
+</head>
+<body>
+<header>
+  <a href="../html/index.html">&#8592; Index</a>
+  <h1>Toml</h1>
+</header>
+<main>
+  <pre>TOML - Tom&#x27;s Obvious Markup Language
+files have .toml extension
+3 main complex types: arrays, tables(dict), array of tables
+&quot;.&quot; creates sub-section e.g. sub-array or sub-table
+
+<span class="cmt"># comment</span>
+<span class="cmt"># whitespace around key or value or = is ignored</span>
+key = &quot;value&quot; # value can be string/int/float/boolean/date/time/datetime/array/inline table
+&quot;quoted keys&quot; = &quot;other value&quot;       # &quot;key&quot; is same as key.
+site.&quot;google.com&quot; = true  # dotted keys are useful for grouping
+
+
+    name = &quot;Orange&quot;
+    physical.color = &quot;orange&quot;
+    physical.shape = &quot;round&quot;
+    site.&quot;google.com&quot; = true
+maps to JSON
+    {
+      &quot;name&quot;: &quot;Orange&quot;,
+      &quot;physical&quot;: {
+        &quot;color&quot;: &quot;orange&quot;,
+        &quot;shape&quot;: &quot;round&quot;
+      },
+      &quot;site&quot;: {
+        &quot;google.com&quot;: true
+      }
+    }
+
+
+<span class="cmt"># This makes the key &quot;fruit&quot; into a table.</span>
+fruit.apple.smooth = true
+<span class="cmt"># So then you can add to the table &quot;fruit&quot; like so:</span>
+fruit.orange = 2
+
+
+<span class="hdr">strings:</span>
+    &#x27;literal \n string&#x27; # No escapes e.g \n stays as-is
+    &quot;basic&quot;
+    &quot;&quot;&quot; multi   \    # causes whitespace to be trimmed (including new lines)
+        line
+    &quot;&quot;&quot;
+    
+<span class="hdr">integer:</span>
+    int1 = +100
+    int2 = -2_000_000
+    hex1 = 0xdead_beef
+    oct1 = 0x755
+    bin1 = 0b1010_1010
+    
+<span class="hdr">float:</span>
+    f1 = -3.14
+    f2 = 3.14e+2
+    flarge = 123_456.789_123
+    
+<span class="hdr">inf/nan:</span>
+    pos = +inf  # or inf
+    neg = -inf
+    ne = nan
+    ne2 = -nan
+    
+<span class="hdr">bool:</span>
+    b1 = true # false
+
+date-time (or date or time)
+    odt  = 197900527 08:30:00
+    odt1 = 1979-05-27T07:32:00Z
+    odt2 = 1979-05-27T00:32:00-07:00
+    odt3 = 1979-05-27T00:32:00.999999-07:00
+    
+    
+Array:  any (same or mixed) data type in [.,..,...,] with optional terminating , and can span multiline
+    ints = [1,2,3,]
+    colors = [&quot;red&quot;,&quot;blue&quot;,&quot;green&quot;]
+    nested_mixed = [ [1,2,3], [&quot;red&quot;,&quot;blue&quot;,&quot;green&quot;] ]
+
+
+Table (or hash or dictionary): defined as header within [...]
+    A root table starts at the begining of the TOML document and ends just before the first table header (or EOF) ... so all key-values go in default top-level dict or till first dict/table is declared
+[table1]
+key1 = &quot;value1&quot;
+key2 = 123
+
+[dog.&quot;tater.man&quot;]
+type.name = &quot;pug&quot;
+<span class="cmt"># JSON eq # { &quot;dog&quot;: { &quot;tater.man&quot;: { &quot;type&quot;: { &quot;name&quot;: &quot;pug&quot; } } } } </span>
+
+
+<span class="hdr">Inline table:</span>
+    compact expression for tables that are specified with {...}. Must be on single line and terminating , is not allowed. These are fully contained i.e. can&#x27;t add more keys/sub-tables outside braces.
+    point = { x=1, y=2}
+
+
+<span class="hdr">Array of Tables:</span>
+    Definition 1 with double brackets repeating for each Table/Dict entry: 
+        [[product]]
+        name = &quot;Hammer&quot;
+        sku = 12345
+        [[product]] # empty table in array
+        [[product]]
+        name = &quot;Nail&quot;
+        sku = 54321
+        [[product.details]]     # subtable
+        material  = &quot;iron&quot;
+<span class="cmt">        # JSON equivalent</span>
+<span class="cmt">        # {</span>
+<span class="cmt">        #  &quot;products&quot;: [</span>
+<span class="cmt">        #    { &quot;name&quot;: &quot;Hammer&quot;, &quot;sku&quot;: 738594937 },</span>
+<span class="cmt">        #    { },</span>
+<span class="cmt">        #    { &quot;name&quot;: &quot;Nail&quot;, &quot;sku&quot;: 284758393, &quot;color&quot;: &quot;gray&quot; },</span>
+<span class="cmt">        #    &quot;details&quot; : [{&quot;material&quot;:&quot;iron}]</span>
+<span class="cmt">        #  ]</span>
+<span class="cmt">        # }</span>
+        
+</pre>
+</main>
+</body>
+</html>

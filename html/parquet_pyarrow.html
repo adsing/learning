@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Parquet Pyarrow</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: #1a1a2e;
+    color: #e0e0e0;
+    min-height: 100vh;
+}
+header {
+    background: #16213e;
+    border-bottom: 2px solid #0f3460;
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+header a {
+    color: #e94560;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+}
+header a:hover { text-decoration: underline; }
+h1 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #53d8fb;
+    letter-spacing: 0.03em;
+}
+main {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 24px;
+}
+pre {
+    background: #0d1117;
+    border: 1px solid #21262d;
+    border-radius: 8px;
+    padding: 20px 24px;
+    overflow-x: auto;
+    font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+    font-size: 0.85rem;
+    line-height: 1.65;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+.cmd  { color: #7ee787; }          /* $ shell commands */
+.cmt  { color: #8b949e; }          /* # comments */
+.hdr  { color: #f0c040; font-weight: bold; }  /* section headers */
+.url  { color: #79c0ff; }
+</style>
+</head>
+<body>
+<header>
+  <a href="../html/index.html">&#8592; Index</a>
+  <h1>Parquet Pyarrow</h1>
+</header>
+<main>
+  <pre>https://parquet.apache.org/documentation/latest/
+
+Apache Parquet (columnar data storage file format) 2013 
+Supports complex/nested data structs with efficient encoding/compression techniques.
+Integrates well with Spark (default data format).
+Self-describing i.e. contains metadata with schema &amp; file structure.
+More efficient for reading &amp; analytical querying.
+
+------------------------------------------------
+Interoperability - Language independent(more Java than C++); encoding library; Java convertors (parquet to avro/proto). Works with Hive/HAWQ/Drill/Pig (query engines) + Spark/MapReduce (frameworks) + Avro/Proto (Data models).
+
+Space Efficieny - columnar storage (homogenous data leads to better encoding/compression like binary packing + vertical projection push down (read only columns required) and Horizontal partitioning i.e. predicate pushed down = read only data required i.e. IO optiomized)
+            - CPU pipeline i.e. instructions processed in parallel (mis-prediction is expensive caused from if/loops/virtual calls/data dependency ) + processor cache (layer L1/L2/L3) is faster than RAM so aim to get all data in the cache and avoid cache-miss. Columnar data (bring only data required) fits better into cache.
+            - Encodings - RLE, dictionary for &lt; 100K records, delta (sequential data like timestamp/ints like order id [reference number, min delta, bits reqquired to store delta, bi packing ), prefix (delta for strings) 
+            - Performance - 
+            - nested schema (lists (or list of list) -&gt; table), 
+Query Efficieny - 
+
+<span class="hdr">Schema::</span>
+The root of the schema is a group of fields called a message. Each field has three attributes: a repetition, a type and a name. The type of a field is either a group or a primitive type (e.g., int, float, boolean, string) and the repetition can be one of the three following cases:
+ required: exactly one occurrence
+ optional: 0 or 1 occurrence
+ repeated: 0 or more occurrences
+
+message AddressBook {
+required string owner;
+repeated string ownerPhoneNumbers;
+repeated group contacts {
+  required string name;
+  optional string phoneNumber;
+  }
+}
+
+List/Set: message myList { repeated string item; }   #{ item: &#x27;a&#x27;,  item:&#x27;b&#x27;, ...}
+Map: message myMap { repeated group item {requierd string key; optional string value; } } # { item: {key:&#x27;NY&#x27;, value:&#x27;New York&#x27;}, item: {key:&#x27;IL&#x27;, value:&#x27;Illinois&#x27;}, ...}
+
+Parquet creates one column per primitive type field in the schema. If we represent the schema as a tree, the primitive types are the leaves of this tree.
+The structure of the nested record is captured for each value by two integers called repetition level and definition level (is null?).
+Nested encoding - RLE and bit-packed.
+
+Data page = length ( optional definition levels (blank -&gt; required else max definition level)
+			 + optional repetition levels (default 1 i.e. not nested)
+			 + required encoded data
+			)
+Page metadata = header + compression + encoding details
+
+Compression formats:: 
+Speed (low - high); space used (max - low)
+Brotli -&gt; Gzip -&gt; Snappy
+
+<span class="hdr">Types:</span>
+	1. Boolean (1 bit)
+	2. Integer (INT32, INT64, INT96 signed)
+	3. Floats (FLOAT, DOUBLE)
+	4. Byte_Array (byte array) . Note: Strings are byte_arrays stored in utf-8 encoding.
+
+
+
+
+PyArrow (Parquet in-memory)
+==============================
+
+Apache Arrow is an ideal in-memory transport layer for data that is being read or written with Parquet files.
+
+The Apache Parquet project provides a standardized open-source columnar storage format for use in data analysis systems. It was created originally for use in Apache Hadoop with systems like Apache Drill, Apache Hive, Apache Impala (incubating), and Apache Spark adopting it as a shared standard for high performance data IO.
+
+From &lt;https://arrow.apache.org/docs/python/parquet.html&gt; 
+
+
+import pandas as pd
+df_omar = pd.read_csv(&quot;/auto/cesrpt/temp/asingh5/omar.csv&quot;)
+df_omar.to_parquet(&quot;/auto/cesrpt/temp/asingh5/omar.parquet.gz&quot;, compression=&#x27;brotli&#x27;)
+
+
+
+import numpy as np
+import pandas as pd
+import pyarrow as pa
+df = pd.DataFrame({&#x27;one&#x27;:[-1, np.nan, 2.4],
+                   &#x27;two&#x27;:[&#x27;foo&#x27;,&#x27;bar&#x27;,&#x27;baz&#x27;],
+                   &#x27;three&#x27;:[True, False, True],
+                   })
+
+table = pa.Table.from_pandas(df)
+
+import pyarrow.parquet as pq
+pq.write_table(table, &#x27;example.parquet&#x27;)
+<span class="cmt">#</span>
+table2 = pq.read_table(&#x27;example.parquet&#x27;)
+table2.to_pandas()
+
+import pyarrow.parquet as pq
+pq.read_table(&#x27;/auto/cesrpt/temp/asingh5/dst.prq&#x27;, columns=[&#x27;TradeDate&#x27;,&#x27;Factor&#x27;],).to_pandas().head()
+
+<span class="hdr">with open(&#x27;/auto/cesrpt/temp/asingh5/dst.prq&#x27;,&#x27;r&#x27;) as fh:</span>
+  pq.read_table(fh, columns=[&#x27;TradeDate&#x27;,&#x27;Factor&#x27;],).to_pandas().head()
+#pyarrow.lib.ArrowIOError: Arrow error: IOError: &#x27;ascii&#x27; codec can&#x27;t decode byte 0xac in position 7: ordinal not in range(128)
+
+
+parquet_file = pq.ParquetFile(&#x27;example.parquet&#x27;)
+parquet_file.metadata
+    &lt;pyarrow._parquet.FileMetaData object at 0x7f144d954c78&gt;
+      created_by: parquet-cpp version 1.4.1-SNAPSHOT
+      num_columns: 4
+      num_rows: 3
+      num_row_groups: 1
+      format_version: 1.0
+      serialized_size: 1082
+
+
+import pandas as pd
+df_omar = pd.read_csv(&quot;/auto/cesrpt/temp/asingh5/omar.csv&quot;)
+df_omar.to_parquet(&quot;/auto/cesrpt/temp/asingh5/omar.parquet&quot;)
+df_omar.to_parquet(&quot;/auto/cesrpt/temp/asingh5/omar.parquet.gz&quot;, compression=&#x27;gzip&#x27;)
+
+prq_omar_file = pq.ParquetFile(&#x27;omar.parquet&#x27;)
+prq_omar_file.metadata   #row_group 1
+prq_omar_file.read_row_group(0)
+
+
+with pq.ParquetWriter(&#x27;example2.parquet&#x27;, table.schema) as writer:
+  for i in range(3): 
+    writer.write_table(table)
+
+pf2 = pq.ParquetFile(&#x27;example2.parquet&#x27;)
+pf2.metadata
+    &lt;pyarrow._parquet.FileMetaData object at 0x7f144b9330e8&gt;
+      created_by: parquet-cpp version 1.4.1-SNAPSHOT
+      num_columns: 4
+      num_rows: 9
+      num_row_groups: 3
+      format_version: 1.0
+      serialized_size: 1650
+
+
+Compression : gzip/snappy/brotli
+------------------------------------------
+pq.write_table(table, where, compression=&#x27;gzip&#x27;)
+pq.write_table(table, where, compression={&#x27;foo&#x27;: &#x27;snappy&#x27;, &#x27;bar&#x27;: &#x27;gzip&#x27;},  #per column setting
+               use_dictionary=[&#x27;foo&#x27;, &#x27;bar&#x27;])
+
+DataSet : collection of parquet files (specified either as a directory or tree list)
+------------------------------------------------------------------------------------
+dataset = pq.ParquetDataset(&#x27;dataset_name/&#x27;)
+table = dataset.read()
+
+<span class="hdr">Multi-threaded reads (avoid gzip format):</span>
+------------------------------------------
+pq.read_table(where, nthreads=4)
+pq.ParquetDataset(where).read(nthreads=4)
+
+Read from cloud (Azure Blob store of Parquet files to PyArrow in-memory):
+-------------------------
+import pyarrow.parquet as pq
+from io import BytesIO
+from azure.storage.blob import BlockBlobService
+
+account_name = &#x27;...&#x27;
+account_key = &#x27;...&#x27;
+container_name = &#x27;...&#x27;
+parquet_file = &#x27;mysample.parquet&#x27;
+
+byte_stream = io.BytesIO()
+block_blob_service = BlockBlobService(account_name=account_name, account_key=account_key)
+<span class="hdr">try:</span>
+   block_blob_service.get_blob_to_stream(container_name=container_name, blob_name=parquet_file, stream=byte_stream)
+   df = pq.read_table(source=byte_stream).to_pandas()
+<span class="cmt">   # Do work on df ...</span>
+<span class="hdr">finally:</span>
+<span class="cmt">   # Add finally block to ensure closure of the stream</span>
+   byte_stream.close()</pre>
+</main>
+</body>
+</html>

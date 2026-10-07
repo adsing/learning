@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rest</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: #1a1a2e;
+    color: #e0e0e0;
+    min-height: 100vh;
+}
+header {
+    background: #16213e;
+    border-bottom: 2px solid #0f3460;
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+header a {
+    color: #e94560;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+}
+header a:hover { text-decoration: underline; }
+h1 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #53d8fb;
+    letter-spacing: 0.03em;
+}
+main {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 24px;
+}
+pre {
+    background: #0d1117;
+    border: 1px solid #21262d;
+    border-radius: 8px;
+    padding: 20px 24px;
+    overflow-x: auto;
+    font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+    font-size: 0.85rem;
+    line-height: 1.65;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+.cmd  { color: #7ee787; }          /* $ shell commands */
+.cmt  { color: #8b949e; }          /* # comments */
+.hdr  { color: #f0c040; font-weight: bold; }  /* section headers */
+.url  { color: #79c0ff; }
+</style>
+</head>
+<body>
+<header>
+  <a href="../html/index.html">&#8592; Index</a>
+  <h1>Rest</h1>
+</header>
+<main>
+  <pre>REST API
+    uniform interface
+    client server
+    stateless
+    cacheable
+    layered system
+    optional code-on-demand
+    
+URI: https://server.com/api/v2/users         # nounes e.g. orders, products, users
+
+Request: POST /users HTTP/1.1
+        Accept: &quot;aplication/json&quot;
+        Response: HTTP/1.1 200 OK    
+
+POST - create new resource
+GET  - select/get resource info
+PUT - update existingAWS manages the security of the cloud, specifically the physical infrastructure that hosts your resources, which include:
+
+    Physical security of data centers
+    Hardware and software infrastructure
+    Network infrastructure
+    Virtualization infrastructure
+
+Although you cannot visit AWS data centers to see this protection firsthand, AWS provides several reports from third-party auditors. These auditors have verified its compliance with a variety of computer security standards and regulations.
+DELETE - remove
+OPTIONS
+HEAD
+PATCH
+TRACE
+
+
+200s - success
+400s - failure
+500s - server error     # potentially retry if action is not &quot;idempotent&quot;
+
+&quot;idempotent&quot; - repeated fn calls have no state change (can&#x27;t use for POST
+
+For large data: use limit and offset to send data by pagination
+    /products?limit=10&amp;offset=50
+Versioning of API: allow backward compatibility when making breaking changes
+
+
+
+
+from fastapi import FastAPI     # documentaiton, serial/des, data validation
+app = FastAPI()         # API docs at http://localhost:8000/docs built in (extends as you add methods/paths to app
+
+@app.get(&quot;/&quot;)           # app.post|put|delete|options|head|patch|trace
+<span class="hdr">async def root():</span>
+    return {&quot;msg&quot;:&quot;Hello&quot;}
+    
+<span class="cmt"># put fixed path first i.e. @app.get(&quot;items/fixed_item&quot;) before &quot;items/{item_id}&quot;</span>
+@app.get(&quot;/items/{item_id}&quot;)        # parameter item_id
+async def read_item(item_id: int):  # enforces item_id to be an int (data parsing &amp; validation supported (using pydantic) by FastAPI)
+    return {&quot;item_id&quot;: item_id}
+    
+<span class="cmt"># use pydantic to declare data model/shape</span>
+from pydantic import BaseModel
+<span class="hdr">class Item(BaseModel):</span>
+    name: str
+    desc: Options[str] = None
+    price: float
+    
+@app.post(&quot;/items/&quot;)
+async def create_item(item: Item):      # Item is from request body (JSON-&gt;Pydantic object -&gt; JSON)
+    return item.dict()</pre>
+</main>
+</body>
+</html>

@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Python Concurrency</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: #1a1a2e;
+    color: #e0e0e0;
+    min-height: 100vh;
+}
+header {
+    background: #16213e;
+    border-bottom: 2px solid #0f3460;
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+header a {
+    color: #e94560;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+}
+header a:hover { text-decoration: underline; }
+h1 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #53d8fb;
+    letter-spacing: 0.03em;
+}
+main {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 24px;
+}
+pre {
+    background: #0d1117;
+    border: 1px solid #21262d;
+    border-radius: 8px;
+    padding: 20px 24px;
+    overflow-x: auto;
+    font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+    font-size: 0.85rem;
+    line-height: 1.65;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+.cmd  { color: #7ee787; }          /* $ shell commands */
+.cmt  { color: #8b949e; }          /* # comments */
+.hdr  { color: #f0c040; font-weight: bold; }  /* section headers */
+.url  { color: #79c0ff; }
+</style>
+</head>
+<body>
+<header>
+  <a href="../html/index.html">&#8592; Index</a>
+  <h1>Python Concurrency</h1>
+</header>
+<main>
+  <pre>Asyncio
+=======
+
+Allows to run tasks concurrently with a single thread.
+Ideal for web-server like situation with multiple thread requirement and high IO.
+
+Uses event loop that is a single thread where tasks are queued &amp; monitored. Any task that needs to do IO is handed over to OS and some other task is worked on in event-loop while waiting for OS to return from IO (and continue from next instruction after). Repeat till there are no more tasks in queue.
+
+Threads/Tasks are not pre-empted (unlike in threading module which are OS threads). Task determines when they (await) give up control to go back to FIFO queue for task processing. &quot;async&quot; indicates that following fn/code will await (with exception of async generator or &quot;asynch with&quot;)
+Easier to manage data in asyncio than in threads since pre-emption is ruled out.
+
+Coroutine - a fn that can pause execution (e.g. when encountering IO operation) and resume when blocking operation is completed. This allows python to run other code while fn waits for IO.
+
+&quot;async&quot; creates coroutine; async fn wait until promise has not happened
+&quot;await&quot; pauses coroutine.
+&quot;asyncio.run&quot; to execute a coroutine on an event-loop. This coroutine will call/await other coroutines
+&quot;asyncio.create_task&quot; creates a task that schedules a coroutine on event loop to run asap in non-blocking manner. Need to await the task completion e.g. task_1 = asyncio.create_task(coroutine(arg1, arg2))
+&quot;task.cancel&quot; a long running task e.g. task_1.cancel() will raise CancelledError
+&quot;task.done&quot; to check if task is done. e.g. task_1.done() # True/False
+&quot;asyncio.wait_for(tasl, timeout) waits for a task to complete with a time out which raises TimeoutError
+&quot;asyncio.shield&quot; to prevent cancellation of task from a timeout. wait_for will raise TimeoutError but task is still running so await it in exception handling.
+&quot;asyncio.wait&quot; wait for awaitable objects iterable and timeout or return when ALL_COMPLETED|FIRST_COMPLETED|FIRST_EXCEPTION.  Returns tuple of (done, pending) awaitables.
+    asyncio.wait(aws, *, timeout=None, return_when=ALL_COMPLETED)
+&quot;asyncio.gather&quot; run multiple async operations and get results when completed. Schedule the awaitable in task queue. Returns result as futures &amp; in same order as input awaitables. If return_exceptions=True then any exceptions are added to result otherwise default action is to propogate exception immediately on awaiting task.
+    gather(*aws, return_exceptions=False) -&gt; Future[tuple[()]]
+
+&quot;Future&quot; class object that returns value later (in future instead of now).
+    future = Future()
+    future.done() # now False (True/False)
+    future.set_result(123)
+    future.done()  # True
+    result = future.result()
+
+Awaitables (__await__) : Coroutines, Futures &amp; Task.
+
+
+Adding &quot;async&quot; in front of a regular function definition makes it return a coroutine object when it&#x27;s invoked i.e. it&#x27;s not invoked right away. It needs to be in an event loop e.g. with asyncio.run() - which creates the event loop, runs the function and closes the loop.
+    result = asyncio.run( foo(x) )      # foo coroutine can call other coroutines.
+
+    In other coroutines,
+    result = await bar(x)               # run bar(x), wait for it&#x27;s code to be run &amp; return result
+
+functions have a &quot;async&quot; in front and code &quot;await&quot;s for control back.
+await can only be inside coroutines.
+Start tasks with asyncio.create_task() &amp; wait for them to run in paralle with &quot;await asyncio.wait()&quot;.
+Same set of tasks can be gathered with &quot;ayncio.gather()&quot; - which can also take coroutines generated by our &quot;async def fn()&quot;.
+Py 3.11 introduces task group that use context manager with to ensure all tasks are awaited
+
+
+### Asyncio
+import time
+import asyncio
+
+<span class="hdr">async def task_fn(interval, count):</span>
+    print(&quot;Task started. Count=&quot;, count)
+<span class="cmt">    # time.sleep(interval)      # not an async function</span>
+    await asyncio.sleep(interval)
+    print(&quot;Task ended. Count=&quot;, count)
+
+<span class="hdr">async def main():</span>
+    sleep_iterval = [&#x27;1.25&#x27;,&#x27;1.30&#x27;,&#x27;1.20&#x27;]
+    start = time.perf_counter()
+<span class="cmt">    # for interval,count in enumerate(sleep_iterval):</span>
+<span class="cmt">    #     await task(interval, count)</span>
+
+<span class="cmt">    # tasks = [asyncio.create_task(task_fn(interval,count))</span>
+<span class="cmt">    #                             for interval,count in enumerate(sleep_iterval)]</span>
+
+<span class="cmt">    # done, pending = await asyncio.wait(tasks, timeout=1.25) 	# if timeout not specified then all tasks will be done</span>
+<span class="cmt">    # print(&quot;Done tasks:&quot;)</span>
+<span class="cmt">    # for tsk in done:</span>
+<span class="cmt">    #     result = tsk.result()		# any exceptions in task would be raised now</span>
+<span class="cmt">    #     print(result)</span>
+<span class="cmt">    # print(&quot;Pending tasks:&quot;)</span>
+<span class="cmt">    # for tsk in pending:</span>
+<span class="cmt">    #     print(tsk)      # Task has a &quot;wait_for&quot;</span>
+<span class="cmt">    # print(done, pending)</span>
+
+<span class="cmt">    # tasks = [asyncio.create_task(task_fn(interval,count))</span>
+<span class="cmt">    #                              for interval,count in enumerate(sleep_iterval)]</span>
+<span class="cmt">    # results = await asyncio.gather(*tasks)  # can take co-routines directly which asyncio.await can&#x27;t do</span>
+
+    co_routines = [task_fn(interval,count) for interval,count in enumerate(sleep_iterval)]
+    results = await asyncio.gather(*co_routines, return_exceptions=True)	# use try-catch here if not using return_exceptions=True
+    print(results)
+
+    end  = time.perf_counter()
+    print(&quot;All done&quot;, end-start)
+
+<span class="hdr">if __name__ == &#x27;__main__&#x27;:</span>
+    asyncio.run(main())
+
+
+
+
+ThreadPoolExecutor
+<span class="cmt"># Beazley youtube - https://www.youtube.com/watch?v=5-qadlG7tWo</span>
+
+import time
+<span class="hdr">def fn(x,y):</span>
+    time.sleep(1)
+    return x+y
+
+from concurrent.futures import ThreadPoolExecutor
+pool = ThreadPoolExecutor(8)
+future_obj = pool.submit(fn, 2, 3)
+future_obj.result   # blocks until thread is done and gives result=5
+<span class="cmt">                    # any exception will propogate out</span>
+
+<span class="cmt"># handle result with callsback if don&#x27;t want to block waiting for result</span>
+<span class="hdr">def exit_handle_result(result):</span>
+    try:
+        print(f&quot;Got {result.result()}&quot;)
+    except Exception as e:
+        print(f&quot;Failed {type(e)})
+...
+pool = ThreadPoolExecutor(8)
+<span class="cmt"># trigger computations with call back at entry...callback will be the exit</span>
+future_obj = pool.submit(fn, 2, 3)
+future_obj.add_done_callback(exit_handle_result)
+
+<span class="cmt"># one function using __enter__/__exit__ with yield</span>
+@inlined_future
+<span class="hdr">def do_func(x,y):</span>
+    result = yield pool.submit(fn, x, y)    # code before yield w/pool.submit is enter-code; rest is exit-code
+    print(f&quot;Got {result})
+
+run_inline_future(do_func_)
+
+
+
+
+
+
+
+
+
+
+
+Threading - alternative concurrent.futures.ThreadPoolExecutor + queue for data exchange between threads
+        - second alternative asyncio that avoids multiple OS threads. Asyncio has coperative threads where async/await determine where each thread will swap out - while regular threading has threads being preempted by OS based on IO/CPU cycles taken.
+
+    Due to GIL in Cpython, only one thread can run at a time. Python interpreter is single process and always has main thread.
+    So threads are good for processes with lot of IO. For CPU heavy process, use multiprocessing.
+    Running CPU intensive task in threads may cause worse performance as threads get swapped in/out vs. just running linearly.
+    OS tries to run multiple threads on other cores - but GIL is locked by active thread so OS just wasted CPU cycles due to python GIL limitation. So multicore processor is detrimental to python multithreading (Python v3.1). In Python v3.2 onward, there is a global var to request current thread to drop GIL. Secondary thread waits for 0.005s (5ms) waiting for active thread to do IO and drop or at end of 5ms of conditional var wait, thread-1 suspends and releases GIL. At this point, the thread on top of priorityQ is started.
+    Interpreter switches between threads (queued in a priorityQ) when active threads blocks for IO or when sys.getswitchinterval() 0.005 i.e. 5ms is hit.
+    Shared data protected by mutex and uses condition to signal between threads.
+
+    To manage data in thread:
+        (a) use thread-safe data structure like queue
+        (b) use threading.local() to define what variable/attributes are going to be common between threads
+        (c) threading.Lock to use as mutex
+
+
+    Module functions:
+    ----------------
+    active_count() - # of active threads (excludes not-started or completed threads)
+    enumerate() - list all active threads including daemon threads. active_count() is based on this.
+    thread_object = current_thread()
+    excepthook - for uncaught exceptions from thread.run. Ignores SystemExit from thread (to indicate it&#x27;s done) else printed on stderr.
+    get_ident() - get current thread&#x27;s thread-identifier; a non-zero value.
+    get_native_id() - get OS thread id
+    main_thread() -  return main thread i.e. from where python started
+    set|get trace() - set trace on all threads (?unsure?)
+    getprofile() - profile fn set
+    TIMEOUT_MAX - max value allowed for timeout in acquire()/wait() meathods of Locl/RLock/Condition. Over it gives OverflowError.
+
+    stack_size([size]) - get thread stack size(typicall 32KB - where thread stores it&#x27;s local data + recursion). Can also be set to specific size so that threads created after the size change have updated stack size
+    local() is where thread specific values/data is saved. e.g. mydata = threading.local; mydata.x = 1
+
+
+    Thread object: an activity that runs in separate thread.
+        Thread created by (1) overrideing thread.run or (2) passing callable to constructor (Class derived from threading can override only __init__ &amp; run).
+        Thread started by t.start()  -- which calls t.run() and now is_alive() is true; active_count is up.
+        main thread waits for t.join() -- can&#x27;t exit if thread is not a daemon so use join() to specify your wait point else main won&#x27;t exit at end of code and wait for thread completion.
+            Caution on resources used in daemon threads since they can die if main ends.
+
+        t1 = Thread(target=print, args=(1,2,3,), kwards={&#x27;debug&#x27;: True}, daemon=False, name=None)
+<span class="cmt">            # name is typicall &quot;Thread-N&quot;; daemon state copied from creating thread if not supplied so daemons create daemons.</span>
+        t1.start()  # thread is now active and awaits CPU timeslot. Call just once else RuntimeError
+<span class="cmt">            # a subclass can invoke .run() that starts the callable set in __init__</span>
+        t1.join(timeout=None)   # wait until t1 terminates and calling thread is blocked
+<span class="cmt">            # if using timeout, use t1.is_alive() to check for timeout vs thread terminated.</span>
+        Others:
+            tt1.name, t1.ident; t1.native_id; t1.daemon
+
+    Lock object: for synchornization; not owned by a particular thread
+        state set by:  acquire() to locked  and release() to unlocked
+        when state=locked then acquire(blocking=True, timeout=-1) will block
+        supports contextmanager so can be used like:
+            with lock:
+<span class="cmt">                # acquire</span>
+                do mutually exclusive action
+<span class="cmt">                # release</span>
+
+        Lock methods:
+            acquire(blocksing=True, timeout=-1) : # returns True if locked. Can return False when it times out
+            release()       # no return value; can be called by any thread (not just the one that acquired it!). On release, other waiting threads can block it
+            locked()        # True if lock is acquired
+
+        RLock methods:
+
+        Event: one thread signals while one/many other threads wait (similar to Lock)
+            E.g. use 2 events to form a communication between 2 threads; or event to make threads exit if set.
+            event = Event()  # clear state
+            event.set()
+            event.is_set()
+            event.clear()
+            event.wait(timeout=-1)
+
+        Semaphore: control how many threads can access a shared resource.
+            It&#x27;s a lock + counter
+            semaphore.acquire()  # check if counts&gt;0 then count-- &amp; give access/permit else wait
+            semaphore.release()  # increase the count
+
+<span class="hdr">queue.Queue:</span>
+    thread-safe data sharing between threads - a queue with required locking semantics
+        from queue import Queue
+        q = Queue(maxsize=-1)
+        q.put(1), q.put(2), q.put(3)        # if size is specified on creation, then put blocks (unless called with block=False, timeout=N in which case it throws queue.Full exception)
+        print(q.get())      # blocks until some item is available (if block=False then raises queue.Empty exception)
+        q.task_done()       # for each get, there should be task_done by consumer to indicate this item can be removed from queue as consumer as processed it. For each put, there should be a get()
+<span class="cmt">        # block thread until all queue is processed (get &amp; task_done)</span>
+        q.join()
+
+        q.qsize()
+        q.empty()
+
+
+
+ThreadPoolExecutor performs betters instead of mutually creating/starting/joining threads. Overall memory usage is less and faster 2X than manual approach.
+
+    from concurrent.futures import ThreadPoolExecutor
+    with ThreadPoolExecutor() as executor:
+        future = executor.submit(fn, arg1, arg2)
+<span class="cmt">        # typical to map dict(future, input_args) and use concurrent.futures.as_completed</span>
+        for fut in as_completed(future_dict):
+<span class="cmt">            # future.result() future.exception()</span>
+
+        results = executor.map(fn, zip(arg1_list, arg2_list))
+
+
+
+<span class="hdr">Multiprocess:</span>
+    Where task is CPU intensive. Move away from single CPU core limitation of GIL/python interpreter to multi-core processing with multi-processing.
+    Threading is good for IO based tasked that wait for IO to complete.
+    Processes also have separate memory space so can&#x27;t corrupt variables. Any data passing is done through picking so don&#x27;t pass large objects back/forth between the processes.
+    Processes take longer to start-up than threads (as they are heavier)
+
+    import multiprocessing
+    processes = [ multiprocessing.Process(cpu_intensive_fn, args=[filename,] for file in filnames]
+    for p in processes:
+        p.start()           # now has p.pid, p.is_alive()
+    for p in processes:
+        p.join()            # see p.exitcode for error return code
+<span class="cmt">        # data can be returned via IPC like pipe or Queue</span>
+
+
+ProcessPoolExecutor - helps manage resources automatically. Based on host&#x27;s total CPU cores.
+    from concurrent.futures import ProcessPoolExecutor
+    future = executor.submit(target=fn, args=(1,2,3))       # future.result, future.exception
+<span class="cmt">    # executor.map(fn, [args_list])</span>
+<span class="cmt">    # executor.shutdown()  ... or use with/context manager</span>
+
+</pre>
+</main>
+</body>
+</html>

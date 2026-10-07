@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rust</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: #1a1a2e;
+    color: #e0e0e0;
+    min-height: 100vh;
+}
+header {
+    background: #16213e;
+    border-bottom: 2px solid #0f3460;
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+header a {
+    color: #e94560;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+}
+header a:hover { text-decoration: underline; }
+h1 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #53d8fb;
+    letter-spacing: 0.03em;
+}
+main {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 24px;
+}
+pre {
+    background: #0d1117;
+    border: 1px solid #21262d;
+    border-radius: 8px;
+    padding: 20px 24px;
+    overflow-x: auto;
+    font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+    font-size: 0.85rem;
+    line-height: 1.65;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+.cmd  { color: #7ee787; }          /* $ shell commands */
+.cmt  { color: #8b949e; }          /* # comments */
+.hdr  { color: #f0c040; font-weight: bold; }  /* section headers */
+.url  { color: #79c0ff; }
+</style>
+</head>
+<body>
+<header>
+  <a href="../html/index.html">&#8592; Index</a>
+  <h1>Rust</h1>
+</header>
+<main>
+  <pre>Rust Language
+    for speed &amp; stablility
+
+Book -  https://doc.rust-lang.org/stable/book;
+        * https://rust-book.cs.brown.edu/ (with quiz);
+        rustup; run rustup docs --book
+    Chapters 2, 12, and 20 are project chapters; the rest are concept chapters.
+
+Install : curl --proto &#x27;=https&#x27; --tlsv1.2 -sSf https://sh.rustup.rs | sh
+<span class="cmt"># Needs a linker (typically uses the one with C/C++ installed .e.g gcc/Clang. Also some Rust packages depend on C code so needs a C compiler)</span>
+<span class="cmt"># installed version 1.74.1 in Dec 2023</span>
+
+<span class="cmd">$ rustc --version</span>
+rustc 1.80.0 (051478957 2024-07-21)
+
+Update:: rustup update stable
+Uninstall:: rustup self uninstall
+
+
+rustup : installer, version mgmt tool &amp; documentation (rustup doc)
+rustc  : compiler
+cargo  : build system &amp; pacakge/dependency manager
+rustfmt: code formatter
+
+&quot;rustc file.rs&quot;   - compiles the code and builds an executable for a single file (file.ext)
+&quot;rustfmt file.rs&quot; - formats the code
+
+<span class="cmd">$ cargo --version</span>
+cargo 1.80.0 (376290515 2024-07-16)
+
+&quot;cargo new &lt;name&gt;&quot; - create package with &quot;name&quot; + git initialize. See Cargo.toml (name of &#x27;cargo&#x27;; version/edition of Rust; and any dependency packages/crates).
+                    Put code under sub-folder &quot;src&quot;. Top directory for README, configs
+&quot;cargo check&quot; - compile (only) your project *
+&quot;cargo build&quot; - build your project and create an executable (in &quot;target/debug&quot; sub-folder &amp; Cargo.lock to track vesions of dependencies)
+&quot;cargo build --release&quot; - build for release/benchmarking (optimized version that&#x27;s 10x smaller than debug version)
+&quot;cargo run&quot;   - build &amp; run your project *
+&quot;cargo test&quot;  - test your project
+&quot;cargo doc&quot;   - build documentation for your project
+&quot;cargo publish&quot; - publish a library to crates.io
+
+&quot;cargo add &lt;crate_package&gt;&quot; - updates Cargo.toml and downloads any dependency for the crate package e.g. rand. Saves versions of dependent package in Cargo.lock for having a reproducible build.
+&quot;cargo update&quot; - determine latest (but compatible based on SemVer) version of dependencies &amp; updates Cargo.lock
+
+&quot;cargo fmt&quot; - format the code (or rustfmt some_code.rs)
+&quot;cargo fix&quot; - fix compiler warnings
+&quot;cargo clippy&quot; - static code analysis
+
+Rust metadata &amp; toolchain in ~/.rustup (RUSTUP_HOME)
+Cargo (CARGO_HOME) ~/.cargo
+        ~/.cargo/bin has cargo | rustc | rustup
+
+Code in /Desktop/github/code/rust
+
+<span class="cmd">$ cargo new --bin hello --vcs git</span>
+     Created binary (application) `hello` package
+
+<span class="cmd">$ tree hello/</span>
+hello/
+├── Cargo.toml
+└── src
+    └── main.rs
+
+1 directory, 2 files
+
+<span class="cmd">$ ll hello/</span>
+total 24
+drwxrwxr-x 4 user user 4096 Aug  5 21:52 ./
+drwxrwxr-x 3 user user 4096 Aug  5 21:52 ../
+-rw-rw-r-- 1 user user  174 Aug  5 21:52 Cargo.toml
+drwxrwxr-x 6 user user 4096 Aug  5 21:52 .git/
+-rw-rw-r-- 1 user user    8 Aug  5 21:52 .gitignore
+drwxrwxr-x 2 user user 4096 Aug  5 21:52 src/
+
+<span class="cmd">$ cd hello</span>
+
+
+<span class="cmd">$ cargo run</span>
+   Compiling hello v0.1.0 (/home/user/Desktop/github/code/rust/hello)
+    Finished dev [unoptimized + debuginfo] target(s) in 0.28s
+     Running `target/debug/hello`
+Hello, world!
+
+
+<span class="cmd">$ tree</span>
+.
+├── Cargo.lock
+├── Cargo.toml
+├── src
+│   └── main.rs
+└── target
+    ├── CACHEDIR.TAG
+    └── debug
+        ├── build
+        ├── deps
+        │   ├── hello-d05b7befbbac835b
+        │   └── hello-d05b7befbbac835b.d
+        ├── examples
+        ├── hello
+        ├── hello.d
+        └── incremental
+            └── hello-1o51jik9wfhbk
+                ├── s-gnig39yffx-17ldmq6-llmkkliaq2jpnek1qh57s6xz
+                │   ├── 14ry2bwiy49bg235.o
+                │   ├── 1g8gtodx3goa5er1.o
+                │   ├── 2fcxicak2xl3m6q3.o
+                │   ├── 2ztquemw1wer6o9x.o
+                │   ├── dep-graph.bin
+                │   ├── hnwoghqcdtnuzqv.o
+                │   ├── query-cache.bin
+                │   ├── qxkexfu97f5vg70.o
+                │   └── work-products.bin
+                └── s-gnig39yffx-17ldmq6.lock
+
+<span class="cmd">$ target/debug/hello</span>
+Hello, World!
+
+<span class="cmd">$ cat src/main.rs</span>
+fn main() {
+    println!(&quot;Hello, world!&quot;);
+}
+
+<span class="cmd">$ cargo clean</span></pre>
+</main>
+</body>
+</html>

@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Python Numpy</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: #1a1a2e;
+    color: #e0e0e0;
+    min-height: 100vh;
+}
+header {
+    background: #16213e;
+    border-bottom: 2px solid #0f3460;
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+header a {
+    color: #e94560;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+}
+header a:hover { text-decoration: underline; }
+h1 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #53d8fb;
+    letter-spacing: 0.03em;
+}
+main {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 24px;
+}
+pre {
+    background: #0d1117;
+    border: 1px solid #21262d;
+    border-radius: 8px;
+    padding: 20px 24px;
+    overflow-x: auto;
+    font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+    font-size: 0.85rem;
+    line-height: 1.65;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+.cmd  { color: #7ee787; }          /* $ shell commands */
+.cmt  { color: #8b949e; }          /* # comments */
+.hdr  { color: #f0c040; font-weight: bold; }  /* section headers */
+.url  { color: #79c0ff; }
+</style>
+</head>
+<body>
+<header>
+  <a href="../html/index.html">&#8592; Index</a>
+  <h1>Python Numpy</h1>
+</header>
+<main>
+  <pre>Numpy Array - homogenous type (dtype) and more compact than Python list.
+    Rank indicates dimension (1D, 2D)
+    ar.shape(gives length of each dimension) e.g (5,) or (2,3)
+    ar = np.array([[1, 2], [3, 4], [5, 6]])   # 2D array with shape of (3,2)
+    &quot;ndarray&quot; implied N dimension array. Vector (one dimension ndarray) vs Matrix (2D ndarray) vs Tensor (3D ndarray)
+
+Differs from python list as slicing refers to same data while in python creates a new list. View on underlying data.
+
+Create array: np.array() - pass list 1D/2D
+        or np.zeros/ones/empty  - empty is filled with random values and is faster to initialize
+        or np.arange - range end or range start/stop/step
+        or np.linespace()
+    Default dtype is float64. Can specify dtype in creation e.g. dtype=np.int32
+
+Sort: np.sort(arr) returns sorted copy
+    matrix/ND-array have dtype that specify col.name &amp; type. np.sort() accepts order=[&#x27;colA&#x27;,&#x27;colB&#x27;]
+    np.searchsorted([1,2,3,4,5], 3, side=&#x27;right&#x27;) -- where to insert into sorted array (Similar to python bisect).
+
+Concatenate: np.concatenate((arr1, arr2)) with optional axis
+    np.concatenate(([[1,2],[3,4]], [5,6]), axis=0)
+    np.concatenate((a, b.T), axis=1)  # [[1,2,5],[3,4,6]]
+
+<span class="hdr">Reshape:</span>
+    arr.shape   # (m,n) or (m,)
+    arr.reshape(m,n)
+
+<span class="hdr">Adding new axis to array:</span>
+    np.newaxis: ar[np.newaxis, :]
+    np.expand_dims(ar, axis=0)  # shape (n,1)
+
+<span class="hdr">Index/slice:</span>
+    ar[1], ar[0:2], ar[-1:]
+    ar[ar &gt; 10], ar[(ar &gt; 3) &amp; (ar &lt; 10)]
+    b = np.nonzero(a &gt; 5)  # returns 2 tuples (X-indices and Y-indicies) of elements that are non-zero. These indicies that can be zipped together to get (X,Y) where a&gt;5 in 2D array &quot;a&quot; or extract with a[b]
+    Check if element exists : np.nonzero(arr == 42) will be empty
+
+    slice yields a new array (not a view)
+    ar = a[3:8] # changing a[0] does not impact ar
+
+    np.vstack/hstack to stack.
+    np.hsplit(ar, equal_parts__or_column_index)
+
+Numpy uses views for optimization i.e. shallow copy with ar.view().
+To make separate copy, use ar.copy()
+
+<span class="hdr">Array operations:</span>
+Basic math: add/subtract/multiple/divide e.g. ar1 + ar2
+    ar.sum(axis=0)  # axis=0 means run fn over the axis of rows i.e one value per column (excel sum column); axis=1 refers one value over row.
+    axis=0 (fn per column); axis=1 (fn across row)
+
+Broadcast : perform operation over entire array. ar * 1.5
+min/max/sum/prod/mean/std
+
+<span class="hdr">Matrix (2D array):</span>
+    matrix = np.array([[1,2],[2,3],[3,4]])
+    matrix.max()    # 4
+    matrix.max(axis=0)  # [3,4]
+    matrix1 + matrix2
+    matrix + vector ## broadcast addition
+
+<span class="hdr">Unique &amp; Counts:</span>
+<span class="cmt">    # gets unique values in array</span>
+    uniq_values = np.unique(arr)
+    uniq_values, indices_list, unique_count =
+        np.unique(arr, return_index=True, return_count=True)
+    Works on matrix/2D as well - flattens (if axis is not given) and finds unique/indices/counts
+
+<span class="hdr">Transpose/Reshape:</span>
+    arr.T or arr.transpose()
+
+Reverse or Flip:  np.flip(arr)
+    np.flip(matrix, axis=0)
+    np.flip(matrix[1]) # flip one row (np.flip(matrix[1,:]))
+
+Flattening: matrix.flatten() generates new flat array
+    matrix.ravel() generates a aview on top of matrix so changes impact underlying
+
+<span class="hdr">Save/Load from file:</span>
+    1. np.save(&quot;filename&quot;, arr) and ar = np.load(&quot;filename.npy&quot;) is good for a single NDarray.
+    Also have savetxt() and loadtxt() to dump as ASCII text. E.g. np.savetxt(&#x27;np.csv&#x27;, a, fmt=&#x27;%.2f&#x27;, delimiter=&#x27;,&#x27;, header=&#x27;1,  2,  3,  4&#x27;)
+    2. To save multiple data objects, use np.savez or np.savez_compressed (.npz files)
+    3. CSV - use pandas.read_csv() and to_csv(). Matrix can be fed into dataframe
+    4. ndarray.tolist(), fromstring()
+    5. memmap() files
+
+<span class="hdr">Plotting:</span>
+    import matplotlib.pyplot as plt
+    plt.plot(arr)</pre>
+</main>
+</body>
+</html>

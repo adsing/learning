@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Avro</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: #1a1a2e;
+    color: #e0e0e0;
+    min-height: 100vh;
+}
+header {
+    background: #16213e;
+    border-bottom: 2px solid #0f3460;
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+header a {
+    color: #e94560;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+}
+header a:hover { text-decoration: underline; }
+h1 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #53d8fb;
+    letter-spacing: 0.03em;
+}
+main {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 24px;
+}
+pre {
+    background: #0d1117;
+    border: 1px solid #21262d;
+    border-radius: 8px;
+    padding: 20px 24px;
+    overflow-x: auto;
+    font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+    font-size: 0.85rem;
+    line-height: 1.65;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+.cmd  { color: #7ee787; }          /* $ shell commands */
+.cmt  { color: #8b949e; }          /* # comments */
+.hdr  { color: #f0c040; font-weight: bold; }  /* section headers */
+.url  { color: #79c0ff; }
+</style>
+</head>
+<body>
+<header>
+  <a href="../html/index.html">&#8592; Index</a>
+  <h1>Avro</h1>
+</header>
+<main>
+  <pre>Avro
+
+Apache Avro - data serialization system.
+
+Schema : JSON like data schema/model (RecordType, [fields = name + type]).
+    Schema leads to robust, clear, compatible.
+    Schema evolution - Good support for adding/retiring columns.
+    Doesn&#x27;t need a code generator e.g. like protobuffer/flatbuffers do.
+Maps to/from JSON.
+Binary format makes data compact.
+Further compression possible (gzip/xz//bzip/snappy).
+
+Data (msg-body) &amp; Schema (msg-header) stored together! Caution on file size being too small. Advantage: can split bigger files (or likely merge smaller files)
+Handles complex data structs like array, maps, enums, unions.
+
+Ideal for write-heavy or read-all column workloads.
+
+<span class="hdr">Data:</span>
+{
+  &quot;time&quot;: 1424849130111,
+  &quot;customer_id&quot;: 1234,
+  &quot;product_id&quot;: 5678,
+  &quot;quantity&quot;:3,
+  &quot;payment_type&quot;: &quot;mastercard&quot;
+}
+
+<span class="hdr">Schema:</span>
+{
+  &quot;type&quot;: &quot;record&quot;,
+  &quot;doc&quot;:&quot;This event records the sale of a product&quot;,
+  &quot;name&quot;: &quot;ProductSaleEvent&quot;,
+  &quot;fields&quot; : [
+    {&quot;name&quot;:&quot;time&quot;, &quot;type&quot;:&quot;long&quot;, &quot;doc&quot;:&quot;The time of the purchase&quot;},
+    {&quot;name&quot;:&quot;customer_id&quot;, &quot;type&quot;:&quot;long&quot;, &quot;doc&quot;:&quot;The customer&quot;},
+    {&quot;name&quot;:&quot;product_id&quot;, &quot;type&quot;:&quot;long&quot;, &quot;doc&quot;:&quot;The product&quot;},
+    {&quot;name&quot;:&quot;quantity&quot;, &quot;type&quot;:&quot;int&quot;},
+    {&quot;name&quot;:&quot;payment&quot;,
+     &quot;type&quot;:{&quot;type&quot;:&quot;enum&quot;,
+	     &quot;name&quot;:&quot;payment_types&quot;,
+             &quot;symbols&quot;:[&quot;cash&quot;,&quot;mastercard&quot;,&quot;visa&quot;]},
+     &quot;doc&quot;:&quot;The method of payment&quot;}
+  ]
+}
+</pre>
+</main>
+</body>
+</html>

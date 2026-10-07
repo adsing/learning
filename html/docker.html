@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Docker</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: #1a1a2e;
+    color: #e0e0e0;
+    min-height: 100vh;
+}
+header {
+    background: #16213e;
+    border-bottom: 2px solid #0f3460;
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+header a {
+    color: #e94560;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+}
+header a:hover { text-decoration: underline; }
+h1 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #53d8fb;
+    letter-spacing: 0.03em;
+}
+main {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 24px;
+}
+pre {
+    background: #0d1117;
+    border: 1px solid #21262d;
+    border-radius: 8px;
+    padding: 20px 24px;
+    overflow-x: auto;
+    font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+    font-size: 0.85rem;
+    line-height: 1.65;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+.cmd  { color: #7ee787; }          /* $ shell commands */
+.cmt  { color: #8b949e; }          /* # comments */
+.hdr  { color: #f0c040; font-weight: bold; }  /* section headers */
+.url  { color: #79c0ff; }
+</style>
+</head>
+<body>
+<header>
+  <a href="../html/index.html">&#8592; Index</a>
+  <h1>Docker</h1>
+</header>
+<main>
+  <pre>Docker
+
+Container vs Image (part of container run-time) - has application, env.config, file system, n/w port. 
+Container abstraction of OS with its own env/files/port (compared with VM where each instance has it&#x27;s own OS).
+
+
+<span class="cmd">$ docker pull &lt;image_name_from_hub/registry&gt;  	# docker pull redis:latest</span>
+<span class="cmd">$ docker scout quickview &lt;image_name&gt;       # check for vulnerabilities</span>
+<span class="cmd">$ docker images 		# show images (name, tag, image_id, size, created on)</span>
+
+<span class="cmd">$ docker run &lt;image name/id&gt; 			# docker run redis (will pull from repo if not locally available)</span>
+<span class="cmd">$ docker run -d --name ima&lt;image&gt;				# run in detached mode, returns container id</span>
+<span class="cmd">$ docker run -d -p 63790:6379 redis		# publish container port 6379 to localhost 63790</span>
+<span class="cmd">$ docker start|stop|kill|restart &lt;container_id&gt;	# to debug a stopped container</span>
+
+#debug
+<span class="cmd">$ docker logs &lt;container id/name&gt;			# </span>
+<span class="cmd">$ docker exec -it &lt;container id/name&gt; /bin/bash		# gives you a bash shell into container as root user</span>
+<span class="cmd">$ docker ps -a			# show all containers (running or exited -- which can be restarted) </span>
+<span class="cmt"># lists container_id/name, image, command, created on, status, port</span>
+
+Out layer of image should be what changes (Copy code &amp; run).
+
+
+<span class="cmt"># Dockerfile</span>
+FROM IMAGE                       # typically OS:version e.g. ubuntu:bullseye-20240211
+WORKDIR /app                     # create directory and CD into ti
+
+RUN groupadd -r temp_group &amp;&amp; useradd -g temp_group temp_uer # add temp group &amp; user
+RUN chown -R temp_group:temp_user /app
+USER temp_user
+
+ENV PYTHONPATH=/app
+COPY myapp /app
+EXPOSE 8000                         # expose port
+<span class="cmt"># RUN python3 /app/app.py			# Instead of RUN, use CMD or</span>
+CMD [&quot;python3&quot;, &quot;/app/app.py&quot;]		# Entry point command (just one CMD vs many RUN per container)
+
+<span class="cmt"># additional cmds</span>
+VOLUME /db/data                 # data that needs to be used after container is shudown or across containers
+LABEL version=&quot;1.1&quot;             # Labels for metadata
+HEALTHCHECK --interval=30s --timeout=10s \      # health check to ensure container is running OK
+    CMD curl -f http://localhost:8000 || exit 1
+
+
+<span class="cmt"># Jenkins CI can build the image like so</span>
+<span class="cmd">$ dockerfile build -t py-app:1.1 .</span>
+<span class="cmd">$ docker images		# push to repo/registry for others to use (e.g. QA team/deployment)</span>
+<span class="cmd">$ docker run py-app:1.0</span>
+<span class="cmd">$ docker rm &lt;container_name&gt;	# remove container (&quot;stop&quot; it first)</span>
+<span class="cmd">$ docker rmi &lt;image_name&gt;	# remove image</span>
+<span class="cmt"># rebuild Dockerfile if there were any errors in Dockerfile or code was updated</span>
+<span class="cmd">$ docker exec -it &lt;container_id&gt; /bin/bash	# to look into running container</span>
+
+
+Multiple stage build (when build-tools etc not required in final container)
+FROM IMAGE as build
+WORKDIR /app
+COPY myapp /app
+RUN build_system
+
+FROM IMAGE
+COPY --from=build /app/target/module.zip /use/local/modules/
+<span class="cmt"># &quot;build&quot; image left and not part of final image</span>
+..
+
+Run image as non-root.
+Run image for vulnerabilities (connect to docker hub) with &quot;docker scan image:version&quot;
+
+
+Docker network: 
+Docker has it&#x27;s own network. Containers can talk to each other without needing the localhost network (e.g. DB like mongo can talk to mongo-express UI within the docker network; similarly app can talk to mongo db within container network as well).
+<span class="cmd">$ docker network ls		# </span>
+
+<span class="cmd">$ docker network create mongo-network</span>
+<span class="cmt"># specify the network when running the image</span>
+<span class="cmd">$ docker run -d -p 27017:27017 \</span>
+-e MONGO_INITDB_ROOT_USERNAME=user \
+-e MONGO_INITDB_ROOT_PASSWORD=password \
+--name mongodb \
+--network mongo-network \		# &lt;&lt;&lt; specify network
+mongo 
+<span class="cmt"># hostname of mongodb server is the container name</span>
+<span class="cmd">$ docker logs mongodb		# verify it&#x27;s ready to accept connections</span>
+
+
+Docker Compose (YAML): Command structured as a YAML to run containers (typically multiple containers that are part of an app .e.g frontend/backend/database)
+<span class="cmt"># mongo-docker-compose.yaml - all container services on same network</span>
+version:&#x27;3&#x27;		# docker compose version 3
+services:		# list of services that run in the containers
+  mongodb:		# container name
+    image: mongo
+    ports:		# open ports
+      - 27017:27017
+    environment:		# open ports
+      - MONGO_INITDB_ROOT_USERNAME=user
+      - MONGO_INITDB_ROOT_PASSWORD=password
+      
+  mongo-express:		# container name
+    image: mongo-express
+    ports:		# open ports
+      - 8081:8081
+    environment:		# open ports
+      - MONGODB_USERNAME=user
+      - MONGODB_PASSWORD=password
+      
+<span class="cmd">$ docker-compose -f mongo-docker-compose.yaml up 	# run the container services on default network &quot;myapp_default&quot;. Container names (myapp_mongodb_1). Logs of both containers mixed. Mongodb-express shows errors until MongoDB is up (need to setup dependency or force restart-always). Any initial setup e.g. DB setup (volumes).</span>
+<span class="cmd">$ docker ps</span>
+<span class="cmt"># Network specified while running</span>
+<span class="cmd">$ docker run -d --network mongo-network</span>
+
+<span class="cmt"># stop &amp; remove all containers &amp; network from the manifest</span>
+<span class="cmd">$ docker-compose -f mongo-docker-compose.yaml down</span>
+
+<span class="cmd">$ docker compose up --build         # build and run</span>
+<span class="cmt"># docker compose watch  # will watch current workspace and automatically build and deploy your app (to test env)</span>
+<span class="cmt">        # specify develop watch action=sync and specify which folders to watch for &amp; ignore</span>
+    
+Docker volumes
+For data persistence (DB data or app state).
+Point/Mount hosts file system onto container&#x27;s virtual file-system.
+
+<span class="cmd">$ docker run -v /host/mount/data:/data/db	# Host volumes</span>
+<span class="cmd">$ docker run -v /data/db			# Anonymous volumes (on host as /data/docker/volume/HASH/_data - managed by Docker)</span>
+<span class="cmd">$ docker run -v name:/data/db		# Named volumes (most commonly used)</span>
+<span class="cmt">	# Like anonymous but have a logical name associated with it</span>
+
+On host, location of volumes depeds on OS.
+Windows - c:/programData/docker/volumes
+Unix/Mac - /var/lib/docker/volumes/{HASH}/_data  (volume name is hashed)
+
+<span class="hdr">Compose (named volume):</span>
+<span class="hdr">services:</span>
+  mongodb:
+    ...
+    volumes:
+      - mongo_data:/data/db
+<span class="hdr">volumes:</span>
+  mongo_data:
+    driver: local
+    
+See https://gitlab.com/nanuchi/techworld-js-docker-demo-app/-/blob/master/docker-compose.yaml
+
+
+<span class="cmd">$ docker init</span>
+<span class="cmt"># To setup docker on a project after it has been built</span>
+<span class="cmt"># Detects projects and suggest OS/programming-language based images, user/port etc setup. Build Dockerfile; docker.compose and .dockerignore based on Q&amp;A prompt.</span>
+
+
+<span class="cmd">$ docker scout</span>
+<span class="cmt"># container scan images for vulnerabilities</span>
+
+
+
+Kubernetes (K8s) - container orchestration (Start/Stop/Monitor/ResourceControl/AbstractInfra)
+ - Improved maintenance, monitoring and automation (self healing apps -- auto-restart/auto-sclae/auto-replicate)
+ - faster release cycles (with CI/CD)
+ - scaling &amp; load balance, rolling updates, toggle traffic to different version
+ - containers ensure app behavior is consistent
+ - add storgae for stateful apps
+ - expose container to other containers/internet/clusters
+<span class="hdr">NOT a platform-as-a-service, K8s:</span>
+ - doesn&#x27;t limit type of supported apps &amp; require dependency handling framework
+ - doesn&#x27;t require apps to written in specific languages or dictate on language/config
+ - doens&#x27;t build or deploy code (helps build CI/CD)
+ - doesn&#x27;t provide middleware (msg), database or storage (can be integrated)
+ - doesn&#x27;t specify logging/monitoring/alerting
+Machines are either workers or control pane (manage workers and monitor system). More than one control pane are possible in a large system.)
+
+Dashboard/kubectl talk to API that manages scheduler/controller that manage workers with (kubelet, kube-proxy, docker).
+The nodes run all serices required to run &quot;pod&quot; (single application instance or The smallest unit in the Kubernetes object model that is used to host containers). Control plane&#x27;s uses etcd (a Key-Value store) 
+
+
+Kubelet : An agent that runs on each worker node in the cluster and ensures that containers are running in a pod.
+
+Kube-proxy : Enables communication between worker nodes, by maintaining network rules on the nodes.
+
+Kubectl : A command-line tool for controlling Kubernetes clusters.
+
+
+
+MicroK8s - Lightweight Kubernetes
+https://ubuntu.com/kubernetes/install
+ - single node or multi-node (3 nodes makes it HA)
+ - default setup
+ - automatic updates
+ - zero ops experience
+ - works with cloue
+ - helm/juju/jaas to automate operations; CoreDNS/flannel for networking; GPU; KubeFlow for AI/ML; monitoring with Graphana/prometheus/elastic/fluentd/Kabana
+ 
+ Use cases:
+ 1. DevOps CI/CD: Build containerized apps locally with gitlab; test on another k8s host; deploy in prod. Ability to stop/reset the K8s env.
+ 2. AI/ML pipelines: (enable kubeflow &amp; CPU acceleration) - multiuser environment.
+ 
+ 
+LXD to spin 3 machines; install microK8s; connect other 2 microK8s to the first one to create a cluser.
+<span class="cmt"># may need to sudo to run these cmds</span>
+sudo snap install microk8s --classic
+
+sudo usermod -a -G microk8s $USER   # Add user to microk8s group
+sudo chown -f -R $USER ~/.kube
+
+su - $USER      # become a super user to run (each time else use sudo)
+
+systemctl status microk8s
+microk8s status &lt;--wait-ready&gt;
+microk8s start
+microk8s reset
+microk8s stop
+
+microk8s enable dashboard dns ingress   # enable services like dashboard, dns
+microk8s dashboard-proxy        # access dashboard
+
+microk8s add-node               # cmd to run from other nodes to join them to this cluster
+
+<span class="cmt"># helpful alias mkctl=”microk8s kubectl”</span>
+microk8s kubectl get all --all-namespaces       # all objects from all namespaces
+microk8s kubectl get all -n kube-system         # all objects from kube-system namespace
+microk8s kubectl get nodes                  # list of current nodes in cluster (single node)
+
+microk8s kubectl apply -f myapp-deployment-rolling.yaml  # create deployment through yaml file with rolling updates
+microk8s kubectl create deployment &lt;deployment_name&gt; --image=deployment_name:v1
+microk8s kubectl get all --all-namespaces   # created under default namespace
+microk8s kubectl scale deployment &lt;deployment_name&gt; replicas=3    # 3 deployments on 3 hosts
+microk8s kubectl expose deployment &lt;deployment_name&gt; --type=nodePort --port=80 --name &lt;deployment_name_service&gt;
+microk8s kubectl describe pods (| rs | deployment)          # list all posds with image details, labels
+microk8s kubectl delete pod &lt;pod_name&gt;          # will restart a new pod (different name) since we specified 3 replicas
+microk8s kubectl delete rs &lt;replicationset_name&gt; # delete replication set..dpeloyment script should restart a new rs
+microk8s kubectl port-forward -d default service/&lt;dpeloyment_name&gt;_service 10800:80 --address 0.0.0.0</pre>
+</main>
+</body>
+</html>

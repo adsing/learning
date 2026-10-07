@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Python Pytest</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: #1a1a2e;
+    color: #e0e0e0;
+    min-height: 100vh;
+}
+header {
+    background: #16213e;
+    border-bottom: 2px solid #0f3460;
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+header a {
+    color: #e94560;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+}
+header a:hover { text-decoration: underline; }
+h1 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #53d8fb;
+    letter-spacing: 0.03em;
+}
+main {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 24px;
+}
+pre {
+    background: #0d1117;
+    border: 1px solid #21262d;
+    border-radius: 8px;
+    padding: 20px 24px;
+    overflow-x: auto;
+    font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+    font-size: 0.85rem;
+    line-height: 1.65;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+.cmd  { color: #7ee787; }          /* $ shell commands */
+.cmt  { color: #8b949e; }          /* # comments */
+.hdr  { color: #f0c040; font-weight: bold; }  /* section headers */
+.url  { color: #79c0ff; }
+</style>
+</head>
+<body>
+<header>
+  <a href="../html/index.html">&#8592; Index</a>
+  <h1>Python Pytest</h1>
+</header>
+<main>
+  <pre>Pytest- https://docs.pytest.org/
+
+1. auto-discover test cases (test_*.py)
+2. just &quot;assert&quot; stmt
+3. modular fixture (parameterizeing args)
+4. Can run unittest as-is
+
+python3 -m pip install pytest
+
+<span class="cmd">$ pytest		# discover the test files and test fn.</span>
+Typically, all test cases in separate file and go under &quot;tests/&quot; sub-folder.
+Pytest - fn have long names and small body.
+
+
+Dependency/State is managed through fixtures that are passed into test fn. E.g. setup like DB connection/JSON data
+Test resullt (. means OK, F means Failure, E means Exception)
+
+<span class="hdr">def test_prime_numers():</span>
+  assert 25 in {no from no in range(2,50)..}
+
+<span class="cmt"># try to put fixtures in a separate module. conftest.py is automatically imported with autouse=True</span>
+@pytest.fixture()
+<span class="hdr">def foo_fixture():</span>
+  return &quot;Foo&quot;
+
+<span class="hdr">def test_foo_string(foo_fixture):</span>
+  assert foo_fixture == &quot;Foo&quot;
+
+$pytest --fixtures 		# for available fixtures e.g. tmp_path/tmp_dir
+
+<span class="cmt"># also has monkeypatch to override any module/objeccts attributes (e.g. request.get) to prevent network calls for test cases or don&#x27;t hit AWS.</span>
+
+
+Marks are like lables on test cases. Pytest allows to selectively run test cased based on marks/lables; directory; name filtering.
+e.g label tests that his DB
+@pytest.mark.db_access
+<span class="hdr">def test_blah():</span>
+<span class="cmt">  # do something</span>
+<span class="cmd">$ pytest -m &quot;not db_access&quot;  # run all marks/label test that are not having &#x27;db_access&#x27; in name.</span>
+Existing marks (skip, skipif expression, parameterized - call same test with different args)
+E.g. of Parameterization of tests
+@pytest.mark.parametrize(&quot;palindrome&quot;, [
+    &quot;&quot;,
+    &quot;a&quot;,
+    &quot;Bob&quot;,
+    &quot;Never odd or even&quot;,
+    &quot;Do geese see God?&quot;,
+])
+<span class="hdr">def test_is_palindrome(palindrome):</span>
+    assert is_palindrome(palindrome)
+
+
+
+pytest &lt;test_script&gt; -s  # show stdout
+pytest &lt;test_script&gt; -v  # verbose details per test, for more verbosity do -vv
+
+pytest -x --pdb # fail on first error and start pdb session on failure
+<span class="cmt"># exception information in sys.last_value, s.last_traceback (.type/.value/.traceback)</span>
+
+
+pytest -trace # drop into pdb at start of each test
+
+<span class="cmt"># set break points</span>
+import pdb;pdb.set_trace() 
+
+<span class="cmt"># call pytest from python</span>
+pytest.main()
+
+<span class="hdr">with pytest.raises(RuntimeError) as excinfo:</span>
+  def f():
+    f() # infinite recursion
+  f()
+  assert &quot;maximum recursion&quot; in str(excinfo.value)
+
+<span class="cmt"># test failing in a specific way e.g. documenting unfixed bugs</span>
+@pytest.mark.xfail(raises=IndexError)
+<span class="hdr">def test_f():</span>
+    f()
+<span class="cmd">$ pytest -m &quot;mark_name&quot;   # run test case with mark_name</span>
+
+
+<span class="cmt"># fixtures for pre/post test run setup/cleanups</span>
+temp_path = &#x27;TEMP_DIR/temp_path_012345&#x27;
+def test_case_22(temp_path):  # temp_path is a fixture
+<span class="cmt">  # do something with temp_dir</span>
+  assert 0
+
+<span class="cmt"># fixtures</span>
+<span class="cmt"># cache :: persist state between testing sessions</span>
+<span class="cmt"># capfd, capsys (binary) :: capture writes to file-descriptors or sys.stdout/stderr (binary suffix for bytes instead of text)</span>
+<span class="cmt"># tmpdir, tmp_path :: temp directory unique to each test fn</span>
+<span class="cmt"># monkeypath ::</span>
+
+pytest has special (detailed) comparision for strings, sets, dicts
+
+Group test_cases in a TestClass - helps with organization, applying a mark to run only specific class related test cases.
+<span class="cmd">$ pytest -K &quot;TestClass and not test_method_specific&quot;  # name can refer to File/Class/Function  (node_id is File::Class::Method or File::Function)</span>
+
+<span class="hdr">Invoking Pytest:</span>
+<span class="cmd">$ pytest    # self discovery of test_...py files and TestClass/test_methods and test_functions</span>
+<span class="cmd">$ python3 -m pytest [...]</span>
+pytest.main()     # in code
+<span class="cmd">$ pytest test_file.py</span>
+<span class="cmd">$ pytest test_cases/</span>
+<span class="cmd">$ pytest test_file.py::test_func   or test_file.py::TestClass::test_method</span>
+<span class="cmd">$ pytest -k &quot;MyClass and not specific_methods&quot; 	# runs TestMyClass (e.g. TestMyClass.test_this but not TestMyClass.test_specific_method_x)</span>
+<span class="cmd">$ pytest -m slow		# run tests with &quot;slow&quot; marker with @pytest.marker.slow</span>
+
+Profiling: show slowest 10 test that took over 1.0 seconds
+<span class="cmd">$ pytest --durations=10 --duration-min=1.0</span>
+<span class="cmt"># default behavior to not show tests that take &lt; 0.05 seconds</span>
+
+<span class="cmd">$ pytest -p pytest_cov		# to load a plugin (?) ... to disable &quot;-p no:doctest&quot;</span>
+
+<span class="cmd">$ pytest --cov			# to check for code coverage with test ... load plugin		# pip install pytest-cov</span>
+<span class="cmd">$ pytest --cov --cov-report=html:covereag_report.html</span>
+
+
+<span class="cmt"># how to write &amp; report tests</span></pre>
+</main>
+</body>
+</html>

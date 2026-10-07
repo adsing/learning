@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Monitoring</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: #1a1a2e;
+    color: #e0e0e0;
+    min-height: 100vh;
+}
+header {
+    background: #16213e;
+    border-bottom: 2px solid #0f3460;
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+header a {
+    color: #e94560;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+}
+header a:hover { text-decoration: underline; }
+h1 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #53d8fb;
+    letter-spacing: 0.03em;
+}
+main {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 24px;
+}
+pre {
+    background: #0d1117;
+    border: 1px solid #21262d;
+    border-radius: 8px;
+    padding: 20px 24px;
+    overflow-x: auto;
+    font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+    font-size: 0.85rem;
+    line-height: 1.65;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+.cmd  { color: #7ee787; }          /* $ shell commands */
+.cmt  { color: #8b949e; }          /* # comments */
+.hdr  { color: #f0c040; font-weight: bold; }  /* section headers */
+.url  { color: #79c0ff; }
+</style>
+</head>
+<body>
+<header>
+  <a href="../html/index.html">&#8592; Index</a>
+  <h1>Monitoring</h1>
+</header>
+<main>
+  <pre>Monitoring
+
+Prometheus: 
+    Open source monitoring/alerting toolkit.
+    Collects and stored metrics as time series (TS) i.e. metric info is store with timestamp (of when recorded) along with optional key-value labels.
+
+    Features:
+        multi-dimension data model with TS data identified by metric and key-value labels
+        PromQL - query language
+        single server nodes are autonomous so reliable even when distributes network is out
+        Pull data over HTTP or push data via gateway to server
+
+    Works well for recording numeric TS data esp for micro-services with multi-dimension data.
+                reliable even when network outages as the server is standalone
+    Not good for 100% accurate data as it may occasionally drop some data.
+
+    So reliable but not 100% accurate.
+    UI on top is typically Grafana
+
+    
+<span class="hdr">Splunk:</span>
+    capture, index, search, monitor, analyze machine generated data (e.g. logs)
+    web interface for query (Splunk Query Language)
+    UI is grafana
+    
+<span class="hdr">Grafana:</span>
+    Visibility stack for making dashboards on data from Prometheus/splunk etc.
+    API to integrate with databases (Snowflake/Postgres), Kafka, Databog etc.</pre>
+</main>
+</body>
+</html>
