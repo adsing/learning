@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Database Dbt</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: #1a1a2e;
+    color: #e0e0e0;
+    min-height: 100vh;
+}
+header {
+    background: #16213e;
+    border-bottom: 2px solid #0f3460;
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+header a {
+    color: #e94560;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+}
+header a:hover { text-decoration: underline; }
+h1 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #53d8fb;
+    letter-spacing: 0.03em;
+}
+main {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 24px;
+}
+pre {
+    background: #0d1117;
+    border: 1px solid #21262d;
+    border-radius: 8px;
+    padding: 20px 24px;
+    overflow-x: auto;
+    font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+    font-size: 0.85rem;
+    line-height: 1.65;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+.cmd  { color: #7ee787; }          /* $ shell commands */
+.cmt  { color: #8b949e; }          /* # comments */
+.hdr  { color: #f0c040; font-weight: bold; }  /* section headers */
+.url  { color: #79c0ff; }
+</style>
+</head>
+<body>
+<header>
+  <a href="../html/index.html">&#8592; Index</a>
+  <h1>Database Dbt</h1>
+</header>
+<main>
+  <pre>DBT - Data Build Tools
+
+Unbundle Data Pipeline
+
+Airflow (orchestrations; connect to data sources; transform data in DW; data quality checks)
+
+Primary around Transform (SQL + Jinja + Framework for best practices like version control/test schema|referential/repeatable)
+
+pip install dbt
+SQL models (tables), config (test/qa/prod), SQL-Jinja =&gt; Target SQL, target SQL run in different env)
+
+DB + DW design skills still required
+
+Lacks debugging functionality
+
+ELT vs ETL
+
+Data Sources -&gt; Data Lake -&gt; Staging Area (data clean up; column rename of trx data) -&gt; Warehouse (golden truth source) -&gt; Analytical wide tables
+
+Cleaning - e.g. datatype
+DeDuping - from multiple sources
+Restructuring - join sources to make it easy to report
+Filtering - remove records with DQ
+Aggregating - creating measures/aggregates
+Joining
+
+DBT - build your pipeline with SQL
+
+Data Loaders : FiveTran/Stich (Raw Data)
+Warehouse : DBT - orchestrate &amp; push down code into DW (faster/secure)
+Consumers : BI/DataScience/Ad-hoc query (Transformed Data)
+
+DBT Core: open source data transformation (Jinja templating; CLI interface)
+    1. SQL Select (No create tbl/view/CTE)
+        Data model is single DB object (materialized as table/view/CTE/incremental or selective build)
+    2. Lineage graph/DAGs based on references
+        Expressing relations as {{ref}} e.g. select * from {{ref(&#x27;MODEL_NAME&#x27;)}} to differ between DEV/PROD etc using Jinja template.
+    3. Tests ensure model is accurate
+        test assumption in yml (column unique, not null, foreign key test)
+        A test failure prevents further downstream runs ($ dbt test)
+        Any SQL can be a test -- for extensibility
+    4. Document is accessible and easily updated
+        Description from .yml for model/columns (manual)
+        Model dependencies
+        Model SQL
+        Sources
+        Tests
+        Metadata info on columns/tables from db
+    5. Macros to write reusable/modular SQL
+        Jinja templates with if/for loops &amp; environment variables
+        Like funcitons in programming languages e.g. cents to dollars; 
+DBT Cloud: Managed SaaS. IDE to develop &amp; testing; job orchestrations; auth
+
+
+GreatExpectations :: Data expectation tool (open source)
+    e.g. value in colA must be between 1 and 10 -- based on business knowledge or historical trend
+    Data validation at each stage (sourcing, staging, transformation, final anlytical tbl).</pre>
+</main>
+</body>
+</html>

@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Markup Yaml Xml Etc</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: #1a1a2e;
+    color: #e0e0e0;
+    min-height: 100vh;
+}
+header {
+    background: #16213e;
+    border-bottom: 2px solid #0f3460;
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+header a {
+    color: #e94560;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+}
+header a:hover { text-decoration: underline; }
+h1 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #53d8fb;
+    letter-spacing: 0.03em;
+}
+main {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 24px;
+}
+pre {
+    background: #0d1117;
+    border: 1px solid #21262d;
+    border-radius: 8px;
+    padding: 20px 24px;
+    overflow-x: auto;
+    font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+    font-size: 0.85rem;
+    line-height: 1.65;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+.cmd  { color: #7ee787; }          /* $ shell commands */
+.cmt  { color: #8b949e; }          /* # comments */
+.hdr  { color: #f0c040; font-weight: bold; }  /* section headers */
+.url  { color: #79c0ff; }
+</style>
+</head>
+<body>
+<header>
+  <a href="../html/index.html">&#8592; Index</a>
+  <h1>Markup Yaml Xml Etc</h1>
+</header>
+<main>
+  <pre>XML escape
+===========
+&lt;![CDATA[
+    Since this is a CDATA section
+    I can use all sorts of reserved characters
+    like &gt; &lt; &quot; and &amp;
+    or write things like
+    &lt;foo&gt;&lt;/bar&gt;
+    but my document is still well formed!
+]]&gt;
+
+From &lt;http://stackoverflow.com/questions/2784183/what-does-cdata-in-xml-mean&gt; 
+
+
+Symbol (name)	Escape Sequence
+&lt; (less-than)	&amp;#60; or &amp;lt;
+&gt; (greater-than)	&amp;#62; or  &amp;gt;
+&amp; (ampersand)	&amp;#38; &amp;amp;
+&#x27; (apostrophe or single quote)	&amp;#39; &amp;apos;
+&quot; (double-quote)	&amp;#34; &amp;quot;
+
+From &lt;https://docs.oracle.com/cd/A97335_02/apps.102/bc4j/developing_bc_projects/obcCustomXml.htm&gt; 
+
+
+XML file check
+==============
+http://www.xmlvalidation.com/
+
+<span class="cmd">$ xmllint --noout Zap.dailyreports.xml</span>
+Zap.dailyreports.xml:137: parser error : Opening and ending tag mismatch: Dependency line 134 and Job
+      &lt;/Job&gt;
+            ^
+
+XQuery
+=======
+From &lt;https://www.mssqltips.com/sqlservertip/2738/examples-of-using-xquery-to-update-xml-data-in-sql-server/&gt; 
+
+/Salaries/Accounting
+/Salaries/Marketing/Employee[@ID=(&quot;2&quot;)]/Projects
+{(/Salaries/Marketing/Employee[@ID=(&quot;1&quot;)]/Salary/text())}  #text
+/Salaries/Marketing/Employee[@ID=(&quot;2&quot;)]/@tier      #attribute value
+
+
+MARKDOWN
+=========
+Markdown
+<span class="hdr">Can make italicized, bold, and monospaced text:</span>
+Can make *italicized*, **bold**, and ``monospaced text``
+<span class="hdr">Headers:</span>
+<span class="cmt"># H1</span>
+## H2
+### H3
+<span class="hdr">Lists:</span>
+* First item
+* Second item
+<span class="hdr">Code:</span>
+<span class="hdr">If you indent by four spaces you have code:</span>
+<span class="hdr">def add(x, y):</span>
+        return x + yt
+
+
+YAML
+======
+From &lt;https://github.com/ansible/ansible/blob/devel/docsite/rst/YAMLSyntax.rst&gt; 
+YAML because it is easier for humans to read and write than other common data formats like XML or JSON.
+
+All YAML files (regardless of their association with Ansible or not) can optionally begin with --- (separator) and end with ....
+
+Every YAML file starts with a list. Each item in the list is a list of key/value pairs (dict)
+
+All members of a list are lines beginning at the same indentation level starting with a &quot;- &quot; (a dash and a space):
+A dictionary is represented in a simple key: value form (the colon must be followed by a space).
+Boolean values true/FALSE/yes/No.
+Values can span multiple lines using | or &gt;. Spanning multiple lines using a | will include the newlines. (| is literal, while &gt; is folded)
+YAML special characters `` [] {} : &gt; | `` 
+Comment &quot; #&quot; ..space then #
+
+---
+<span class="cmt"># An employee record</span>
+name: Martin D&#x27;vloper
+job: Developer
+skill: Elite
+employed: True
+<span class="hdr">foods:</span>
+    - Apple
+    - Orange
+    - Strawberry
+    - Mango
+<span class="hdr">languages:</span>
+    perl: Elite
+    python: Elite
+    pascal: Lame
+education: |
+    4 GCSEs
+    3 A-Levels
+    BSc in the Internet of Things
+…</pre>
+</main>
+</body>
+</html>

@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kafka</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: #1a1a2e;
+    color: #e0e0e0;
+    min-height: 100vh;
+}
+header {
+    background: #16213e;
+    border-bottom: 2px solid #0f3460;
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+header a {
+    color: #e94560;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+}
+header a:hover { text-decoration: underline; }
+h1 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #53d8fb;
+    letter-spacing: 0.03em;
+}
+main {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 24px;
+}
+pre {
+    background: #0d1117;
+    border: 1px solid #21262d;
+    border-radius: 8px;
+    padding: 20px 24px;
+    overflow-x: auto;
+    font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+    font-size: 0.85rem;
+    line-height: 1.65;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+.cmd  { color: #7ee787; }          /* $ shell commands */
+.cmt  { color: #8b949e; }          /* # comments */
+.hdr  { color: #f0c040; font-weight: bold; }  /* section headers */
+.url  { color: #79c0ff; }
+</style>
+</head>
+<body>
+<header>
+  <a href="../html/index.html">&#8592; Index</a>
+  <h1>Kafka</h1>
+</header>
+<main>
+  <pre>Kafka 
+
+A distributed, scalable, fault-tolerant messaging + store(db) system.
+Event based log/stream with publisher/subscriber model. 
+Producer &amp; consumer decoupled.
+Kafka processes events exactly-once.
+Servers : brokers (store data) &amp; connectors (pull/push) data.
+Clients in multiple languages + REST API.
+
+Log of &quot;topic&quot; (in order, durable/replicated); &quot;partition&quot;ed into buckets and distributed amongst different brokers based on a key (same key is always on same topic-partition combo); redundant/replicated.
+
+Microservices listen to one topic and generate processed data in another topic - leading to real-time data processing.
+Easy to expand to other systems and gain firm wide adoption.
+
+
+KStreams (API - for real-time join/windowing/aggregation) &amp; KSQL - SQL for data enrichment/manipulation
+Kafka connect - to let other systems (pluggable modules) to connect &amp; talk/absorb to/from Kakfa.
+</pre>
+</main>
+</body>
+</html>

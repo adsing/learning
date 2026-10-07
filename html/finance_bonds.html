@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Finance Bonds</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: #1a1a2e;
+    color: #e0e0e0;
+    min-height: 100vh;
+}
+header {
+    background: #16213e;
+    border-bottom: 2px solid #0f3460;
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+header a {
+    color: #e94560;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+}
+header a:hover { text-decoration: underline; }
+h1 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #53d8fb;
+    letter-spacing: 0.03em;
+}
+main {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 24px;
+}
+pre {
+    background: #0d1117;
+    border: 1px solid #21262d;
+    border-radius: 8px;
+    padding: 20px 24px;
+    overflow-x: auto;
+    font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+    font-size: 0.85rem;
+    line-height: 1.65;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+.cmd  { color: #7ee787; }          /* $ shell commands */
+.cmt  { color: #8b949e; }          /* # comments */
+.hdr  { color: #f0c040; font-weight: bold; }  /* section headers */
+.url  { color: #79c0ff; }
+</style>
+</head>
+<body>
+<header>
+  <a href="../html/index.html">&#8592; Index</a>
+  <h1>Finance Bonds</h1>
+</header>
+<main>
+  <pre>
+Bond is a fixed-income instrument that is a loan made by investor to a borrower.
+Interest typically paid at fixed interval (semi/annual). Interest is called coupon and rate is called coupon rate.
+Issued by a trusting authority (govt, state/city, company) and rated by credit ratings (AAA, AA, A, BBB, BB, B...). Investment grade at/above BB and Junk below BBB.
+
+Bonds traded daily (700 B) vs Stocks (200 B).
+
+<span class="hdr">Common terms:</span>
+Issuer - Borrower
+Investor - Lender/Creditoy
+Principal/Face/Par/Nomimal value -  Amount borrowed 
+Interest amount - coupon (paid at fixed interval and if not paid then company is in default)
+interest rate - coupon rate (fixed mostly; can also be floating)
+Maturity - Due date (when principal is paid back in full)
+Term - Time to mature (duration - fixed)
+Yield to maturity - annualized return on bond investment (inversely related to price; depends on macro economic conditions like interest rate, credit ratings)
+Market value - current price
+
+Treasury 5% 2025 112  (EOD pricing on newspaper)
+Name of Bond/Company | Coupon Rate | Maturity | current price that changes daily
+Flat Yield = Coupon * 100 / Price of Bond = 5*100/112 = 4.4
+<span class="hdr">Yield to maturity (YTM) calc:</span>
+        Cost per year of bond =  (Price - Face value) / Number of years = 3.25
+        Yield to maturity = (coupon - cost_per_year) / current_px = 1.55%
+        
+<span class="hdr">Type of bonds:</span>
+Govt (war funding) | Corporate | Internation (Euro bonds)  | Muni (no tax &amp; typically slight lower rate) | Asset-backed (MBS)
+Treasury bills (&lt;1yr), notes (2-10), bonds (10-30), TIPS (inflation protected).
+
+<span class="hdr">Corporate bond issue:</span>
+ Lenders have priority over share-holders. Company must give out coupon regularly else legally in default and can be re-org per law (chapter 13).
+
+Bond prices vs yields: inversely related.
+Interest rate and yield: directly relatied.
+
+As interest rates goes up, price of bonds go down (and yields go up). Older bonds have lower rates and with increased market interest rates, demand for such lower rate bonds go down.
+
+Discount bonds : yield &gt; coupon rate
+Par bonds      : yield = coupon rate (when issued)
+Premium bonds  : yield &lt; coupon rate (rates decrease making your bonds @ higher rate)
+
+<span class="hdr">Bond yield or price depends on:</span>
+Face value :  $1000
+Bond price :  $ 800
+Annual coupon rate : 4%
+Years to maturity (term) : 10yr
+gives Bond yield or prive
+
+Yield curve: Yield vs time
+Smalled term has lower interest rate typically. Curve gets flatter with time.
+But yield curve can be inverted if short term interest rates spike up while long term rates don&#x27;t go up much. Inverted curve indicates changes of recession.
+
+Rates decided by Central Banks (e.g. Federal Reserve Bank, ECB) whose goals are:
+1. Stabilize currency
+2. Keep employment low
+3. Prevent inflation
+
+<span class="hdr">Purchase:</span>
+US bonds - treasury.gov
+Corp bonds or as low-expense ETF (ticker e.g. BND, AGG) - Brokerage
+
+<span class="hdr">Trading strategy:</span>
+1. Long-short near vs far term bonds
+2. Laddering: Invest in 1,2,3,4,5 yr bonds/CDs. At end of year one, take proceed and invest in another 5 year that matures at year-6.
+
+
+<span class="hdr">Taxes:</span>
+1. Bond interest is taxed as part of normal income (Fed + State). Potential capital gains taxed as well. Good for Roth IRA.
+2. Muni bond - no fed tax (and maybe no state).
+3. Bond funds taxed like bonds.</pre>
+</main>
+</body>
+</html>

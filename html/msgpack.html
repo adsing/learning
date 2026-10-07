@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Msgpack</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: #1a1a2e;
+    color: #e0e0e0;
+    min-height: 100vh;
+}
+header {
+    background: #16213e;
+    border-bottom: 2px solid #0f3460;
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+header a {
+    color: #e94560;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+}
+header a:hover { text-decoration: underline; }
+h1 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #53d8fb;
+    letter-spacing: 0.03em;
+}
+main {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 24px;
+}
+pre {
+    background: #0d1117;
+    border: 1px solid #21262d;
+    border-radius: 8px;
+    padding: 20px 24px;
+    overflow-x: auto;
+    font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+    font-size: 0.85rem;
+    line-height: 1.65;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+.cmd  { color: #7ee787; }          /* $ shell commands */
+.cmt  { color: #8b949e; }          /* # comments */
+.hdr  { color: #f0c040; font-weight: bold; }  /* section headers */
+.url  { color: #79c0ff; }
+</style>
+</head>
+<body>
+<header>
+  <a href="../html/index.html">&#8592; Index</a>
+  <h1>Msgpack</h1>
+</header>
+<main>
+  <pre>MessagePack - binary serialization format.
+Exchange multiple languages like JSON.
+
+[App object] ---&gt; MsgPack Type system --&gt; [MsgPack Format : representation as byte array]
+
+<span class="hdr">MsgPack Type system:</span>
+nil
+boolean (true/false)
+int
+floats
+Raw - string (utf-8)/binary
+Array
+Map (key-value)
+Extension type (application specific :: (int, byte-array) where int 0-127 decides the type of representation)...
+Timestamp can&#x27;t be serialized in JSON or MsgPack (Convert to string and serialize that)
+
+<span class="cmd">$ conda install msgpack  #install</span>
+import msgpack   #object serialization/deserialization
+
+#packb or dumps ... unpackb or loads  
+#pack or dump   ... unpack or load      (file-like object)
+#unpacks to listl; for tuple, set use_list=False
+
+msgpack.packb([1,2,3])
+&#x27;\x93\x01\x02\x03&#x27;
+msgpack.unpackb(_)
+[1,2,3]
+msgpack.unpackb(_, use_list=False)  #tuple
+(1,2,3)
+#strings treated as byte arrays (dict keys become byte string
+s = msgpack.packb(&#x27;abc&#x27;)    # b&#x27;\xa3abc&#x27;
+msgpack.unpackb(s)          # b&#x27;abc&#x27; (not &#x27;abc&#x27;)
+msgpack.unpackb(s, encoding=&#x27;utf-8&#x27;) # &#x27;abc&#x27;
+msgpack.unpackb(s, raw=False)        # &#x27;abc&#x27;
+
+<span class="hdr">with open(&#x27;/tmp/a&#x27;,&#x27;wb&#x27;) as fh:</span>
+  msgpack.pack( [1,2,3], fh)
+<span class="hdr">with open(&#x27;/tmp/a&#x27;,&#x27;rb&#x27;) as fh:</span>
+  msgpack.unpack(fh)
+
+
+d = {&#x27;1&#x27;:1, &#x27;2&#x27;:2 }
+d
+dd = msgpack.packb(d)
+msgpack.unpack(dd)
+
+#Unpacker stream
+import msgpack
+from io import BytesIO
+
+buf = BytesIO()
+<span class="hdr">for i in range(1, 100):</span>
+   buf.write(msgpack.packb( list( range(i) ), use_bin_type=True))
+
+buf.seek(0)
+
+unpacker = msgpack.Unpacker(buf, raw=False)
+<span class="hdr">for unpacked in unpacker:</span>
+    print(unpacked)
+
+#Custom data like datetime
+import datetime
+import msgpack
+data_dict = { &#x27;id&#x27;:1, &#x27;created&#x27;:datetime.datetime.now() }
+
+##fn for coding/decoding
+def decode_datetime(obj): 
+  if b&#x27;__datetime__&#x27; in obj:
+    obj = datetime.datetime.strptime(obj[&quot;as_str&quot;], &quot;%Y%m%dT%H:%M:%S.%f&quot;)
+  return obj
+<span class="hdr">def encode_datetime(obj):</span>
+  if isinstance(obj, datetime.datetime):
+    return {&#x27;__datetime__&#x27;: True, &#x27;as_str&#x27;: obj.strftime(&quot;%Y%m%dT%H:%M:%S.%f&quot;)}
+  return obj
+
+packed_dict = msgpack.packb(data_dict, default=encode_datetime, use_bin_type=True)
+this_dict_again = msgpack.unpackb(packed_dict, object_hook=decode_datetime, raw=False)</pre>
+</main>
+</body>
+</html>

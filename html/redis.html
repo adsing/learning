@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Redis</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: #1a1a2e;
+    color: #e0e0e0;
+    min-height: 100vh;
+}
+header {
+    background: #16213e;
+    border-bottom: 2px solid #0f3460;
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+header a {
+    color: #e94560;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+}
+header a:hover { text-decoration: underline; }
+h1 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #53d8fb;
+    letter-spacing: 0.03em;
+}
+main {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 24px;
+}
+pre {
+    background: #0d1117;
+    border: 1px solid #21262d;
+    border-radius: 8px;
+    padding: 20px 24px;
+    overflow-x: auto;
+    font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+    font-size: 0.85rem;
+    line-height: 1.65;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+.cmd  { color: #7ee787; }          /* $ shell commands */
+.cmt  { color: #8b949e; }          /* # comments */
+.hdr  { color: #f0c040; font-weight: bold; }  /* section headers */
+.url  { color: #79c0ff; }
+</style>
+</head>
+<body>
+<header>
+  <a href="../html/index.html">&#8592; Index</a>
+  <h1>Redis</h1>
+</header>
+<main>
+  <pre>Redis - REmote DIctionary Server
+A NoSQL, distributed, in-memory, key-value store (db/cache/message broker) with optional durability.
+Pros: Low latency for read/write; ideal for cache.
+Cons: 
+
+Buit in replication - master can be replicated to N replicas.
+LRU eviction
+Transactions
+Different level of persistence on disk -- Snapshot (async copy of memory to disk as binary dump) &amp; Journal (write data modification operations are appended-only file AOF in background in 2nd thread).
+Cluster provides partitioning of data - restricts commands that impact multi-key as the requirement is that all impacted keys must be on the same node.
+
+
+Data structures:    String/List/Map/Sets/Bitmaps/Streams/HyperLogLogs
+    Strings
+    List (of Strings)
+    Set (of Strings)
+    Sorted Sets (of strings (ordered by a floating point score)
+    Hash table (with Key &amp; values as strings)
+    HyperLogLogs (size estimation)
+    Stream (store multiple fields and string values)
+    JSON
+    Search - full test search
+    Time serires - 
+
+
+Write actions results in a separate child process
+Server query -&gt; results in fork of child that writes DB to memory while parent process serves other clients.
+
+https://redis.io/documentation
+
+
+
+https://redis.io/commands#string
+
+ReDiS : Remote Dictionary Server
+Core Redis is In-memory key-value database for multiple types of data (string/hash/set/list etc).
+Modules in Redis e.g. RedisSearch, RedisGraph, RedisJSON, RedisTimeSeries.
+
+Redis is schema-less.
+
+Replicate data server (master + 2 replicas).
+
+Persisting data - use combination of RDB (snapshot) + AOF(write ahead log)
+1. Snapshot of database (as a .rdb file). Snapshot in disk is great for DB restore
+2. AOF - append only file - all writes saved to a log continuously. Used to rebuild state on restart. Slower than snapshot but more reliable.
+Note - persist files on a separate server. E.g. on AWS EC2 store on EBS (Elastic Block Storage) and not on EC2 disk/memory.
+
+Extend capacity with &quot;Redis on Flash&quot; - extends RAM to Flash/SSD. Frequent data on RAM; infrequent data on flash/SSD.
+
+
+<span class="hdr">Scaling a redis database:</span>
+1. Clustering - master with multiple replicas. Master to write and replicas to read. If master fails, one of replicas takes over.  Replicas can be on same server but ideal to setup on another node.
+    High availability - operational DB even when one host fails. E.g. replica is promoted to master/primary (each primary shard has a replica). All primary and replicas are interconnected. Configure how many fellow shards need to agree when to failover primary - have odd # of primary and 2 replicas per shard. One group will be bigger/majority - in which case minority can not trigger a failover.
+    
+2. Sharding - partition the data horizontally (e.g. A-G, H-M, N-R, R-Z)
+    Algorithmic sharding where key is hashed and then modulo N to determine which host has the key. Issue is if hosts/shards are added/removed causing a mismatch with modulo fn step. Redis uses logical unit called Hashslot which sits between a key and as shard. Each database has 16K hashslots - divided evenly between hosts in cluster. So it&#x27;s modulo hashslot (not shards N). We move hashslots between instances as more hosts are added/removed.
+
+Best: Target multiple nodes (in differnt regions) with multiple replicas with data sharded.
+Regional clusters are synced (compressed binary stream); each region is seviced by nearby cluster. Each data type has it&#x27;s own conflict resolution rule when cross-region clusters have conflicting writes from different regions.
+
+
+Streams - data struct that behaves as a Append-Only-File with timestamped entries that are immutable. Entries are like hash (key-value pairs; no schema).
+    Producers -&gt; generate stream of Events (EventID -&gt; DataStruct) -&gt; Consumers (Real-time, DBWriter)
+    Stream is linked to a redis key (example &quot;checkins). Adding entry to stream:
+    redis&gt; XADD stream_key * key1 value1 key2 value2  # * tells add key and associate with unique key of timestamp+seq.no
+    &quot;171201221-0&quot;                       # timestamp_ms-sequence#
+    redis&gt; XRANGE starttimestamp_ms endtimestamp_ms  count 10 # returns 10 oldest first
+    redis&gt; XREVRANGE  endtimestamp_ms  starttimestamp_ms      # recent entries first...note timestamp is end_ts start_ts
+    redits&gt; XRANGE stream_key -+ COUNT 5    # return first and last 5 records from stream 
+    
+<span class="cmt">    # read stream continuously blocking when there is no more output from producer</span>
+    redis&gt; XREAD STREAMS stream_key 0       # return all ids &gt; 0 (all data from stream) ... use last key_id to request for next batch
+    redis&gt; XREAD COUNT 1 BLOCK 5000 STREAMS stream_key 0    # get 1 record, block for 5sec for record key &gt; 0
+    
+<span class="cmt">    # data trimming strategy (remove older entires)</span>
+    redis&gt; XTRIM stream_key MAXLEN 10000    # keep only 10K records in stream and delete older entires
+    redis&gt; XADD stream_key MAXLEN 10000 * key1 value1 key2 value2  # specify while adding to restrict len to 10k (more common)
+    redis&gt; XLEN stream_key    # tells length of stream that has been setup
+    
+    
+<span class="hdr">On dev host (redis-host):</span>
+<span class="cmd">$ cd ~/docs/temp/redis-5.0.4</span>
+<span class="cmd">$ src/redis-server --protected-mode no</span>
+
+<span class="cmt"># Test:</span>
+<span class="cmd">$ src/redis-cli -h redis-host ping</span>
+PONG
+
+<span class="cmt"># on any host:</span>
+<span class="cmd">$ cd ~/docs/temp/redis-5.0.4</span>
+<span class="cmd">$ src/redis-cli -h redis-host</span>
+redis-host:6379&gt; get SomeValue
+&quot;125&quot;
+redis-host:6379&gt; ping
+PONG
+redis-host:6379&gt; save
+OK
+redis-host:6379&gt; shutdown
+not connected&gt;
+
+redis-host:6379&gt; get y
+(nil)
+redis-host:6379&gt; set y 1 xx
+(nil)
+redis-host:6379&gt; set x 1 nx
+OK
+redis-host:6379&gt; get x
+&quot;1&quot;
+redis-host:6379&gt; incr x
+(integer) 2
+redis-host:6379&gt; incr x
+(integer) 3
+redis-host:6379&gt; incrby x 7
+(integer) 10
+#decr, decrby - thread safe
+redis-host:6379&gt; getset x 1
+&quot;10&quot;
+redis-host:6379&gt; get x
+&quot;1&quot;
+
+
+redis-host:6379&gt; mget x y SomeValue   #returns array
+1) &quot;1&quot;
+2) (nil)
+3) &quot;125&quot;
+redis-host:6379&gt; mset x 1 y 1
+OK
+redis-host:6379&gt; get y
+&quot;1&quot;
+
+redis-host:6379&gt; exists x
+(integer) 1
+redis-host:6379&gt; del x
+(integer) 1
+redis-host:6379&gt; del zzz
+(integer) 0     #not exists
+
+<span class="cmt"># expire / ttl</span>
+redis-host:6379&gt; set tkey 123
+OK
+redis-host:6379&gt; expire tkey 5
+(integer) 1
+redis-host:6379&gt; ttl tkey
+(integer) 3
+redis-host:6379&gt; get tkey
+&quot;123&quot;
+redis-host:6379&gt; ttl tkey
+(integer) 1
+redis-host:6379&gt; ttl tkey
+(integer) -2                     # -1 live forever
+redis-host:6379&gt; get tkey
+(nil)
+
+redis-host:6379&gt; set k 1 ex 10   #set and expire
+OK
+redis-host:6379&gt; get k
+&quot;1&quot;
+redis-host:6379&gt; ttl k
+(integer) 7
+
+#pexpire/pttl for time in milliseconds
+
+<span class="cmt"># lists -- are linked list (constant add time to begin/end) but large seek times (no indexing of Arrays)</span>
+<span class="cmt"># lpush, rpush, lpop, rpop, lrange &lt;list&gt; &lt;begin&gt; &lt;end&gt;</span>
+<span class="cmt">#</span>
+redis-host:6379&gt; rpush MyList 1 2 3 4 &#x27;more elements&#x27;
+(integer) 5
+redis-host:6379&gt; lpush MyList 0
+(integer) 6
+redis-host:6379&gt; lrange MyList 0 -1
+1) &quot;0&quot;
+2) &quot;1&quot;
+3) &quot;2&quot;
+4) &quot;3&quot;
+5) &quot;4&quot;
+6) &quot;more elements&quot;
+redis-host:6379&gt; rpop MyList
+&quot;more elements&quot;
+redis-host:6379&gt; rpop SomeValue   # key:value
+(error) WRONGTYPE Operation against a key holding the wrong kind of value
+
+
+redis-host:6379&gt; lpush MyList &quot;new value&quot;
+(integer) 4
+redis-host:6379&gt; ltrim MyList 0 2                         # Trim list to contain only recent history
+OK
+redis-host:6379&gt; lrange MyList 0 -1
+1) &quot;new value&quot;
+2) &quot;0&quot;
+3) &quot;1&quot;
+redis-host:6379&gt; llen MyList
+(integer) 3
+
+#blocking wait for clients on list with blpop &amp; brpop
+## client session consuming data
+redis-host:6379&gt; brpop Q 5    # block for 5 seconds (0 mean wait forever) and get data
+1) &quot;Q&quot;                        # Return Array (list/key name + value)  
+2) &quot;1&quot;
+redis-host:6379&gt; brpop Q 5    # block and timeout
+(nil)
+(5.01s)
+## server session generating data
+redis-host:6379&gt; lrange Q 0 -1
+(empty list or set)
+redis-host:6379&gt; lpush Q 1
+(integer) 1
+
+<span class="cmt"># block on multiple list</span>
+redis-host:6379&gt; brpop Q 5 P 5
+1) &quot;Q&quot;
+2) &quot;1&quot;
+(1.18s)
+redis-host:6379&gt; brpop Q 5 P 5
+1) &quot;P&quot;
+2) &quot;2&quot;
+
+
+<span class="cmt"># hash</span>
+redis-host:6379&gt; hset MyHash key value
+(integer) 1
+redis-host:6379&gt; hget MyHash key
+&quot;value&quot;
+redis-host:6379&gt; hmset MyHash NewKey NewValue ID 1000 Type XA Verified 1
+OK
+redis-host:6379&gt; hget MyHash key
+&quot;value&quot;
+redis-host:6379&gt; hget MyHash NewKey
+&quot;NewValue&quot;
+redis-host:6379&gt; hmget MyHash key NewKey ID Verified
+1) &quot;value&quot;
+2) &quot;NewValue&quot;
+3) &quot;1000&quot;
+4) &quot;1&quot;
+redis-host:6379&gt; hincrby MyHash ID 2     # incrby hash key value
+(integer) 1002
+redis-host:6379&gt; hincr MyHash ID         # hincr does not exists
+(error) ERR unknown command `hincr`, with args beginning with: `MyHash`, `ID`,
+
+redis-host:6379&gt; hkeys MyHash
+1) &quot;key&quot;
+2) &quot;NewKey&quot;
+3) &quot;ID&quot;
+4) &quot;Type&quot;
+5) &quot;Verified&quot;
+redis-host:6379&gt; hvals MyHash
+1) &quot;value&quot;
+2) &quot;NewValue&quot;
+3) &quot;1002&quot;
+4) &quot;XA&quot;
+5) &quot;1&quot;
+
+
+<span class="cmt"># sets - unordered collection of strings (representing an object)</span>
+redis-host:6379&gt; sadd MySet 1 2 3
+(integer) 3
+redis-host:6379&gt; sadd MySet 3 4 5  #only 4,5 added to set
+(integer) 2
+redis-host:6379&gt; smembers MySet
+1) &quot;1&quot;
+2) &quot;2&quot;
+3) &quot;3&quot;
+4) &quot;4&quot;
+5) &quot;5&quot;
+redis-host:6379&gt; sismember MySet 3
+(integer) 1
+redis-host:6379&gt; sismember MySet 23
+(integer) 0
+
+redis-host:6379&gt; sadd NewSet 1 2 4 8 3
+(integer) 5
+redis-host:6379&gt; sinter MySet NewSet            #intersection
+1) &quot;1&quot;
+2) &quot;2&quot;
+3) &quot;3&quot;
+4) &quot;4&quot;
+redis-host:6379&gt; sunion MySet NewSet            #union
+1) &quot;1&quot;
+2) &quot;2&quot;
+3) &quot;3&quot;
+4) &quot;4&quot;
+5) &quot;5&quot;
+6) &quot;8&quot;
+redis-host:6379&gt; sdiff MySet NewSet
+1) &quot;5&quot;
+redis-host:6379&gt; sunionstore backup NewSet    # copy NewSet -&gt; backup
+(integer) 5
+redis-host:6379&gt; spop NewSet                  # spop randomly removes an element
+&quot;1&quot;
+redis-host:6379&gt; spop NewSet
+&quot;2&quot;
+redis-host:6379&gt; spop NewSet
+&quot;4&quot;
+redis-host:6379&gt; smembers NewSet
+1) &quot;3&quot;
+2) &quot;8&quot;
+redis-host:6379&gt; srandmember NewSet           # srandmember - return a member randomly; doesn&#x27;t remove
+&quot;8&quot;
+redis-host:6379&gt; smembers NewSet
+1) &quot;3&quot;
+2) &quot;8&quot;
+redis-host:6379&gt; scard NewSet           #cardinality
+(integer) 2
+
+<span class="cmt"># sorted set - mix of set + hash - good when lot of updates happen to set</span>
+<span class="cmt"># set element is associated with a score (like hash-value)</span>
+<span class="cmt">#</span>
+<span class="cmt"># ordered according to the following rule:</span>
+<span class="cmt"># If A and B are two elements with a different score, then A &gt; B if A.score is &gt; B.score.</span>
+<span class="cmt"># If A and B have exactly the same score, then A &gt; B if the A string is lexicographically greater than the B string. A and B strings can&#x27;t be equal since sorted sets only have unique elements.</span>
+<span class="cmt">#</span>
+redis-host:6379&gt; zadd marks 86 adi
+(integer) 1
+redis-host:6379&gt; zadd marks 78 sam
+(integer) 1
+redis-host:6379&gt; zadd marks 92 dee
+(integer) 1
+redis-host:6379&gt; zcard marks            # how many members
+(integer) 3
+redis-host:6379&gt; zrange marks 0 -1         #order per score
+1) &quot;sam&quot;
+2) &quot;adi&quot;
+3) &quot;dee&quot;
+
+redis-host:6379&gt; zadd marks 78 another78
+(integer) 1
+redis-host:6379&gt; zrange marks 0 -1        # zrevrange (for reverse range)
+1) &quot;another78&quot;                            # lexical since scores are same
+2) &quot;sam&quot;
+3) &quot;adi&quot;
+4) &quot;dee&quot;
+redis-host:6379&gt; zrange marks 0 -1 withscores  #show scores as well
+1) &quot;another78&quot;
+2) &quot;78&quot;
+3) &quot;sam&quot;
+4) &quot;78&quot;
+5) &quot;adi&quot;
+6) &quot;86&quot;
+7) &quot;dee&quot;
+8) &quot;92&quot;
+redis-host:6379&gt; zrangebyscore marks 70 90   #select elements by score range. Can use +inf for infinity. Also have zrevrangebyscore for reverse. TO implement SQL WHERE clause
+1) &quot;another78&quot;
+2) &quot;sam&quot;
+3) &quot;adi&quot;
+redis-host:6379&gt; zrank marks sam               #rank
+(integer) 1
+redis-host:6379&gt; zrank marks another78
+(integer) 0
+redis-host:6379&gt; zrevrange marks 0 -1     # zrevrange -- reverse range
+1) &quot;dee&quot;
+2) &quot;adi&quot;
+3) &quot;sam&quot;
+4) &quot;another78&quot;
+redis-host:6379&gt; zrangebyscore marks -inf 80    #inf, -inf
+1) &quot;another78&quot;
+2) &quot;sam&quot;
+redis-host:6379&gt; zremrangebyscore marks 70 80   # remove based on score range
+(integer) 2                                     # elements removed 2 (another78, sam)
+redis-host:6379&gt; zrange marks 0 -1
+1) &quot;adi&quot;
+2) &quot;dee&quot;
+
+<span class="cmt"># if same score for all elements then you can do lexicographical scores</span>
+redis-host:6379&gt; zadd eq 0 a 0 b 0 d 0 f 0 z
+(integer) 5
+redis-host:6379&gt; zrange eq 0 -1
+1) &quot;a&quot;
+2) &quot;b&quot;
+3) &quot;d&quot;
+4) &quot;f&quot;
+5) &quot;z&quot;
+redis-host:6379&gt; zrangebylex eq [a (d            # ( exclusive, [ inclusive
+1) &quot;a&quot;
+2) &quot;b&quot;
+redis-host:6379&gt; zrangebylex eq [a [d
+1) &quot;a&quot;
+2) &quot;b&quot;
+3) &quot;d&quot;
+
+
+<span class="cmt"># Bitmaps - set of bit oriented operations on string type (max len 512MB or 2^32bits)</span>
+<span class="cmt"># Space saving</span>
+<span class="cmt"># constant time ops : set/get bit or group ops like # of bits set in a range</span>
+<span class="cmt"># setbit/getbit</span>
+redis-host:6379&gt; setbit b 2 1                   # set 2nd bit to 1
+(integer) 0
+redis-host:6379&gt; get b
+&quot; &quot;
+redis-host:6379&gt; getbit b 2
+(integer) 1
+redis-host:6379&gt; getbit b 1
+(integer) 0
+redis-host:6379&gt; getbit b 3
+(integer) 0
+redis-host:6379&gt; setbit b 4 1
+(integer) 0
+redis-host:6379&gt; bitcount b              # bits set 
+(integer) 2
+
+redis-host:6379&gt; setbit b1 1 1
+(integer) 0
+redis-host:6379&gt; setbit b1 2 1
+(integer) 0
+redis-host:6379&gt; bitcount b1
+(integer) 2
+redis-host:6379&gt; setbit b2 2 1
+(integer) 0
+redis-host:6379&gt; setbit b2 4 1
+(integer) 0
+redis-host:6379&gt; bitop AND ba b1 b2          #bitop AND/OR/XOR/NOT dest src1 src2..
+(integer) 1
+redis-host:6379&gt; bitcount b1
+(integer) 2
+redis-host:6379&gt; bitcount b2
+(integer) 2
+redis-host:6379&gt; bitcount ba
+(integer) 1
+redis-host:6379&gt; getbit ba 2
+(integer) 1
+redis-host:6379&gt; getbit ba 1
+(integer) 0
+redis-host:6379&gt; getbit ba 4
+(integer) 0
+redis-host:6379&gt; bitop OR bo b1 b2
+(integer) 1
+redis-host:6379&gt; bitcount bo
+(integer) 3
+redis-host:6379&gt; bitop XOR bx b1 b2
+(integer) 1
+redis-host:6379&gt; bitcount bx
+(integer) 2
+redis-host:6379&gt; bitop NOT bn b1
+(integer) 1
+redis-host:6379&gt; bitcount bn
+(integer) 6
+
+<span class="cmt"># HLL or HyperLogLog </span>
+<span class="cmt"># HyperLogLog is a probabilistic data structure used in order to count unique things </span>
+<span class="cmt"># technically this is referred to estimating the cardinality of a set - with 1% error (constant memory use)</span>
+<span class="cmt"># encoded as string so use get/set</span>
+<span class="cmt"># HLL API:</span>
+<span class="cmt"># Every time you see a new element, you add it to the count with PFADD.</span>
+<span class="cmt"># Every time you want to retrieve the current approximation of the unique elements added with PFADD so far, you </span>
+use the PFCOUNT.
+
+redis-host:6379&gt; pfadd hll a b c d
+(integer) 1
+redis-host:6379&gt; pfcount hll
+(integer) 4
+redis-host:6379&gt; get hll
+&quot;HYLL\x01\x00\x00\x00\x04\x00\x00\x00\x00\x00\x00\x00\\{\x80Dv\x80P\xb1\x84K\xfb\x80BZ&quot;
+
+<span class="cmt"># KEY &lt;pattern*&gt;  - list all keys</span>
+<span class="cmt"># SCAN - iterate over keys in current redis DB</span>
+<span class="cmt"># SSCAN/HSCAN/ZSCAN for set/hash/sorted-set</span>
+<span class="cmt"># WATCH &lt;key&gt;  &amp; MULTI - to implement SQL transactions which will discard changes by other clients to watched key. MULTI gives you transactions where you can SET the key and call EXEC to commit (nil return value means not committed; </span></pre>
+</main>
+</body>
+</html>

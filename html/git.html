@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Git</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: #1a1a2e;
+    color: #e0e0e0;
+    min-height: 100vh;
+}
+header {
+    background: #16213e;
+    border-bottom: 2px solid #0f3460;
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+header a {
+    color: #e94560;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+}
+header a:hover { text-decoration: underline; }
+h1 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #53d8fb;
+    letter-spacing: 0.03em;
+}
+main {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 24px;
+}
+pre {
+    background: #0d1117;
+    border: 1px solid #21262d;
+    border-radius: 8px;
+    padding: 20px 24px;
+    overflow-x: auto;
+    font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+    font-size: 0.85rem;
+    line-height: 1.65;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+.cmd  { color: #7ee787; }          /* $ shell commands */
+.cmt  { color: #8b949e; }          /* # comments */
+.hdr  { color: #f0c040; font-weight: bold; }  /* section headers */
+.url  { color: #79c0ff; }
+</style>
+</head>
+<body>
+<header>
+  <a href="../html/index.html">&#8592; Index</a>
+  <h1>Git</h1>
+</header>
+<main>
+  <pre><span class="cmd">$ git init   #create a git project under VC</span>
+
+Git has 3 stages/parts:: working dir -&gt; staging area -&gt; repo
+
+1. working dir :: create/edit/delete files  (possible to have untracked files)
+2. staging area :: list changes made to working dir   $ git add            #add file to staging area
+<span class="cmd">                                                      $ git status</span>
+<span class="cmd">                                                      $ git diff &lt;filename&gt;</span>
+3. repo :: store the changes as different versions by  $ git commit
+<span class="cmd">                                                       $ git log      # 40 char SHA hash</span>
+
+Log
+<span class="cmd">$ git log &lt;filename&gt;</span>
+<span class="cmd">$ git log origin/master..HEAD   #diff of current brach with remote master branch ...shows diff between local and remote repo!</span>
+<span class="cmd">$ git log --stat -n 10   #list of (last 10) commits with list of files changed per commit</span>
+<span class="cmd">$ git log --after=10/01/2019</span>
+<span class="cmd">$ git log --auther=jcui</span>
+<span class="cmd">$ git log --auther=jcui --grep &quot;Table Editor&quot;</span>
+<span class="cmd">$ git log --pretty=oneline         #brief commit history</span>
+
+Current commit is called HEAD
+<span class="cmd">$ git show HEAD        #show log for all file changed in head</span>
+
+Discard current changes and pull from HEAD
+<span class="cmd">$ git checkout HEAD [filename]</span>
+
+Unstage a file (so that it is not committed but still in working dir)
+<span class="cmd">$ git reset HEAD [filename]</span>
+
+
+Reset (reverting back) to a previous git commit log history (discarding some recent commits and going back to a prior good state):
+<span class="cmd">$ git reset [commit_SHA 7 char atleast]    ****</span>
+<span class="cmt"># &quot;$ git log&quot; to see history &amp; to find which version you want to revert to </span>
+
+<span class="hdr">Log:</span>
+<span class="cmd">$ git log --oneline</span>
+<span class="cmd">$ git log --oneline --showgraph</span>
+
+Bisect: to find bad commit using binary search
+
+Amend your commits - ability to change history assuming it&#x27;s not pushed to remote repo
+<span class="cmd">$ git commit --amend -m &quot;Update last commit msg&quot;</span>
+<span class="cmd">$ git add missed_adding_this_file_in_last_commint &amp;&amp; git commit --amend --no-edit   # keep last commit msg and just add this missed file to that commit</span>
+<span class="cmd">$ git commit -a  --amend</span>
+
+Branching
+<span class="cmd">$ git branch                  #shows current branch as * and other branches as well</span>
+<span class="cmd">$ git branch new_branch       # creates new branch</span>
+<span class="cmd">$ git checkout new_branch     # switch branch  (switch = checkout)</span>
+#...do edits/adds/commits to branch
+<span class="cmd">$ git branch master           # switch back to master</span>
+<span class="cmd">$ git merge new_branch        # merge to master (Fast-forward merge type in this case...commits from branch now show up in merge)</span>
+<span class="cmd">$ git branch -d new_branch    # delete branch</span>
+
+Cherry-pick - to apply captures the content of a commit from another (as a patch) and applies to current branch
+<span class="cmd">$ git checkout new_branch</span>
+<span class="cmd">$ git cherry-pick &lt;SHA_from_other_branch&gt;   #may have to handle merge manually</span>
+
+Stash - holding area for when changing braches and you have uncommitted but edited work in current branch
+<span class="cmd">$ git stash  #save current wd/uncommitted changes...change branch and work on other development...come back to this branch and then do</span>
+<span class="cmd">$ git stash apply  #puts wd back in with your previous changes</span>
+<span class="cmt"># multiple stash</span>
+<span class="cmd">$ git stash list    #two stash  stash@{0} and stash@{1}</span>
+<span class="cmd">$ git apply stash@{1}</span>
+
+<span class="hdr">Rebase:</span>
+Move branch into main (cleaner history)
+<span class="cmd">$ git rebase master   #on branch</span>
+<span class="cmd">$ git rebase bugFix   #on master ... move master to bugFix</span>
+
+Clone
+<span class="cmd">$ git clone remote_location clone_name   # origin = remote_location</span>
+<span class="cmd">$ git fetch                              # update clone from origin to origin/master (branch) and not your master branch </span>
+#(does not merge, just get latest from remote branch)
+<span class="cmd">$ git merge origin/master</span>
+...
+<span class="cmd">$ git push origin my_branch    # my_branch can be master   ... now remote repo owner can view your my_branch for changes made and decide to merge with those or not</span>
+
+
+<span class="cmd">$ git remote -v</span>
+origin  &lt;path&gt; (fetch/push)
+
+A remote is a Git repository that lives outside your Git project folder. Remotes can live on the web, on a shared network or even in a separate folder on your local computer.
+The Git Collaborative Workflow are steps that enable smooth project development when multiple collaborators are working on the same Git project.
+
+We also learned the following commands
+    git clone: Creates a local copy of a remote.
+    git remote -v: Lists a Git project’s remotes.
+    git fetch: Fetches work from the remote into the local copy.
+    git merge origin/master: Merges origin/master into your local branch.
+    git push origin &lt;branch_name&gt;: Pushes a local branch to the origin remote.
+
+
+<span class="cmt"># worktree - allow checkout of multiple branches of same repo in separate directories (some things are shared e.g. stash, config)</span>
+<span class="cmt"># previously used git checkout or git switch to switch in same directory for different branches</span>
+<span class="cmt"># worktree allows switch to new branch without having to checkin or stash your current changes to do say a hotfix</span>
+<span class="cmt"># gotchas - can only checkout branch in one work-tree (not multiple); clean up discipline (no rm -rf but git worktree remove)</span>
+
+<span class="cmd">$ git worktree list</span>
+
+<span class="cmd">$ git worktree add -b hotfix-bug123 ../project-bug123 main   # creates branch hofix-bug123 in dir ../project-bug123 based off main</span>
+<span class="cmd">$ git worktree add ../project-feature-A feature-A            # branch exists, create a directory off it</span>
+
+git commit -am &#x27;bug/feature done&#x27;
+git push 
+
+<span class="cmd">$ git worktree remove ../project-bug123</span>
+<span class="cmd">$ git worktree prune</span>
+
+<span class="cmt"># worktree advantages - allow AI agents to run in each worktree</span>
+<span class="cmd">$ git worktree add -b agent/dark-mode ../myapp-dark-mode main</span>
+<span class="cmd">$ cd ../myapp-dark-mode &amp;&amp; claude &quot;Add a dark mode toggle to the settings page&quot;</span>
+
+<span class="cmt"># review &amp; commit or drop work</span>
+<span class="cmd">$ git log agent/dark-mode --oneline</span>
+<span class="cmd">$ git diff main agent/dark-mode</span>
+
+<span class="cmt"># good -&gt; accept</span>
+<span class="cmd">$ git merge agent/dark-mode</span>
+<span class="cmd">$ git worktree remove ../myapp-dark-mode</span>
+
+<span class="cmt"># reject/discard</span>
+<span class="cmd">$ git worktree remove --force ../myapp-dark-mode</span>
+<span class="cmd">$ git branch -D agent/fix-dark-mode</span>
+
+
+
+Distributed version control system
+
+source /opt/citsec/cs-1/enable #CDRG step to get &quot;git&quot;
+
+<span class="cmd">$ git init     #intialize current dir for git tracking as master branch …duplicate repo with $ git clone &lt;git@HOSTNAME:USERNAME/REPONAME.git&gt;</span>
+<span class="cmd">$ git add 1.py</span>
+<span class="cmd">$ git commit -m &#x27;hello&#x27;</span>
+#edit 1.py
+<span class="cmd">$ git commit -m &#x27;world&#x27; 1.py</span>
+<span class="cmd">$ git log 1.py  #show history</span>
+<span class="cmd">$ rm 1.py</span>
+<span class="cmd">$ git checkout 1.py  #get latest version</span>
+<span class="cmd">$ git log 1.py</span>
+<span class="cmd">$ git diff 1.py</span>
+
+<span class="cmd">$ git status  #untracked files, tracked files (changed, pushed), current branch (master)</span>
+
+$git --version   #2.11
+
+<span class="cmt"># get latest changes</span>
+<span class="cmd">$ git fetch origin # to get the latest changes from master</span>
+<span class="cmd">$ git reset --hard origin/master # remove any local changes and be identical to origin/master</span>
+<span class="cmd">$ git pull # to merge with latest changes to your branch</span>
+<span class="cmd">$ git pull --all</span>
+
+#push latest changes
+<span class="cmd">$ get push origin master</span>
+<span class="cmd">$ git push origin master (push local master to remote origin)</span>
+<span class="cmd">$ get push origin CQSD-branch</span>
+
+#Files changed in a specific commit
+<span class="cmd">$ git diff-tree --no-commit-id --name-only -r &lt;revision_SHA&gt;</span>
+
+<span class="cmd">$ git clone https://asingh5@cqs-bitbucket.citadelgroup.com/scm/cesdb/rpt.git</span>
+<span class="cmd">$ git clone git@github.com:&lt;user&gt;/&lt;repo&gt;.git </span>
+
+#branching
+<span class="cmd">$ git branch bugfix  #pointer only (files are not recreated)</span>
+<span class="cmd">$ git checkout bugfix   #in a new directory</span>
+
+#delete branch
+<span class="cmd">$ git branch -d &lt;branch&gt;   #use -D to force</span>
+
+#merge
+<span class="cmd">$ git checkout master</span>
+<span class="cmd">$ git merge --no-ff bugfix  #no-fastforward - keep history of branch/feature</span>
+<span class="cmd">$ git branch -d bugfix  #delete old branch</span>
+
+#stash -save local branch changes temporarily
+##say you are working in DEV-branch with new files and modification to some…and want to switch to master to do a small commit of a different change
+<span class="cmd">$ git stash   #save snapshot of git locally (doesn&#x27;t save untracked/new files not added to git index … use $git stash -u)</span>
+<span class="cmd">$ gut stash save some_name_to_rember_the_changes_saved</span>
+<span class="cmt">	# $ git stash list</span>
+<span class="cmt">	# $ git show  stash@{2} #files in the stash</span>
+<span class="cmd">$ git checkout master # commit whatever file</span>
+<span class="cmd">$ git checkout dev-branch  </span>
+<span class="cmd">$ git stash pop   # or $git stash apply &lt;optional index&gt; (changes still stashed for reusing this stash)</span>
+..
+<span class="cmd">$ git stash drop stash@{1}</span>
+<span class="cmd">$ git stash clear        #removes all stashes</span>
+
+
+#refresh with changes 
+<span class="cmd">$ git rebase master (or git up master if using alias up)</span>
+<span class="cmd">$ git pull --rebase origin master</span>
+From &lt;https://stackoverflow.com/questions/36540645/updating-local-master-with-remote-master&gt; 
+
+
+#squash your branch changes to one commit (applied on top of HEAD)
+## your locally commited changes have many commits that you want to consolidate into single/few commits
+## $ git log --oneline to determine the commits we need to look back HEAD vs origin/HEAD
+## $ git rebase -i HEAD~3
+## &quot;pick&quot; the commits you want to keep and &quot;squash&quot; the rest. Next you can update the commit msg for ones you want to keep
+<span class="cmd">$ git rebase -i</span>
+
+<span class="cmt"># undo commit already pushed (assuming no one has pulled)</span>
+<span class="cmd">$ git checkout HEAD^ htmlMail.py</span>
+--
+<span class="cmd">$ git commit --amend</span>
+or
+<span class="cmd">$ git reset HEAD^   #go to prior version</span>
+Or
+<span class="cmd">$ git revert HEAD  #New version is version just prior to head (revert is safer than reset)</span>
+--
+<span class="cmd">$ git push -f               #force push your file</span>
+
+#reset-hard (remove staged/uncommitted changes and get latest from repo HEAD) ..back to square one
+<span class="cmd">$ git reset --hard HEAD</span>
+<span class="cmd">$ git reset --hard HEAD~2   #remove last 2 commits</span>
+<span class="cmd">$ git reset HEAD       #keep the files changed but</span>
+
+#GPG sign
+From &lt;https://confluence.atlassian.com/bitbucketserver0515/using-gpg-keys-961275262.html?utm_campaign=in-app-help&amp;utm_medium=in-app-help&amp;utm_source=stash#UsingGPGkeys-add&gt; 
+<span class="cmd">$ gpg --list-secret-keys --keyid-format LONG</span>
+<span class="cmd">$ git config --global user.signingkey A89A6BE28DAEC912  #configure git to sign with my GPG key</span>
+<span class="cmd">$ git commit -S -m &quot;…&quot; &lt;file&gt;</span>
+<span class="cmd">$ git tag -S &lt;mytag&gt;</span>
+
+
+#remote repo
+<span class="cmd">$ git init --bare  #empty repo with no remote repo</span>
+    #in local repo dir
+<span class="cmd">$ git remote add main_repo git@ld-chces16:asingh5/~/main_repo.git</span>
+<span class="cmd">$ git push -u main_repo master   #push to remove from master branch</span>
+
+#changes on certain dates
+<span class="cmd">$ git whatchanged --since=&quot;7 day ago&quot; --until=&quot;2 day ago&quot; -p</span>
+<span class="cmd">$ git whatchanged --since=&quot;2019-01-20&quot; --until=&quot;2019-01-30&quot; -p</span>
+
+#config  local &amp; global
+&lt;repo&gt;/.git/config is local
+~/.gitconfig is global
+<span class="cmd">$ git config --global user.name  #stored in global</span>
+<span class="cmd">$ git config --global --list</span>
+
+git config --global user.name &quot;Aditya Singh&quot;
+git config --global user.email aditya.singh@citadelsecurities.com
+
+
+#shortcuts
+git config --global alias.ci commit  #ci -&gt; commit
+From &lt;https://www.atlassian.com/git/tutorials/setting-up-a-repository&gt; 
+
+
+git config --global alias.st status 
+git config --global alias.co checkout 
+git config --global alias.br branch 
+git config --global alias.up rebase 
+git config --global alias.ci commit
+git config --local alias.lg &quot;log --oneline --decorate&quot;c
+
+
+http://ohshitgit.com/ -- foobars and solutions to commonly occuring issues like make a small tweak to last commit.
+Change from HTTPS to SSH to let you use id_rsa as key (no asking user/password) - https://stackoverflow.com/questions/66262923/how-to-use-ssh-key-instead-of-password-to-clone-push-to-a-specific-gihub-repo
+
+
+
+
+Github Actions (CI/CD pipeline) - automate devloper workflows e.g. CI/CD
+Alternative Jenkins.
+
+e.g. (github events like) PR -&gt; merge code -&gt; test -&gt; build -&gt; push to repo - deploy
+                                                      Build project -&gt; docker image -&gt; push to repo (dockerhub/artifactory)
+Event trigger action. Multiple actions are workflows.
+   
+Build project (bazel/make)
+Run tests (unit/integration)
+Docker image
+Push to AWS repo
+Deploy to AWS EKS
+
+See starter workflows in https://github.com/actions/starter-workflows
+
+
+Github has many prebuilt (and in marketplace) actions with prebuilt yml file that need slight modifications for your needs.
+Also, can setup secrets for username/passwords in repo.
+
+
+
+</pre>
+</main>
+</body>
+</html>

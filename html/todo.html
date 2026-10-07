@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Todo</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: #1a1a2e;
+    color: #e0e0e0;
+    min-height: 100vh;
+}
+header {
+    background: #16213e;
+    border-bottom: 2px solid #0f3460;
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+header a {
+    color: #e94560;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+}
+header a:hover { text-decoration: underline; }
+h1 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #53d8fb;
+    letter-spacing: 0.03em;
+}
+main {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 24px;
+}
+pre {
+    background: #0d1117;
+    border: 1px solid #21262d;
+    border-radius: 8px;
+    padding: 20px 24px;
+    overflow-x: auto;
+    font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+    font-size: 0.85rem;
+    line-height: 1.65;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+.cmd  { color: #7ee787; }          /* $ shell commands */
+.cmt  { color: #8b949e; }          /* # comments */
+.hdr  { color: #f0c040; font-weight: bold; }  /* section headers */
+.url  { color: #79c0ff; }
+</style>
+</head>
+<body>
+<header>
+  <a href="../html/index.html">&#8592; Index</a>
+  <h1>Todo</h1>
+</header>
+<main>
+  <pre><span class="hdr">Python:</span>
+ - pandas
+	df.query(&#x27;colX &gt; @some_value and colA == &quot;Some Value&quot; and colB &gt; 10&#x27;) # some_value variable defined outside
+	for indx, row in df.iterrows():  # row[&#x27;colA&#x27;]
+	df.apply(lambda row: row[&#x27;colA&#x27;] **2, axis=1)
+	to_frame(name=columnA) # (series -&gt; dataframe)
+	df.duplicated()  and df.loc[~df.duplicated(subset=[&#x27;colA&#x27;,&#x27;colB&#x27;])]
+	df.isna().sum() - which columns are empty or df.isna()
+	plots/matplotlib bar,barh,hist,scatter,pairplot (relationship), correlation/heatmap
+
+ - polars
+ - asyncio
+ - multithreading
+ - FastAPI / flask
+
+Design Patterns
+
+Dbt
+
+AdventOfCode 2022 - Python
+Cpp crash course Josh Lospinoso</pre>
+</main>
+</body>
+</html>

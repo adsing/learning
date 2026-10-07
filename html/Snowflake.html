@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Snowflake</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: #1a1a2e;
+    color: #e0e0e0;
+    min-height: 100vh;
+}
+header {
+    background: #16213e;
+    border-bottom: 2px solid #0f3460;
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+header a {
+    color: #e94560;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+}
+header a:hover { text-decoration: underline; }
+h1 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #53d8fb;
+    letter-spacing: 0.03em;
+}
+main {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 24px;
+}
+pre {
+    background: #0d1117;
+    border: 1px solid #21262d;
+    border-radius: 8px;
+    padding: 20px 24px;
+    overflow-x: auto;
+    font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+    font-size: 0.85rem;
+    line-height: 1.65;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+.cmd  { color: #7ee787; }          /* $ shell commands */
+.cmt  { color: #8b949e; }          /* # comments */
+.hdr  { color: #f0c040; font-weight: bold; }  /* section headers */
+.url  { color: #79c0ff; }
+</style>
+</head>
+<body>
+<header>
+  <a href="../html/index.html">&#8592; Index</a>
+  <h1>Snowflake</h1>
+</header>
+<main>
+  <pre>
+<span class="hdr">TASKS:</span>
+=======
+Snowflake task -&gt; fn (SQL/StoredProc/SnowflakeScript)
+Task Graphs (DAG) expect slight delay between parent task ending and child task starting
+
+Task Admin Role
+
+Create Task (suspended)
+ - compute : WH (based on avg. run times which includes queue-wait time) or serverless (auto-resize per workload based on recent runs...to max XXL).
+        For serverless, tasks run time should be stable and for better adherence to timing as WH size can scale up. So for batched loads, might prefer to have tasks on WH with custom schedule &amp; auto-resume/suspend to control cost.
+ - schedule : N-minute or cron-based timing with only one task instance running. If task running when next scheduled time comes, then that run is skipped. DST can cause 1am run twice while 2am not run. Alternative use UTC TZ.
+ - session parameters
+
+Manual execution (role with global EXECUTE MANAGED TASK perm)
+ - create or replace task if not exists my_task &lt;warehouse=&#x27;Small&#x27; | user_task_managed_initial_warehouse_size=&#x27;Small&#x27;&gt; &lt;schedule=10 minute | using cron &lt;...&gt;&gt;
+      allow_overlapping_execute=T/F &lt;session_param=value, sp2=v2&gt; user_task_timeout_ms=100 
+      suspnd_task_after_num_failures=10 error_integration=integ_name task_auto_retry_attempts
+    after task_parent, task_parent2  
+ - create task ... clone
+ 
+ - execute task &lt;my_task&gt;              : must own the task &amp; have WH usage perms &amp; have EXECUTE TASK perm. Runs with owners perms
+ - execute task &lt;my_task&gt; retry last   : re-exec the last failed task of task-graph with name=my_task (restarting from where task failed). The graph will have some task in failed/cancelled state &amp; graph must not be modified since last run; must be done within 14 days.
+
+    Triggered task when stream detects new/changed data in tracked table or when task is resumed to consume what&#x27;s already in stream.
+    Checking stream has_data is based on metadata so doesn&#x27;t use compute until data comes and needs to be processed.
+
+Resume task
+ - versioning of task runs
+ - auto suspend on failures
+ - task history
+ - cost
+ 
+ 
+ 
+ 
+NT: Separation between light/consistent data loads vs heavy/batched loads (esp file based or PADS gated data). Trigger on PADS stream append or on fixed time/Alteryx load triggers.
+
+NT: For PADS data source, we can run on stream append-only when updated (small table to check) will trigger a run (parent-child task group). Need to queue subsequent run.</pre>
+</main>
+</body>
+</html>

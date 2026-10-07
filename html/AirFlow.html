@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Airflow</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: #1a1a2e;
+    color: #e0e0e0;
+    min-height: 100vh;
+}
+header {
+    background: #16213e;
+    border-bottom: 2px solid #0f3460;
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+header a {
+    color: #e94560;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+}
+header a:hover { text-decoration: underline; }
+h1 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #53d8fb;
+    letter-spacing: 0.03em;
+}
+main {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 24px;
+}
+pre {
+    background: #0d1117;
+    border: 1px solid #21262d;
+    border-radius: 8px;
+    padding: 20px 24px;
+    overflow-x: auto;
+    font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+    font-size: 0.85rem;
+    line-height: 1.65;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+.cmd  { color: #7ee787; }          /* $ shell commands */
+.cmt  { color: #8b949e; }          /* # comments */
+.hdr  { color: #f0c040; font-weight: bold; }  /* section headers */
+.url  { color: #79c0ff; }
+</style>
+</head>
+<body>
+<header>
+  <a href="../html/index.html">&#8592; Index</a>
+  <h1>Airflow</h1>
+</header>
+<main>
+  <pre>AirFlow - Job scheduler
+
+&lt; https://www.youtube.com/watch?v=cHATHSB_450 &gt;
+2015 - AirBnB
+2016 - Apache Incubator
+
+Written in python; python as config; programmatic pipeline construction
+
+Pipelines - series of task with job dependecies (DAG)
+UI - DAG name, turn DAG on/off, schedule, job status (passed, run, fail, wait) + additional views (Gantt),
+     history of jobs (forget old history if required to rerun; task logs on S3)
+
+Deployment 
+  - Metadata (SQL DB - SQL Server/Postgres)
+  - WebServer (Flask - talks to Metadata DB)   
+  - Scheduler (Python DAGs + queue)
+  - Worker Queue (Celery - distributed task queue with Redis/RabbitMQ)
+  - Nodes
+  
+Building pipeline
+     - Build DAG (unique name)
+     - start date (will run for hist dates)
+     - schedule interval (min start time in minute)
+     - default_args (for all tasks in pipeline)
+     - max_active_runs (# of parallel runs - safe=1)
+     - concurrency (# of tasks within pipeline that run in parallel)
+     - timeouts (task/pipeline)
+     
+  Task (operator)
+     - python_callable - somemodule.function (or SQL/bash)
+     - dag=DAG
+     - dependency: second_task.set_upstream(first_task)
+     - retries
+     - pool of 10 workers (how many workers can run tasks in pipeline)
+     - queue (for Celery-specific queue for specific workers)     
+     - trigger_rule (default - all upsteam tasks sucessful...changed to fail or done)
+     - context (dictionary about tasks/running env e.g. execution date)
+     - env, jinja templating
+      
+Executor Types (run your tasks): 
+     - CeleryExecutor (has queue); 
+     - SequentialExecutor (task runs with scheduler; good for debugging as task blocks scheduler); 
+          import pdb; pdb.set_trace() #break point in code
+          airflow test &lt;dag&gt; &lt;task&gt; &lt;date&gt;  #CLI to run one task independently
+          #Dev env - everyone should have a local instance of Airflow &amp; schedule_interval=&#x27;@once&#x27;          
+     - LocalExecutor(task runs with scheduler; task as separate process)
+     - MesosExecuter
+
+AirFlow Time (Execution Date) - provided to task in context
+     - gives date of previous task&#x27;s start date.
+
+Be able to test &amp; run without Airflow
+Don&#x27;t mix logic and Airflow
+Challenge deploying new code (when is scheduler/tasks done) - allow for some downtime.
+
+
+Holiday calendar ?
+
+ALternative - Luigi (sub-classing as programatic pipeline)</pre>
+</main>
+</body>
+</html>

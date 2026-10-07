@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Github</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: #1a1a2e;
+    color: #e0e0e0;
+    min-height: 100vh;
+}
+header {
+    background: #16213e;
+    border-bottom: 2px solid #0f3460;
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+header a {
+    color: #e94560;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+}
+header a:hover { text-decoration: underline; }
+h1 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #53d8fb;
+    letter-spacing: 0.03em;
+}
+main {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 24px;
+}
+pre {
+    background: #0d1117;
+    border: 1px solid #21262d;
+    border-radius: 8px;
+    padding: 20px 24px;
+    overflow-x: auto;
+    font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+    font-size: 0.85rem;
+    line-height: 1.65;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+.cmd  { color: #7ee787; }          /* $ shell commands */
+.cmt  { color: #8b949e; }          /* # comments */
+.hdr  { color: #f0c040; font-weight: bold; }  /* section headers */
+.url  { color: #79c0ff; }
+</style>
+</head>
+<body>
+<header>
+  <a href="../html/index.html">&#8592; Index</a>
+  <h1>Github</h1>
+</header>
+<main>
+  <pre>&lt;source from https://githubtraining.github.io/training-manual&gt;
+RemoteRepo      LocalHistory        Staging     WorkingDirectory
+ |---- clone ------&gt;|-----------------------------------|
+                                        |&lt;--- add ------|
+                    |&lt;----- commit -----|
+ |&lt;---- push -------|
+ |--- fetch -------&gt;|
+ |---- pull ------&gt;|--------------- merge  -------------|   pull = fetch + merge
+
+ * add/commit are local operations
+
+ Code - repo/history of all files
+ Issues - bug/feature requests
+ PullRequests PR - change to repo
+ Projects - Board for work item tracking
+ Wiki -
+ README.md - explains the project. badges to explain code-covertage/testing status
+ CONTRIBUTING.md - describe process for contributing - e.g. when someone creates a PR
+ ISSUE_TEMPLATE.md - template of starter test for reporting issues (similarly PR template)
+ Packages - published packages e.g. containers/docker/pip/maven
+ .github - special folder that triggers/worksflows; PULL_REQUEST_TEMPLATE.md, release.ynl, dependabot,yml (dependencies and security alert) + code scan.
+ Insights - graphs, top contributors
+
+ Markdown:
+  #header, ##header2
+  *ListItem or -ListItem
+  **bold**
+  -[] checklist
+  @mention
+  #PR_number
+
+Github Pages - host free/static site
+
+<span class="hdr">Github Flow:</span>
+    - main/master/trunk
+    - create feature branch
+        - changes create new commits and main vs feature have diverged
+        - create PR for review (earlier for team comments/visibility/adjustments, keep as draft PR)
+        - pull often from main/master to keep it current
+        - perform test and if all passes then merge to master;
+            or deploy from pull request n deploy to test and then merge. In case of issues, rollback is master.
+        - merge to master
+
+<span class="hdr">Git configs:</span>
+    system - to ALL user
+    global - to a given user (git config --global--list; git config --global user.name &quot;AD Singh&quot;) need to have user.name and user.email setup
+    local - to specific repo (git config --list)
+
+<span class="cmd">$ git checkout -b new_feature_branch  # old way of creating branch</span>
+<span class="cmd">$ git switch -c new_feature_branch    # explicitly for dealing with branches -c</span>
+<span class="cmd">$ git branch --all</span>
+ new_feature_branch                 # local only branch since no remote/origin/&lt;branch_name&gt; exists
+ * main
+ remote/origin/HEAD -&gt; origin/main  # current branch is main
+ remote/origin/new_feature_branch   # remote for newly created local feature branch
+ remote/origin/main
+ remote/origin/feature_1_branch     # other branches on remote
+ remote/origin/bugfix_1_branch
+
+<span class="cmd">$ git add some_new_file             # adds to stage. also git add . (all files)</span>
+<span class="cmd">$ git commit -m &#x27;updates ...&#x27;       # creates commit and adds to history</span>
+<span class="cmd">$ git fetch                         # get changes from remote ... in case remote has changed</span>
+<span class="cmd">$ git push                          # push our changes to remote</span>
+
+<span class="hdr">Pull request:</span>
+    base: main
+    compare: feature_branch
+    able to merge or conflicts
+    title/description with TL;dR brief and  keywords closes/fixes/resolves #1 (issue #1 ..issues linked to milestone)
+    add reviewers (autoadd designated code-owners to review list)
+    Can create as draft review
+    Pull request template.md
+    Checks tab - CI/CD workflows e.g. unit-test/linting/security scan
+    File changed tab - changes to file...and place for approval
+
+Invite collaborators - for writing to repo; code review
+Code review - Approve, Request Change, Comment.
+
+Two stage commit:  working-&gt;stage    stage-&gt;index/local      history/commit
+
+<span class="hdr">Files state:</span>
+    untracked files   (new or untracked)
+    modified          (added to git but modified)
+    staged            (saved in stage)
+    commit            (saved locally as a commit aka snapshot)
+
+Repo -&gt; New as Private with README and .gitignore (type=python) and license (MIT).
+Issues - Milestone &amp; Issues.
+    Milestone e.g. Oct-release, Nov-release.
+    Issues e.g. README is empty (title, desc, milestone, labels like bug
+Projects -&gt; Avatar - your projects (new) : Team Planning, Feature Release, Kanban, Bug tracker, Iterative Developement, Product Launch, Raodmap, Restroperspective
+
+Project swimlanes (Todo, Inprogress, Done...can add more lanes). Each lane has +Add Item (draft). ... convert to issue (assign repo, label and milestone). Assign issue to assignee.
+    Projects have workflows like Item Closed (set status = Done when issue is closed) and Pull request merged
+
+
+Fork a repo &amp; Link to your project (or create a new project):
+    copy only main branch
+    Settings:
+        - template repo?
+        - default branch (main or master)
+        - Features:
+            - Wiki host doc for repo
+            - Issues - integrate task tracking
+            - Sponsorship - to accept financial contri
+            - Preserve rep with Github Archive Program
+            - Discussion
+            - Projects - at repo owner level and linked to repo&#x27;s project tab. Can be used cross-repo
+        - Pull requests
+            - merge commits;
+            - squash/rebase merges
+            - update pull branch/auto-merge/delete heead branch
+        - Pushes
+            - restrict how many branches/files can be updated
+    Code &amp; Automation:
+        - Pages
+            - deploy from main /root folder to &lt;user&gt;.github.io/&lt;repo_name&gt;  # takes 5mins to deploy.
+    For issue create a branch:
+        - update the files
+        - &quot;contribute&quot; to create a pull request
+        - refer to issue with #&lt;issue_number&gt; e.g. #1
+
+IaC, CI/CD with Github Actions, Bicep template
+    .github/workflows/my-cicd.yml
+        buildNtest:     # uses resource-group (US-east &amp; west-EU) and secret.azure_credentials
+            checkout repo
+            prep software like .net SDK
+            build, test and publish artifact
+            upload artifacts (code zip + bicep template?)
+        deploy:
+            download artifacts (code zip + bicep template?)
+            login into azure subscription using service principal
+            deploy app using bicep template
+
+        SUBSCRIPTION_ID=$(az account show --query id --output tsv)
+        echo $SUBSCRIPTION_ID    #  to store the value of your Azure subscription ID
+
+<span class="cmt">        # reate a Microsoft Entra ID service principal</span>
+<span class="cmt">        # assign to it the role of Contributor in the scope of the subscription</span>
+        az ad sp create-for-rbac --name &quot;devopsfoundationslabsp&quot; --role contributor \
+            --scopes /subscriptions/$SUBSCRIPTION_ID --json-auth
+
+<span class="cmt">        # enerate the name of the first App Service web app you&#x27;ll be deploying</span>
+        echo devops-webapp-eastus-$RANDOM$RANDOM
+<span class="cmt">        # gives devops-webapp-westeurope-33464148</span>
+
+    Actions -&gt; select workflow -&gt; Run workflow
+        Deploy app in us-east and west-europe
+    LoadBalancer - Priority to US-east
+        DNS - http://devopsfoundtionstmprofile.trafficmanager.net
+
+        [ ~ ]$ nslookup devopsfoundtionstmprofile.trafficmanager.net
+        Server:         168.63.129.16
+        Address:        168.63.129.16#53
+        Non-authoritative answer:
+        devopsfoundtionstmprofile.trafficmanager.net    canonical name = eshoponweb-webapp-a6741b039cc5e.azurewebsites.net.
+        eshoponweb-webapp-a6741b039cc5e.azurewebsites.net       canonical name = waws-prod-blu-173.sip.azurewebsites.windows.net.
+        waws-prod-blu-173.sip.azurewebsites.windows.net canonical name = waws-prod-blu-173.eastus.cloudapp.azure.com.
+        Name:   waws-prod-blu-173.eastus.cloudapp.azure.com
+        Address: 40.71.11.146
+
+    Chaos Experiment to stop service on US-east for 10mins causes lookup to point to West-Europe server and US-East App server is down
+
+<span class="cmd">    $ nslookup devopsfoundtionstmprofile.trafficmanager.net</span>
+    Server:         168.63.129.16
+    Address:        168.63.129.16#53
+    Non-authoritative answer:
+    devopsfoundtionstmprofile.trafficmanager.net    canonical name = eshoponweb-webapp-a6741b039cc5.azurewebsites.net.
+    eshoponweb-webapp-a6741b039cc5.azurewebsites.net        canonical name = waws-prod-am2-709.sip.azurewebsites.windows.net.
+    waws-prod-am2-709.sip.azurewebsites.windows.net canonical name = waws-prod-am2-709-7367.westeurope.cloudapp.azure.com.
+    Name:   waws-prod-am2-709-7367.westeurope.cloudapp.azure.com
+    Address: 20.105.232.31</pre>
+</main>
+</body>
+</html>

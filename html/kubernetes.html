@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kubernetes</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: #1a1a2e;
+    color: #e0e0e0;
+    min-height: 100vh;
+}
+header {
+    background: #16213e;
+    border-bottom: 2px solid #0f3460;
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+header a {
+    color: #e94560;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+}
+header a:hover { text-decoration: underline; }
+h1 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #53d8fb;
+    letter-spacing: 0.03em;
+}
+main {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 24px;
+}
+pre {
+    background: #0d1117;
+    border: 1px solid #21262d;
+    border-radius: 8px;
+    padding: 20px 24px;
+    overflow-x: auto;
+    font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+    font-size: 0.85rem;
+    line-height: 1.65;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+.cmd  { color: #7ee787; }          /* $ shell commands */
+.cmt  { color: #8b949e; }          /* # comments */
+.hdr  { color: #f0c040; font-weight: bold; }  /* section headers */
+.url  { color: #79c0ff; }
+</style>
+</head>
+<body>
+<header>
+  <a href="../html/index.html">&#8592; Index</a>
+  <h1>Kubernetes</h1>
+</header>
+<main>
+  <pre>Kubernetes up &amp; running book 2nd edition
+=========================================
+
+Need to know docker. 
+
+K8s started in 2014, open-source infrastructure (container deployment/orchestration) for cloud deployment (any sized compute node). 
+Distributes system, microservices that are scalable &amp; reliable.
+
+<span class="hdr">Benefits:</span>
+o Velocity :: feature release quickly (hourly) &amp; reliably. 
+  - Immutability - containers/k8s provide immutable infra through artifact. Example of mutable infra is apt-get (get binaries and 
+            install on top of existing binaries) so infra is not a single artifact but collection of incremental updates over time.
+            Immutable infra = new/complete/immutable image... with update replacing the image (rollack easy to older image).
+  - Declarative config - eberything in K8s is a declarative config object that represents the desired state of system.
+            Opposed to imperative config where state = series of instructions/actions. E.g. run A; run B; run C.
+            Declarative config defines &quot;state&quot;. E.g. replicas = 3.
+            Store declarative config in source control is &quot;infra as code&quot;            
+  - online self-healing systems - continously monitor your current state to ensure it matches desired/config state. E.g. ensure replicas=3
+            Less time spent on operations and maintenance.
+            &quot;Operator&quot; application runs a software like SQL DBW with wrapper code to detect health + healing.
+o Scalability with &quot;decoupled&quot; architecture
+  - Decoupling of components through well-defined APIs (implementer/consumer balance with low communication overhead) and
+    service load balancer (demand/supply balance).
+  - Easy scaling for applications &amp; clusters
+            Due to immutability+declarative nature, scale to more replicas (or auto-scale)
+            For cluster, add new machine with same image or using declarative config
+  - Scaling teams with micro-services: Ideal team size=2 pizza (6-8 people for knowledge sharing, decision making and sense of purpose)
+            Each team builds one micro-service, combination of teams/microservices.
+            K8s abtractions for building decoupled microservice architecture:
+              = pods (group container of different images i.e. micro-services into single deployable unit)
+              = service (load balancing, naming, discovery to isolate one service from another)
+              = namespaces (isolation, access control)
+              = ingress obejcts (combine multiple microsserices into single external API)
+  - Separation of concerns for consistency &amp; scaling
+            Decoupling of OS/machine and app.
+            Small teams required for maintaining apps/OS/machines
+            KaaS - K8s-as-a-service on cloud for very small teams
+o Abstracting your infra - Separates developer from machine (portability across machine/clouds)
+o Efficiency 
+  - Abtraction aids thought-process
+  - Mchine used optimally (better utilization)
+  - Cheap to create test/development environments with namespace (test/dev)
+
+
+K8s cluster has a control pane &amp; many worker nodes.
+
+Worker nodes run pods i.e. groups of containers/microservices that belong to same application. 
+Pod can consiste of 1 or more containers.
+Wroker node consits of pods and: 
+ - kubelet daemon that talks to Control Pane&#x27;s API server (whic pods to run &amp; ensure desired pod state is maintained)
+ - kube-proxy that redirects network traffic to correct pod &amp; provide load balancing for pods
+ - container runtime (runs containers on worker nodes by polling registry, start/stop containers &amp; container resource manager)
+
+ControlPane has a REST API for user via UI/CLI to interest with and supports ReplicationController (run N instances of this pod) and MigrationController (that allows upgrade/rollback).
+Control plane has 
+ - etcd (distribute key-value DB to store clusters state), 
+  - Scheduler (schedule pods on cluster depending on available resources on worker nodes),
+  - ControlManager (running controllers that manage cluster state) e.g. ReplicationController, DeploymentController (rolling updates &amp; rollbacks)
+ControlPane talks to worker nodes via APIServer.
+
+   
+<span class="hdr">Creating and running containers:</span>
+================================
+K8s platform for managing distributes applications. First, need to know how to put applications in container images.
+Application = source code + library (perhaps shared e.g. libc) + language runtime. Potential issue with shared library (not installed on a host; or different version).
+So image &amp; infrastructure should be immutable.
+Container - creation &amp; register/upload of image; services/infra to run these. Container apps run inside an OS container
+K8s supports Docker imagesand other OCI-compatible images (Open Contaner Initiative).
+Docker - each layer add/removes/modifies preceding layers. Each config line adds a layer.
+Containers :: (a) System contains like OS - full boot cycle with serive like ssh. (b) Application container - run a single program (preferred method).
+
+Building with Docker: 
+1. &quot;.dockerignore&quot; - do not copy these files into image.
+2. Dockerfile is recipe for how to build the container image. 
+
+<span class="hdr">Example:</span>
+FROM node:10          # Start from a Node.js 10 (LTS) image 1
+WORKDIR /usr/src/app  # Specify the current working directory inside the image in which all commands will run 2
+COPY package*.json ./ # Copy package files and install dependencies 3
+RUN npm install
+COPY . .               # Copy all of the app files into the image 4
+CMD [ &quot;npm&quot;, &quot;start&quot; ] # The default command to run when starting the container 5
+
+<span class="cmt"># create simple-node Docker image</span>
+<span class="cmd">$ docker build -t simple-node .</span>
+#run it on locahost:3000
+<span class="cmd">$ docker run --rm -p 3000:3000 simple-node</span>
+<span class="cmd">$ docker build -t simple-node .</span>
+
+<span class="hdr">Pitfalls of Docker file:</span>
+1. files removed by subsequent layer are still present in parent image and thus making the container image bulky.
+2. changes made to in-between layers require all subsequent layers to be rebuilt. So try to make changes to last lines of Dockerfile.
+3. Don&#x27;t do compilation on docker image - leaves all the build/link tools in image. That is unless you can do multi-stage builds (build in one stage and then use the binary build image in deployment build).
+4. Security - dont built images with passwords baked in.
+
+Multi-state builds in docker produces multiple images; each is a stage from which artifacts from preceding stages can be copied to current stage.
+
+<span class="cmt"># STAGE 1: Build</span>
+FROM golang:1.11-alpine AS build
+RUN apk update &amp;&amp; apk upgrade &amp;&amp; apk add --no-cache git nodejs bash npm   # Install Node and NPM
+RUN go get -u github.com/jteeuwen/go-bindata/...  # Get dependencies for Go part of build
+RUN go get github.com/tools/godep
+WORKDIR /go/src/github.com/kubernetes-up-and-running/kuard
+COPY . .  # Copy all sources in
+<span class="cmt"># This is a set of variables that the build script expects</span>
+ENV VERBOSE=0
+ENV PKG=github.com/kubernetes-up-and-running/kuard
+ENV ARCH=amd64
+ENV VERSION=test
+RUN build/build.sh   # Do the build. Script is part of incoming sources.
+
+<span class="cmt"># STAGE 2: Deployment</span>
+FROM alpine
+USER nobody:nobody
+COPY --from=build /go/bin/kuard /kuard    #copy from build image
+CMD [ &quot;/kuard&quot; ]
+
+<span class="cmd">$ docker build -t kuard .</span>
+<span class="cmd">$ docker run --rm -p 8080:8080 kuard</span>
+
+<span class="hdr">Storing images in remote repository (like Artifactory) :</span>
+<span class="cmd">$ docker login  #authenticate   dockerhub.com - public repo</span>
+<span class="cmd">$ docker tag myapp dockerhub.com/myaccount/myapp:v2</span>
+<span class="cmd">$ docker push dockerhub.com/myaccount/myapp:v2</span>
+
+Docker runtime
+<span class="cmd">$ docker run -d --name myapp --publish 8080:80  dockerhub.com/myaccount/myapp:v2  # -d as daemon in background</span>
+<span class="cmd">$ curl http://localhost:8080  # test</span>
+
+#stop and remove container
+<span class="cmd">$ docker stop</span>
+<span class="cmd">$ docker rm myapp  # otherwise when new image is tagged with myapp its associted with new image while old image still exists.</span>
+<span class="cmd">$ docker images    # list images on computer</span>
+<span class="cmd">$ docker prune     # remove stopped images/untagged images/unused image layers</span>
+
+Limiting resources used by container by exposing underlying Linux cgroup.
+<span class="cmd">$ docker run -d --name myapp --publish 8080:80  --memory 200m --memory_swap 1G --cpu-shares 1024 dockerhub.com/myaccount/myapp:v2</span>
+
+<span class="cmd">$ docker rmi &lt;tag or image&gt;  #remove/delete image</span>
+
+
+<span class="hdr">MicroK8s theory:</span>
+================
+<span class="hdr">High Availability:</span>
+<span class="hdr">3 types of nodes in a HA setup:</span>
+    1. voter node: replicate DB &amp; vote in leader election
+    2. standby nodes: replicate DB but don&#x27;t vote for leader election
+    3. spare: don&#x27;t replicate DB and don&#x27;t vote for leader election
+Status lists the voter &amp; spare nodes and whether HA is achieved or not.
+Master control pane runs on all nodes and can use &quot;microk8s *&quot; cmds on any node.
+If leader node crashes, a new one is elected within 5 sec. Do it gracefull with &quot;microk8s leave&quot; &amp; &quot;microk8s remove-node &lt;node&gt;&quot;.
+If a new node is made a voter node then you may have to install the add-ons 
+
+Strict Confinement: microk8s comes with a strict setup that block file/network etc access.
+
+<span class="hdr">Classic setup (default):</span>
+    - Calico as CNI Networking Interface (configure image registry, 
+    - dqlite (instead of etcd) as data store
+
+ClusterAPI (CAPI) is API for cluster creation/config/mgmt as YAML file.
+    Abstracts away infra prvisioning, networking etc.
+    Runs on management clusters (and not provisioned cluster where workloads run). 
+
+<span class="hdr">Dual stack IPv4/IPv6:</span>
+    Default setup to use IPv4
+    
+Add ons: Dashboard/DNS/Cert-manager/helm/ingress/metrics server/prometheus/registry &amp; many from community (fluentd, argoCD, istio, traefik)
+
+<span class="hdr">MicroK8s v1.28 setup on localhost (ThinkPad):</span>
+=========================================
+setup : 
+    sudo apt install microk8s --classic
+    sudo usermod -a -G microk8s $USER
+    sudo mkdir -p ~/.kube
+    sudo chown -f -R $USER ~/.kube
+<span class="cmt">    # microk8s start</span>
+    microk8s status --wait-ready
+        microk8s is running
+        high-availability: no
+          datastore master nodes: 127.0.0.1:19001   # master control pane, replicate DB and participate in leader election
+          datastore standby nodes: none             # replicate DB but don&#x27;t participate in leader election
+<span class="cmt">                                                    # spare nodes don&#x27;t replicate DB or participate in leader election</span>
+        addons:
+          enabled:
+            dashboard            # (core) The Kubernetes dashboard
+            ha-cluster           # (core) Configure high availability on the current node
+            helm                 # (core) Helm - the package manager for Kubernetes
+            helm3                # (core) Helm 3 - the package manager for Kubernetes
+            metrics-server       # (core) K8s Metrics Server for API access to service metrics
+
+
+<span class="cmd">$ alias ukubectl=&quot;microk8s kubectl&quot;</span>
+<span class="cmd">$ microk8s kubectl get all --all-namespaces</span>
+...
+
+<span class="hdr">Deployment:</span>
+<span class="cmd">$ kubectl create deployment nginx --image nginx</span>
+<span class="cmt"># deployment/nginx created</span>
+<span class="cmd">$ kubectl expose deployment nginx --port 80 --target-port 80 --selector app=nginx --type=ClusterIP --name nginx</span>
+<span class="cmt"># service/nginx created</span>
+
+<span class="cmd">$ ukubectl get all          # we see pod, service, deployment &amp; a replica-set</span>
+    NAME                       READY   STATUS             RESTARTS   AGE
+    pod/ngix-979d6455c-nlkzv   0/1     ImagePullBackOff   0          4m8s
+
+    NAME                 TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)   AGE
+    service/kubernetes   ClusterIP   10.152.183.1     &lt;none&gt;        443/TCP   19d
+    service/ngix         ClusterIP   10.152.183.163   &lt;none&gt;        80/TCP    2m14s
+
+    NAME                   READY   UP-TO-DATE   AVAILABLE   AGE
+    deployment.apps/ngix   0/1     1            0           4m8s
+
+    NAME                             DESIRED   CURRENT   READY   AGE
+    replicaset.apps/ngix-979d6455c   1         1         0       4m8s
+<span class="cmt"># replicaset is auto-created; pods have random suffix but same name as deployment; ngix is exposed on IP 10.152.183.163:80</span>
+<span class="cmt"># note: deployment &amp; pods are not ready so curl is not working</span>
+
+<span class="cmd">$ curl 10.152.183.163       # didn&#x27;t work - certificate error in logs</span>
+<span class="cmt">    # Get &quot;https://172.18.204.90:10250/containerLogs/default/ngix-979d6455c-nlkzv/ngix?tailLines=5000&amp;timestamps=true&quot;: tls: failed to verify certificate: x509: certificate is valid for 172.18.206.232, 172.17.0.1, not 172.18.204.90</span>
+
+<span class="cmd">$ microk8s reset    #shuts down all components &amp; restarts clean</span>
+<span class="cmd">$ microk8s stop     # when not using; can always start</span>
+
+
+<span class="hdr">Dashboard:</span>
+<span class="cmd">$ microk8s enable dashboard     # enables</span>
+    If RBAC is not enabled access the dashboard using the token retrieved with:
+        microk8s kubectl describe secret -n kube-system microk8s-dashboard-token    # token retrival
+    Use this token in the https login UI of the kubernetes-dashboard service.
+
+    In an RBAC enabled setup (microk8s enable RBAC) you need to create a user with restricted
+    permissions as shown in:
+    https://github.com/kubernetes/dashboard/blob/master/docs/user/access-control/creating-sample-user.md
+
+<span class="cmd">$ microk8s dashboard-proxy  # didn&#x27;t work as certifcate is not authorized for my IP (172.18.204.90)</span>
+
+    Dashboard will be available at https://127.0.0.1:10443
+
+    Use the following token to login: eyJhbGciOiJSUzI1NiIsImtpZCI6InAyRTVmUmRoQmtFeGhJb3lzUEhQMXVaYjNGRHFrVlRKRmYzVU5WalJiNHMifQ.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9uYW1lc3BhY2UiOiJrdWJlLXN5c3RlbSIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VjcmV0Lm5hbWUiOiJtaWNyb2s4cy1kYXNoYm9hcmQtdG9rZW4iLCJrdWJlcm5ldGVzLmlvL3NlcnZpY2VhY2NvdW50L3NlcnZpY2UtYWNjb3VudC5uYW1lIjoiZGVmYXVsdCIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VydmljZS1hY2NvdW50LnVpZCI6IjVkNDM3NjU2LWViODAtNDJhYi1iZjc1LTE3NGIzZmRlNmI5YSIsInN1YiI6InN5c3RlbTpzZXJ2aWNlYWNjb3VudDprdWJlLXN5c3RlbTpkZWZhdWx0In0.aA3f18MDKn3_tUbRraWzl3NZMmt0VlQiSaK1C8FDrxziyDDcowqX_aglVMMQiWcWyUVqujRh2jVKu2IRjaDmCj-2LbSbogjcMjsexOGcs9bw9X6SwWB_1MdsOt7_fvxt2a3raDOc5x1NVr0gKQvZUebWfGKsloSTa9g7l8LcwoiMjnch9qpFQ_og1_-MnDEWSYnOYab0upUOPNYs_jFTjM1Cix6LJYOF544w0Icwj-Wsx9FlYxGTsqejJbFhNMm4qRfXz7vGa5duhagxc7WTqo75hLxfCLqxcJHeZj8IB_7sg6gbugR0_abLJRw4yBSeXPBnFV835izVJH2LWX9_lQ
+
+    error: error upgrading connection: error dialing backend: tls: failed to verify certificate: x509: certificate is valid for 172.18.206.232, 172.17.0.1, not 172.18.204.90
+## edit and add IP to /var/snap/microk8s/current/certs/csr.conf.template .. didn&#x27;t work
+## sudo microk8s refresh-certs -e ca.crt  ... starts browser but certificate error exists (not erroring out atleast)
+
+
+<span class="cmd">$ microk8s kubectl -n kube-system describe service kubernetes-dashboard | grep Endpoints</span>
+     10.1.19.168:8443
+Open firefox to https://10.1.19.168:8443 and enter token
+
+
+
+<span class="hdr">Helm:</span>
+======
+ -  as a package manager (like apt) for K8s i.e. packaging collection of yaml of K8s and distributing them. Bundle of yaml files is called Helm Chart.
+ - as a templating engine. App made of multiple microservices (where each app name/port/image is different else everything is same). Define common blue print for all microservices in an app and replace dynamic values with placeholders like {{.Values.container.name}} these values come from a &quot;values.yaml&quot; file or through CLI with --set flag. Good for CI/CD.
+ -  
+  </pre>
+</main>
+</body>
+</html>

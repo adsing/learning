@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Big Query</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: #1a1a2e;
+    color: #e0e0e0;
+    min-height: 100vh;
+}
+header {
+    background: #16213e;
+    border-bottom: 2px solid #0f3460;
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+header a {
+    color: #e94560;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+}
+header a:hover { text-decoration: underline; }
+h1 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #53d8fb;
+    letter-spacing: 0.03em;
+}
+main {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 24px;
+}
+pre {
+    background: #0d1117;
+    border: 1px solid #21262d;
+    border-radius: 8px;
+    padding: 20px 24px;
+    overflow-x: auto;
+    font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+    font-size: 0.85rem;
+    line-height: 1.65;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+.cmd  { color: #7ee787; }          /* $ shell commands */
+.cmt  { color: #8b949e; }          /* # comments */
+.hdr  { color: #f0c040; font-weight: bold; }  /* section headers */
+.url  { color: #79c0ff; }
+</style>
+</head>
+<body>
+<header>
+  <a href="../html/index.html">&#8592; Index</a>
+  <h1>Big Query</h1>
+</header>
+<main>
+  <pre>BigQuery
+
+Typical database is called &quot;dataset&quot; in a project.
+Dataset has many tables under it.
+
+<span class="cmt"># Client -&gt; project -&gt; datasets -&gt; tables</span>
+from google.cloud import bigquery
+client = bigquery.Client()
+
+dataset_ref = client.dataset(&quot;my_data_set&quot;, project=&quot;project_name_having_this_data_set&quot;)
+dataset = client.get_dataset(dataset_ref)
+
+tables = list(client.list_tables(dataset))
+for table in tables:  
+    print(table.table_id)
+
+table_ref = dataset_ref.table(&quot;my_table_name&quot;)
+table = client.get_table(table_ref)
+
+table.schema        # list of SchemaFields (name, field type, mode ie. Nullable?, description)
+<span class="cmt">            # SchemaField(&#x27;by&#x27;, &#x27;string&#x27;, &#x27;NULLABLE&#x27;, &quot;The username of the item&#x27;s author.&quot;,())</span>
+
+<span class="cmt"># get rows with list_rows returning a RowIterator</span>
+client.list_rows(table, max_results=5).to_dataframe()           # 5 rows only
+client.list_rows(table, selected_fields=table.schema[:1]).to_dataframe()    # first column only
+
+<span class="cmt"># select</span>
+SELECT colA
+FROM `project.dataset.table`   # backticks
+WHERE colA = &#x27;Value&#x27;
+
+query_job = client.query(sql_query)
+df = query_job.to_dataframe()
+
+<span class="cmt"># estimate size of query with QueryJobConfig</span>
+config = bigquery.QueryJobConfig(dry_run=True)
+dry_run_query_job = client.query(sql_query, job_config=config)
+dry_run_query_job.total_bytes_processed
+
+<span class="cmt"># config to run query only if small data is consumed</span>
+safe_config = bigquery.QueryJobConfig(maximum_bytes_billed = 1024*1024)  # 1MB scan limit
+safe_query_job = client.query(sql_query, job_config=safe_config)
+safe_query_job.to_dataframe()           # will raise InternalServerError if it exceeds the limit
+
+
+<span class="cmt"># group by - having - column alias</span>
+
+<span class="cmt"># escape keywords with `..` e.g. column `by`</span>
+
+<span class="cmt"># data YYYY-MM-DD format</span>
+extract(DAY from DateCol)   # DAY WEEK MONTH YEAR DAYOFWEEK
+</pre>
+</main>
+</body>
+</html>

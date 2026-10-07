@@ -1,0 +1,1424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Python General</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: #1a1a2e;
+    color: #e0e0e0;
+    min-height: 100vh;
+}
+header {
+    background: #16213e;
+    border-bottom: 2px solid #0f3460;
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+header a {
+    color: #e94560;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+}
+header a:hover { text-decoration: underline; }
+h1 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #53d8fb;
+    letter-spacing: 0.03em;
+}
+main {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 24px;
+}
+pre {
+    background: #0d1117;
+    border: 1px solid #21262d;
+    border-radius: 8px;
+    padding: 20px 24px;
+    overflow-x: auto;
+    font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+    font-size: 0.85rem;
+    line-height: 1.65;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+.cmd  { color: #7ee787; }          /* $ shell commands */
+.cmt  { color: #8b949e; }          /* # comments */
+.hdr  { color: #f0c040; font-weight: bold; }  /* section headers */
+.url  { color: #79c0ff; }
+</style>
+</head>
+<body>
+<header>
+  <a href="../html/index.html">&#8592; Index</a>
+  <h1>Python General</h1>
+</header>
+<main>
+  <pre><span class="hdr">Learn:</span>
+ - concurrency: multi-threading, multi-processing, concurrent futures
+ - asyncio
+ - callbacks
+ - More itertools - https://pypi.org/project/more-itertools/
+ - polars
+ - pydantic
+ - profiling with Scalene
+ - typing (mypy|pyre|pyright)
+ - FastAPI/OpenAPI -- https://realpython.com/fastapi-python-web-apis/ see REST.txt
+ - dbt 
+
+Python objects are destroyed when their reference counts = 0.
+import sys
+sys.getrefcount(x)  # adds one ref.count as it accesses the variable.
+
+
+globals()   -- namespace at module level
+locals()    -- namespace local 
+LEGB rule : Locals, Enclosed, Global, Built-in, else NameError
+<span class="hdr">To change global variable in a local scope:</span>
+    global var_x
+    var_x = 10    # now this will change global var_x
+To change enclosing variable (not global) in local scope (e.g. for nested fn):
+    nonlocal var_y
+    var_y = &#x27;abc&#x27;
+
+Callable: both function and classes can be called .e.g foo(), MyClass().
+    If class implements __call__, then obj() is callable 
+callable(lambda x:x) == callable(MyClass)
+
+<span class="hdr">Ternary:</span>
+	a if a &lt; b else b
+
+<span class="hdr">List:</span>
+    lst.append(3) or lst.insert(1,100)  # index=1, item=100
+    lst.pop() or lst.pop(0)  vs lst.remove(value) # not returned! but ValueError if value is not found
+    lst.extend(lst2)
+    lst.clear() # remove all elements
+    lst.copy()  # shallow copy
+    lst.count(item)  # parse full list and return # of occurances
+    lst.find(item)   # -1 if not found else index 0..len(lst)-1 ...safer that index. Also lst.rfind()
+    lst.index(item)  # first index of item; ValueError if not found  (better with &quot;item in lst&quot;)
+    lst.reverse()    # in place
+    lst.sort(.. key, reverse) # in place 
+
+String: immutable
+    strng.index(&#x27;substring&#x27;)
+    strng.startwith(&#x27;A) ... strng.endswith(&#x27;Z&#x27;)
+    lst = strng.split(&#x27;,&#x27;) ... strng = &#x27;,&#x27;.join(lst)  # also regex=re.compile(&#x27;_,&#x27;)  regex.split(data) for multiple separator splitting
+    str.strip()     ... remove leading/trailing space
+    str.strip(&#x27;[]&#x27;) ... remove [ and ]
+    &quot;{} + {1} = {2}&quot;.format(2,3,5)  or f&quot;{a}+{b}={tot}&quot; # a=2, b=3, tot=5
+    &quot;{} weighs about {:.2} kilograms ({:.3%} of Earth&#x27;s mass). It is home to {:,} .&quot;.format(
+        planet, pluto_mass, pluto_mass / earth_mass, population,
+        )
+    eval(str)  # my_list = eval(&quot;[1,2,]&quot;)    to convert an IO string into python variable(s)
+    exec(code_str)  # doesn&#x27;t return anything, just executes the code
+    
+<span class="hdr">Dict:</span>
+    {key:value for key,value in zip(keys,values)}
+<span class="cmt">    #  keys(), values(), items()  ... are views on dictionary data structs and not lists.</span>
+    dict.get(key, default_value)  vs dict.setdefault(key,default_value) will return value if key exists otherwise unlike .get() will add to dictionary key:default_value pair.
+    
+    Sets are implemented as dictionary (without values).
+    Common operations | union, &amp; intersection, - difference, ^ symmetric difference, &lt;= subset, &lt; strict subset (not =), &gt;=,&gt; superset
+
+Enum: (unique) Symbolic names bound to a variable. Advantages: grouping, nice repr, type safe.
+	  If 2 names have same value then second serves as alias to first -- which is returned when accessing first or second such enum member.
+	  Aliases are not showin while iterating over enum.
+	  To force, unique values as well then use @unique.
+
+		from enum import Enum, auto, Flag, unique
+
+		@unique
+		class RGBColors(Enum):
+			RED=1			# attribute .name=RED and .value=1
+			GREEN=2
+			BLUE=auto()
+			
+            def __str__(self):  # can define methods as well
+                return self.name.lower()    # RED -&gt; red
+<span class="cmt">            # name|value are read-only and should not be modified in methods</span>
+            
+		rgb = RGBColors(2)
+		rgb         		# repr:: &lt;RGBColors.GREEN: 2&gt;
+		print(rgb)          # str :: RGBColors.GREEN
+<span class="cmt">		# note type, name|value attributes, ability to iterate on enumeration members</span>
+		type(rgb)           # type::  RGBColors
+		rgb.name, rgb.value # GREEN, 2
+		for x in RGBColors: print(x)   # RGBColors.RED, RGBColors.GREEN, RGBColors.BLUE
+
+
+	Similar to Enum, is Flag (bitset)
+		class TimeInForce(Flag):
+			AON = 1		# index starts from 1 even if auto() used
+			DNR = 2
+			DNI = 4
+			FOK = auto()
+			NH = auto()
+		tif = TimeInForce.AON | TimeInForce.NH		# Py3.11
+		for v in tif:			# iterate over flags
+			print(v)
+	Access: TIF[&#x27;AON&#x27;] by name; TIF(1) by value, TIF.AON.value
+
+	Enum similar to namedtuple. E.g. Animal = Enum(&#x27;Animal&#x27;, &#x27;ANT BEE CAT DOG&#x27;)-
+	To compare Enum to integers, use IntEnums (or StrEnums or IntFlags or StrFlags).
+
+
+<span class="hdr">Function:</span>
+    Python evaluates function when they are defined and have a side effect that any mutable default arguments are created at time of evaluation.
+    So don&#x27;t use [] or {} as default args instead default them to None and in function definition, initialize to mutable data struct if None.
+    
+    Fn. always return a value - None, user-specified scalar (which can be None, literal or a tuple for multiple values...limit to 5).
+    When returning multiple values, consider maintaining readability of code i.e. don&#x27;t refactor and shrink the fn just for the sake, it should logically blend itself in terms of code &amp; return values.
+
+<span class="cmt">    # typing  .. list|tuple|MyClass or list[MyClass] or tuple[MyClass, int] </span>
+<span class="cmt">    #           or tuple(float, ...) for multiple floats... better Sequence[float] for tuple/list</span>
+<span class="cmt">    #           or dict[str, int] or dict[str, list[MyClass]], set[int] </span>
+<span class="cmt">    #           or set[int | str] ... set containing int or str</span>
+    def foo(s:str, n:int = 1) -&gt; str:
+        &quot;&quot;&quot; Foo takes string input and returns string with N-copies of original (Summary, args, returns, raises if any) &quot;&quot;&quot;
+        return s * n
+    foo.__doc__   # Foo takes string input and returns string with N-copies of original
+
+
+Args: positional or keyword
+	def fn(positional_only_args, /, positional_or_keyword, *, keyword_only):
+
+
+Exception handling: try-except-else-finally
+<span class="hdr">try:</span>
+<span class="cmt">    # code that can raise exception (keep it short)</span>
+<span class="hdr">except ValueError as x:</span>
+<span class="cmt">    # handle exception (only one matching except block is processed)</span>
+<span class="cmt">    # exception is saved to sys.exception() first and then falls into except-suite of code</span>
+<span class="cmt">    # can raise another exception here....code outside this block or code in stack frame to handle it</span>
+<span class="cmt">    # x goes out of scope here</span>
+<span class="hdr">except IndexError as x:</span>
+<span class="cmt">    # handle specific type of exception</span>
+<span class="cmt">    # x is an object that is highly likely to have &quot;args&quot; attributes. Other attributes are specific to Exception-type/class</span>
+<span class="cmt">    # can chain and raise another exception as shown below...traceback preserves both the exception</span>
+<span class="cmt">    # &quot;raise ValueError(&quot;Value is incorrect too&quot;) from x&quot; </span>
+<span class="cmt">    # raise         # re-raise the same exception (same as &quot;raise x&quot;) e.g. typically logging.exception(x) and delegate by re-raising to higher-level code for handling</span>
+<span class="hdr">except Exception as x:</span>
+<span class="cmt">    # catch-all exception</span>
+<span class="cmt">    # if this part is missing and exception is not handled it will rise up to caller (which can be OS and your code will be terminated)</span>
+<span class="hdr">else:</span>
+<span class="cmt">    # else exeucted only if no exception raised from try block</span>
+<span class="hdr">finally:</span>
+<span class="cmt">    # always executed (try-&gt;else-&gt;finally) or (try-&gt;except-&gt;finally) or (try-&gt;finally and then unhandled exception if any is raised)</span>
+<span class="cmt">    #  If there is a saved exception it is re-raised at the end of the finally clause. If the finally clause raises another exception, the saved exception is set as the context of the new exception. If the finally clause executes a return, break or continue statement, the saved exception is discarded</span>
+    
+Anti pattern to avoid: ignoring all exceptions silently
+    try:
+        ...
+    except:     # or except Exception as e:
+        pass
+    
+except* goes with ExceptionGroups (one message but multiple Exception classes) and each matching except* block is invoked
+<span class="hdr">except * &lt;ExceptionClass&gt; as x:</span>
+
+<span class="hdr">Size of:</span>
+   import sys
+   sys.getsizeof([0,1,2,3])	# bytes used by this data struct - does not count recursive data structs, only 1 level deep. Custom code to do recusrive size computation.
+<span class="cmt">   				# Object has ref.count + ptr.to.its.type at least + 2ptr for garbage collector ... all of which getsizeof() captures.</span>
+
+   PyObject has:
+   	ob_refcount
+   	ob_type
+   PyVarObject has:
+   	ob_size		# len - actual size
+   PyListObject has:
+   	ob_item		# pointer
+   	allocated	# how many elem &quot;could&quot; fit in ob_item memory - max size (returned by getsizeof)
+   2 Garbage collection pointers
+   So a list has 7 meta-data elements. Size of empty list = 7 * 8 = 56 bytes
+
+
+<span class="cmt"># OOP</span>
+task = Task()       
+<span class="cmt"># 2 step calls __new__ and __init__. New is rarely defined and returns object of Class after allocating memory. Initialization of member variables is done in __init__ which returns nothing</span>
+<span class="cmt"># calls task = Task.__new__(Task) and Task.__init__(task)  -- register var. in namespace locals()/globals()</span>
+<span class="cmt"># on del task, calls Task.__del__(task) -- which decrements the ref.count</span>
+
+class Person:           # user defined type i.e. type(Person) is class &#x27;type&#x27; so UDF is an instance of class type like type(p1) = class Person
+<span class="cmt">    # class variable/methods are shared by all instances</span>
+    counter = 0
+    _version = &quot;1.0.1&quot;         # _ protected; __private (mangled to _Class__private_method)
+    @classmethod        # class methods typically factory methods used to create objects (from string/dict etc). called as Person.create_anonymous()
+    def create_anonymous(cls):      # note: says &quot;cls&quot; not &quot;self&quot;
+        counter += 1                # can access other class attributes or methods
+        return cls(&#x27;Anonymous&#x27;)     # same as &quot;Person(&#x27;Anonymous&#x27;)&quot;
+    def __init__(self, name):
+        self._name = name
+        self.counter += 1  # or Person.counter or self.__class__.counter
+    def greet(self):
+        return f&quot;Hello {self.name}&quot;
+<span class="cmt">    # static methods to group methods together; not specific to class or instance</span>
+    @staticmethods
+    def copyright():      # not touching any class/obj data but kept here for logical grouping. called as Person.copyright(). Note: no self/class as argument
+<span class="cmt">    # read only attributes with @property as obj.name (like an attribute aka a property of obj)</span>
+    @property
+    def name(self):
+        return self._name
+    @name.setter        # @{property_name}.setter
+    def name(self, value):
+        if value not in VALID_VALUES:
+            raise AssertionError(f&quot;Invalid value {valu}. Valid values are {VALID_VALUES}&quot;)
+        self._name = value
+<span class="cmt">    # __repr__ (format matches code for creating object throught eval..use !r for raw string) &amp; __str__ (print/f-string ..use !s for string representation) ... !r gives &quot;str&quot; while !s gives str.</span>
+    def __repr__(self):
+        return f&quot;Person({self.name!r})&quot;
+
+ class SpecialPerson(Person):           # single inheritance (__private methods are not accessible in subclass but _protected and regular are accessible in subclass)
+    def__init__(self, name, speciality):        # if __init__ is not defined then parent&#x27;s __init__ called automatically...but since we define in subclass, we need to determing if super()&#x27;s init needs to be called or not
+        super().__init(name)            # init Parent first with super()
+        self.speciality = specialiity
+        print(&quot;Copyright 2020...blah blah&quot;)
+    def greet(self):
+        return super().greet() + f&quot; with speciality {self.speciality}&quot;
+
+p1 = Person(&#x27;Adi&#x27;)
+print(p1.counter)     # class attribute
+getattr(p1, &#x27;attrib&#x27;, &#x27;new_attrib_required&#x27;)        # check if it has attribute &quot;attrib&quot; and if not, return &quot;new_attrib_required&quot; ... looks up in __dict__ first and then in __getattr__ (lazy eval)
+p1.new_attrib = 10    # attribute added dynamically to this object instance only
+<span class="cmt"># setattr(p1, &#x27;new_attrib&#x27;, 10)</span>
+
+<span class="cmt"># adding attribute to class after it&#x27;s created make it available in all instances (even those created prior to new attribute being added to class)</span>
+<span class="cmt"># delattr(Person, &#x27;new_attrib&#x27;)</span>
+print(id(p1))         # get memory locaion of object with id()
+
+sp = SpecialPerson(&#x27;X&#x27;)
+SpeciallPerson.mro()        # method resolution order :: (SpecialPerson, Person, Object) in this order
+
+__slots__ can be used to save memory taken by objects + restrict from adding more member variable (obj.NewVar).
+The instance loses __dicts__.
+The class retains __dicts__ and gains additional __slots__ member along with descriptors to get/set these slots members implemented in C code to access member based on memory location (instead of __dict__).
+	obj.slotX = &#x27;some value&#x27; 	# calls Class.__dict__[&#x27;slotX&#x27;].__set__(obj, &#x27;some_value&#x27;
+	print(obj.slotX)		# calls Class.__dict__[&#x27;slotX&#x27;].__get__(obj, Class)
+
+
+Profilers are of 2 types (a) Tracing which have higher initial setup but very accurate reporting (b) Sampling
+cProfile is tracing type; scalene are sampler type which also supports (threads, multiprocessing, Python vs C time, GPU, mem.trend, mem.leaks, copy time between python/native library)
+<span class="hdr">Profile with cProfile module:</span>
+<span class="cmd">   $ python3 -m cProfile mycode.py    # simple/basic</span>
+<span class="cmd">   $ python3 -m cProfile -o mycode.prof mycode.py &amp;&amp; snakeviz mycode.prof</span>
+
+   import cProfile
+   import pstats
+   with cProfile.Profile() as profiler:
+       my_function()
+   stats = pstats.Stats(profiler)
+   stats.sort_stats(pstats.SortKey.TIME).
+<span class="cmt">   # stats.print_stats()		# alternatel, pip install snakeviz</span>
+   stats.dump_stats(filename=&#x27;code_profile.prof&#x27;)
+
+<span class="cmd">   $ snakeviz code_profile.prof</span>
+
+<span class="hdr">Profiling with scalene:</span>
+<span class="cmd">   $ scalene [options] mycode.py</span>
+   	options:
+   	 --reduced-profile (only show where code runs for atleast 1%)
+   	 --html --outfile profile.html  (line, fn level profile)
+   	 --cpu-only	(not memory but does GPU also)
+
+
+
+<span class="hdr">Benchmarking:</span>
+    1. set PYTHONDONTWRITEBYTECODE=1		# don&#x27;t cache bytecode between test runs
+    2. python -m timeit -s &quot;from mymodule import function&quot; &quot;function()&quot;		# -s part not included in benchmark time
+    3. timeit.timeit(&quot;code_to_test()&quot;, setup=&quot;from __main__ import code_to_test&quot;, number=10)
+
+
+<span class="hdr">Faster code tips:</span>
+   - use itertools/collections e.g. count() instead of loops with var increment
+    - speed vs memory trade off (generator vs list) esp if only first elelement of list is needed then next(gen)
+    - numpy/numba
+    - code optimization e.g. right data struct/algorithm
+   	- e.g. {}, [], () faster than dict(), list(), tuple() fn calls. Tuple faster than list
+   	- unique elements of list while retaining order dict.fromkeys(mylist) but elements need to be hashable
+   	- DRY vs calling too many fn (overheads).
+   	- look for loop-invariant stmt (can be done out of loop), use comprehensions, correct data struct(tuple, frozenset, str, bytes, list/bytearray, set, dict)
+
+
+Data containers : Class/DataClass/Dict/NamedTuple
+	class Pet(typing.NamedTuple):		# Pure classes faster than dataclass (50%) &amp; namedtuple (25%)! but more code. Classes similar to dict.
+	   legs:int
+	   noise:str
+
+	@dataclass
+	class Pet:
+	   noise:str        # type required ... Pet.__annotations__ gives {&#x27;noise&#x27;: &lt;class &#x27;str&#x27;&gt;, &#x27;legs&#x27;: &lt;class &#x27;int&#x27;&gt;} 
+	   legs:int = 4     # default value members at end
+
+	Pet = namedtuple(&quot;Pet&quot;,&quot;legs noise&quot;)
+	p1 = Pet(4, &quot;woof&quot;)
+	p2 = Pet._make([2, &quot;tweet&quot;])
+
+Note: on __repr__. Representation returned should allow the object to be recreated. E.g. Vector(3,4) and not Vector(&#x27;3&#x27;,&#x27;4&#x27;). For this use raw representation e.g. return f&quot;Vector({self.x!r}, {self.y!})&quot;
+
+
+    Lazy attribute eval with __getattr__(self, attr) and/or with @property (prefer @property):
+        &quot;expensive&quot; class data member is evaluated only when used/invoked
+        def __getattr__(self, attr):            # don&#x27;t set self.expensive_attr in __init__ (__getattr__ is called when lookup in __dict__ fails)
+            if attr == &quot;expensive_attr&quot;
+                fetched_attr_value = self.get_expensive_attribute()
+                setattr(self, attr, fetched_attr_value)             # attr is added to obj and expensive call is not made again
+                return fetched_attr_value
+        @property
+        def attr(self):
+            if self._attr is None:
+<span class="cmt">                # do expensive fetch and self._attr = data</span>
+            return self._attr
+
+Dataclasses: provides __init__, __repr__ and __eq__ by default.
+
+    from dataclasses import dataclass, field, astuple, asdict
+    import inspect
+
+    @dataclass(frozen=True, order=True)			# order provides le/ge/lt/gt, frozen allows obj value to NOT be modified after initializations.
+<span class="cmt">							    # Others: kw_args=True, match=True for structural pattern matching, slots=True</span>
+    class Comment:
+        id:int
+        txt:str
+        replies: list[str] = field(default_factory=list)	# list or any other fn that generates initial value. Factory is invoked if user doesn&#x27;t specify this field while creating object. Can set &quot;init=False&quot; in field() to ensure that user can not provide this arg. &quot;repr=False&quot; to hide field from printing with repr. &quot;compare=False&quot; to skip the field
+<span class="cmt">        				# __post__init__(self) method can be used to set attributes that depend on other member attrib.</span>
+
+    class SpecialComment(Comment):
+        special_comment: str = &#x27;&#x27;   # BaseClass fields come before DerivedClass when initializeing ... if base class has any defaults then all sub-class fields must have defaults too as defaults come at end when initializing
+    
+    c = Comment(99, &#x27;text&#x27;, [])
+    sc = SpecialComment(100, &#x27;text&#x27;, [], &#x27;special comment&#x27;)    
+
+    def main():
+        comment = Comment(1,&quot;hoo&quot;)
+        print(comment)
+<span class="cmt">        # comment.id=2</span>
+<span class="cmt">        # comment.set_id(2)</span>
+<span class="cmt">        # print(comment)</span>
+        comment.x = 100	# can&#x27;t do if frozen
+        print(comment.x)
+        number, comment = astuple(comment)		# dataclass converts to tuple/dict
+        pprint(inspect.getmembers(Comment, inspect.isfunction))
+    if __name__ == &#x27;__main__&#x27;:
+        main()
+
+    frozen=True for dataclasses makes the members immutable. So for inheritance, a derived class can not be frozen if it&#x27;s base class is not frozen....but a frozen base class can be inherited by a frozen/non-frozen derived class
+    
+
+match statement (for structural pattern matching) from Py3.10.
+Can match single value (int/str) or other type like list/dict and other objects
+Match patterns based on given sequence i.e. order matters as matching stops after first match.
+	match var:
+		case 0: pass
+		case 1|2: pass
+		case 3 if condition: pass	#  with if condition
+		case 3: pass
+		case _: pass        # default if none matched
+		case other: print(&quot;unknown&quot;)
+		
+Can be used to match other sequence (not iterators) by &quot;destructuring&quot;...for str/bytes/bytearray convert to tuple/list e.g. tuple(input_str_record)
+    match recrd:
+        case [name, _, _, (lat, long)] if long &lt;= 0:        # if-guard and can use 
+            print(f&quot;{name} has negative longitude&quot;)
+        case [name, _, _, (lat, long)]:         # _ to match one item and can occur many times
+            print(f&quot;{name}&quot;)
+        case [name, *_, (lat, long)]:           # *_ for matching n-items
+            print(f&quot;{name} with many args&quot;)
+        case _:
+            raise ValueError(&quot;Unexpected format&quot;)
+            
+<span class="hdr">Can add type info for runtime validation:</span>
+        case [str(name), _, _, (float(lat), float(long))]:
+            print(f&quot;{name}&quot;)
+        case [&#x27;lambda&#x27;, [*params], *body]:      # *body matches many &quot;body&quot;; [*params] ensures it&#x27;s a list with n-items...because we can&#x27;t have same pattern repeat (except _ which can repeat)
+        
+<span class="cmt">            # can have only one * per sequence pattern so need to nest to show that there can be 0-n params and parmas is a list (an inner sequence) and *body outer seq</span>
+        case [&#x27;define&#x27;, [Symbol() as name, *params], *body] if body:
+            return eval(name(*params))
+<span class="cmt">            # fn def with name of type Symbol, n-args</span>
+            
+Ellipsis object: ... passed to fn or slice e.g numpy 4D matrix x[i,...] is same as x[i, :, :, :]
+
+list sorting with Tim sort and takes 2 args: reverse and key
+    l.sort()        # in-place
+    new_l = sorted(l)
+    Concatenate (+) and Extend (+=)
+    
+<span class="cmt">    # Bisect provides binary serch</span>
+    &gt;&gt;&gt; bisect.bisect((1,3,5,7,9), 4)
+    2
+    
+    Other options:
+    1. array.array when storing large number of integer/floats. Same operations as list (and to|fromfile() but memory efficient structure.
+        memoryview allows handling of array slices without copy (based on Numpy w/o math support)
+            memv = memory( array.array(&#x27;h&#x27;, (-1,0,1, -2,0,-2) )
+            unsigned_octets = memv.cast(&#x27;B&#x27;)
+            unsigned_octets.tolist()
+            matrix_2d = memv.cast(&#x27;h&#x27;, [2,3])  # or could be [3,2]
+            matrix_2d.tolist()
+    2. deque when inserting/deleting from both ends of list (thread-safe FIFO as append &amp; popleft are atomic).
+        queue - threadsafe SimpleQueue, Queue, LifoQueue, PriorityQueue. When queue is full then new inserts block.
+        multiprocessing has JoinableQueue for task mgmt.
+        asyncio - for async task mgmt (Queue, LifoQueue, PriorityQueue, JoinableQueue)
+        heapq - heappop/heappush to maintain heap queue aka priority queue.
+    3. set when doing &quot;x in set&quot;
+    4. Numpy - advanced array or matrix operations
+
+
+Dict: Underlying hash map used by set, frozenset as well.
+    Unpacking: **dict_obj : can be used in fn calls for kwargs and in declaring dict.
+    Merge(|) and Update(|=) e.g. d1 |= d2
+
+    Pattern matching with match/case : matches dict (regardless of order) if required keys occur i.e. will match even if there are additional keys - which can be captured with **extra (but not **_ as it would be redundant).
+        e.g. match json_data:
+                case {&#x27;api&#x27;:&#x27;v2&#x27;, &#x27;type&#x27;: type, &#x27;data&#x27;: data, &#x27;authors&#x27;: [*names]}:
+                    print(type, data, names)
+
+    ABC interfaces: Collections &lt;- Mapping &lt;- MutablabeMapping. Also UserDict for deriving from.
+    
+    Keys must be hashable i.e. hash(obj) works and doesn&#x27;t change during life of object. Implements __hash__() and __eq__() to compare. Mutable containers are not hashable. hash() is seeded so value varies between python processed but is constant within a process.
+    
+    dict
+    defaultdict
+    OrderedDict  od.move_to_end(key)
+    *all of above*:
+        dict.fromkeys( iterator, [init_value]) e.g. dict.fromkeys(range(10), 1)
+        dict.popitem()      # pops last inserted item
+        dict.update( [(k1,v1), (k2,v2) ]) or dict.update(mapping)
+     
+<span class="hdr">Decorator:</span>
+	Enhance/Modify behavior to existing fn. E.g. add time taken by existing fn; add logging/user behavior; authentication before fn calls.
+	Address cross-cutting concerns (impacts multiple fn).
+	Decorator takes a fn as input and returns modified fn as output.
+	Can have multiple decorator on fn. E.g. @logging @timer on fn
+	Caution - decorator impacts readability/understanding of code. e.g. when multiple decorator are used. Which one kicks in first e.g. logging before timing or after.
+
+	def my_decorator(func, logger):		# instead of using functools.partial you can create an another outer layer of fn that takes logger as arg and returns my_decorator (see https://stackoverflow.com/questions/5929107/decorators-with-parameters)
+	  @functools.wraps(func)		# fixes func.__name__ not to print &quot;wrapper&quot; but actual fn. Fixes fn.docstring and fn.name
+	  def wrapper(*args, **kwargs):
+	    logger.info(f&quot;Started function {func.__name__}&quot;)
+	    ret = func(*args, **kwargs)
+	    logger.info(&quot;Ended&quot;)
+	    return ret
+	  return wrapper
+
+	@my_decorator(logging)		# inc = decorator(logging)(inc)   ... this is what it means and it won&#x27;t work here because my_decorator needs 2 args. Use functools.partial or wrap my_decorator in another fn lets call it decorator_generator(logger)
+	def inc(x):
+	  return x+1
+
+	my_decorator_with_default_logging = functools.partial(my_decortor, logger=logging)
+
+	@my_decorator_with_default_logging
+	def dec(x):
+	  return x-1
+
+	inc(3)
+
+    Decorator in class (__init__ sets fn &amp; any args; __call__(*args) calls the fn). See Bruce Eckel&#x27;s https://www.artima.com/weblogs/viewpost.jsp?thread=240845#decorator-functions-with-decorator-arguments
+
+
+Functools: Fn/Operations on callables (Fn, Class, Obj)
+	@cache - memoize - store return values for args
+	@cache_property - cache for methods; note: @property requires a setter fn but @cache_property allows writes
+	@lru_cache(maxsize=N, typed=False) - args/kwargs must be hashable. Implemented with @cache_property but slightly slower as it needs to handle max_size limits.
+		- has additional data like cache_info() to show hits/misses/currsize.
+		- typically for expensive/recursive compute e.g. fibonacci or news web-page fetch
+	@cmp_to_key - convert to a key fn. Should return for a,b -1, 0 or 1 if &lt; or = or &gt; respecitvely. 
+	@total_ordering - adds le/ge/lt/gt methods based on 2 methods that user needs to give i.e. eq and one of le/ge/lt/gt. Used to provide __eq__ and __lt__ (or __gt__ or &lt;= or &gt;=)
+	@partial - simplifies fn args/kwards by pre-building partial fn object that has some args/kwargs supplied in advance so that partial fn is called with remaining args/kwargs. Similarly, @partialmethod for methods/property.
+	@reduce - apply fn to iterable with a default start value (e.g. sum of series) and return the final value. itertools.accumulate returns each intermediate value (so returns an iterable) while reduce just gives the final value.
+	@wraps - calls update_wrapper that updates wrapper fn to look like wrapped function. Assigns __module__, __name__, __doc__, __annotations__, __qualname__. Updates __dict__. Used with decorators specially
+	@singledispatch - transform fn into single-dispatch generic fn (based on type of first arg only). Declare the default fn with @singledispatch and then register other variants based on type(s) with @fn.register(type). To check which fn will be called for a given type, test with fn.dispatch(type) .. gives address of fn (not name!).
+	@singledispatchmethod - like singledispatch on methods but applies on first non-self/non-cls arg.
+
+Itertools: Creates iterators for efficient looping
+	- non-terminating/infinite iterators
+		- count(start, [step]]: count() from 0/start onwards
+		- cycle(list_elements): cycle(&#x27;0123456789&#x27;)  ... 0123456789 0123456789 0123456789
+		- repeat(element, [n)]: repeat(&#x27;xyx&#x27;, 20)  ...xyz xyz
+	- terminating on shortest input sequence:
+		- accumulate(list, [func=sum]): accumulate([1,2,3], lambda x,y: x+y) gives 1,3,6 (get running totals/products/max). Also see functools.reduce() which gives the final result only.
+		- batched(iterable, n): batch data into n tuple where last tuple can be &lt; n.
+		- chain(*iterables): chain any 2 or iterables one after another
+		- chain.from_iterable(iterable): chain iterable of iterables i.e. [iter1, iter2]
+		- compress(data_list, selector_list_bool): removes elements marked as false in selector list
+		- dropwhile(predicate, sequence): chopping leading sequence. i.e. predicate applied to &quot;leading&quot; sequence; drops leading sequence if initially predicate is true and once false, ignores predicate and generates till end of sequence.
+		- filterfalse(predicate, sequence): opposite of filter(which keeps elements where predicate is true), this keeps elements where predicate is false
+		- groupby(iterable, [key]): sub-iterators groups by value of key(v). E.g. for key, group in groupby(sorted(&#x27;abbaab&#x27;)): print key, list(value) # gives &#x27;a&#x27; -&gt; [&#x27;a&#x27;,&#x27;a&#x27;,&#x27;a&#x27;] and similar for &#x27;b&#x27;
+		- isslice(sequence, [start, stop, step]): like slice/range for sequence
+		- pairwise(iterable): ABCD gives overlapping pairs of AB BC CD
+		- starmap(function, sequence): gives sequence of fn(*seq[0]), fn(*seq[1]). i.e. fn args come from sequence (as sub-lists) and returns sequence of results
+		- takewhile(predicate, sequence): opposite of dropwhile, it gives the leading sequence while predicate is true
+		- tee(iterator, n): splits one iterator in N-iterators. Allows reuse/copy of iterator.
+		- zip_longest(seqA, seqB, [fillValue=&#x27;-&#x27;]) gives tuple having first element from seqA and second frmo seqB. Any missing values are replaced with None/fillValue.
+	- Combination/Permutations
+		- product(seqA, seqB, [repeat=1]) Cartesion product
+		- permutations(seq, length) all combinations but no repeats e.g. AA but can have AB and BA. Note: permutations are &quot;ordered&quot; combinations (i.e. in permutations order matters; in combinations it does not)
+		- combinations(seq, length) permutations but can&#x27;t have AB == BA
+		- combinations_with_replacement(seq, length) allows AA
+
+
+Operator: efficient operator fn
+	- le, ge, lt, gt, eq, ne
+	- not, is_, is_not, truth (or bool)
+	- abs(x), add, sub, mul, floordiv, truediv, index (convert non-int to int for use as index), inv/invert, mod (%), pow, matmul (@), pos (postive),
+		-- in-place operators (x+=y is x= operator.iadd(x,y)). Returns updated value if inputs are immutable else updates in place.
+		-- iadd/iconcat (a+=b), a&amp;=b, a&lt;&lt;=b, a//=b, a@=b,
+	- lshift, rshift,     neg, or_, and_, xor
+	- concat, contains(a,b ... b in a), countOf, indexOf, get/set/delitem
+	- call
+	- attrgetter/itergetter/methodcaller:
+		-- f = attrgetter(&#x27;name.first&#x27;, &#x27;name.last&#x27;), then call f(b) returns (b.name.first, b.name.last).
+		-- g = itemgetter(2, 5, 3), the call g(r) returns (r[2], r[5], r[3]).
+			getcount = itemgetter(1)
+			sorted(inventory, key=getcount)
+<span class="cmt">			# [(&#x27;orange&#x27;, 1), (&#x27;banana&#x27;, 2), (&#x27;apple&#x27;, 3), (&#x27;pear&#x27;, 5)]</span>
+		-- m = methodcaller(&#x27;name&#x27;, &#x27;arg1&#x27;,arg2=10)
+			m(obj) calls obj.name(&#x27;arg1&#x27;,arg2=10)
+
+
+Collections: container datatypes
+	- ChainMap: create a &quot;view&quot; to treat many dict/mappings as one. Internally store as references to dicts as a list (so update on any dict is reflected in ChainMap view). Can be updated/deleted but impacts only first dict/map in list.
+				Can create new &amp; separate &quot;child&quot; ChainMaps that append to existing ones.
+				Can be used to select from options ChainMap(args, env, default).
+					defaults = {&#x27;user&#x27;: &#x27;guest&#x27;,...}
+					parser = argparse.ArgumentParser()
+					parser.add_argument(&#x27;-u&#x27;, &#x27;--user&#x27;)
+					namespace = parser.parse_args()
+					command_line_args = {k: v for k, v in vars(namespace).items() if v is not None}
+					combined = ChainMap(command_line_args, os.environ, defaults)
+					combined[&#x27;user&#x27;]
+
+		da = {&#x27;a&#x27;:1,&#x27;b&#x27;:2}
+		db = {&#x27;a&#x27;:3,&#x27;c&#x27;:4}		# a:3 is not visible as a from da comes first
+		dc = {&#x27;k&#x27;:5}
+		cm = ChainMap(da,db,dc)
+		dc[&#x27;x&#x27;]=99		# visible in ChainMap
+		cm[&#x27;z&#x27;]=100		# adds to da
+		for key in cm:
+			print(key, cm[key])
+
+    - Counter : a dict subclass for counting hashable objects. Store {Key: Counts}. Any missing key gives count 0.
+				Methods: c.most_common(5), c.total(), c.subtract(another_counter)
+				Addition and subtraction combine counters by adding or subtracting the counts of corresponding elements.
+				Intersection and union return the minimum and maximum of corresponding counts.
+				Equality and inclusion compare corresponding counts.
+				**Each operation can accept inputs with signed counts, but the output will exclude results with counts of zero or less.
+				c = Counter(a=3, b=1, c=0)
+				d = Counter(a=1, b=2, d=-1)
+				c + d                       # add two counters together:  c[x] + d[x]
+<span class="cmt">				# Counter({&#x27;a&#x27;: 4, &#x27;b&#x27;: 3})</span>
+				c - d                       # subtract (keeping only positive counts)
+<span class="cmt">				# Counter({&#x27;a&#x27;: 2, &#x27;d&#x27;: 1})</span>
+				c &amp; d                       # intersection:  min(c[x], d[x])
+<span class="cmt">				# Counter({&#x27;a&#x27;: 1, &#x27;b&#x27;: 1})</span>
+				c | d
+				Counter({&#x27;a&#x27;: 3, &#x27;b&#x27;: 2})
+				-d (or +d) removes zero/negative counts from result
+				Counter({&#x27;d&#x27;: 1})  (or Counter({&#x27;b&#x27;: 2, &#x27;a&#x27;: 1}))
+
+	- deque (double ended queue). Called &quot;deck&quot;.
+			Optimized for stack(LIFO) and queue(FIFO) operations in O(1)
+			Can be unbounded or length given - in which case any new adds once size limit is reached causes overflow from other end.
+			Recipe to use for moving average of 3 elements.
+				dq = deque(&#x27;abcdef&#x27;, maxlen=5)	# gives bcdef
+				dq.append(&#x27;g&#x27;)		# cdefg
+				dq.appendleft(&#x27;b&#x27;)	# bcdef
+				f = dq.pop()		# bcde
+				b = dq.popleft()	# cde
+				c,e = dq[0], dq[-1]
+				dq.rotate(1)		# ecd
+				dq.rotate(-1)		# cde
+				dq.extend(&#x27;xyz&#x27;)	# dexyz
+				dq.extendleft(&#x27;ABC&#x27;) # CBAde &lt;&lt;note the order of insert
+				dq.clear()
+
+	- defaultdict(default_factory=None):
+		Returns dict like object that has __missing__ method added (called by __getitem__) that invokes default_factory (if defined else KeyError) to setup a default value.
+		Note: default_factory is not called for d.get() but only for d[&#x27;item&#x27;] (__getitem__)
+		Note: Py3.9 adds dict merge(|) and update(|=).
+		
+		DefaultDict of DefaultDicts:
+		    defaultdict(lambda: defaultdict(int))     # lambda can&#x27;t be pickled
+		    defaultdict(defaultdict(int).copy)
+
+		Faster than an equivalent technique using dict.setdefault()
+			for k, v in s:
+    			d.setdefault(k, []).append(v)   # without defaultdict
+		Example:
+			exception_tracking = defaultdict(list)
+			exception_tracking[exception].append(code_line_number)
+
+	- namedtuple: Factory Function for Tuples with Named Fields; helps improve code readability.
+		Named tuple instances do not have per-instance dictionaries, so they are lightweight and require no more memory than regular tuples.
+		Tuple Subclass but with extra method and fields.
+			Since it&#x27;s a subclass, it can be extended to add methods.
+			To add more data attributes, create new NamedTuple instead like so:
+
+		Extra fields: var._fields &amp; var._field_defaults. These list field names &amp; their defaults.
+		Extra methods: NamedTuple._make(iter) to make a namedtuple, var._asdict() returns dict of fields names &amp; values and var._replace(**kwargs) to replace named vars as per dict given
+		namedtuple(typename, field_names, *, rename=False, defaults=None, module=None)
+			- rename incorrectly named fields
+			- defaults associated from right most fields
+			- returns tuple subclass
+			- fields defined in list or string separated by whitespace
+				Point = namedtuple(&quot;Point&quot;, [&#x27;x&#x27;,&#x27;y&#x27;])   # namedtuple(&quot;Point&quot;, &quot;x y&quot;)
+				Point = namedtuple(&quot;Point&quot;, [&#x27;x&#x27;, &#x27;y&#x27;], defaults=(0,))  # y is default to 0
+				p1 = Point(10,20)
+				p2 = Point(x=11,y=22)
+				p3 = Point(30)
+				getattr(p3,&#x27;y&#x27;)	# 0
+
+			Recipe used to handle fields coming back from CSV/DB records:
+				EmployeeRecord = namedtuple(&#x27;EmployeeRecord&#x27;, &#x27;name, age, title, department, paygrade&#x27;)
+				import csv
+				for emp in map(EmployeeRecord._make, csv.reader(open(&quot;employees.csv&quot;, &quot;rb&quot;))):
+					print(emp.name, emp.title)
+
+			Recipe to add methods to namedtuple subclass
+				class Point(namedtuple(&#x27;Point&#x27;, [&#x27;x&#x27;, &#x27;y&#x27;])):
+					__slots__ = ()
+					@property
+					def hypot(self):
+						return (self.x ** 2 + self.y ** 2) ** 0.5
+					def __str__(self):
+						return &#x27;Point: x=%6.3f  y=%6.3f  hypot=%6.3f&#x27; % (self.x, self.y, self.hypot)
+				for p in Point(3, 4), Point(14, 5/7):
+					print(p)
+				Point: x= 3.000  y= 4.000  hypot= 5.000
+
+	- OrderedDict - superior to dict in ordering but less performant in space/iteration/updates. Suitable for LRU caches where ordering is often.
+		Since Py3.7 dict are ordered.
+		dict.popitem() returns key,value tuple from end; while in OrderedDict.popitem(last=False) can return the first key,value tuple as well. Equivalent with dict: (k := next(iter(d)), d.pop(k))
+		OrderedDict.move_to_end(key) can be done in dict as (d[k] = d.pop(k)). However, dict can move an element to front which OrderedDict can do with od.move_to_end(key, last=False).
+		So if you don&#x27;t need the functionality to move key to front then better off just using dict.
+			od = OrderedDict([(&#x27;k1&#x27;,&#x27;v1&#x27;),(&#x27;k2&#x27;,&#x27;v2&#x27;),(&#x27;k3&#x27;,&#x27;v3&#x27;)])
+			k,v = od.popitem(last=True)		# pop from end (k3,v3)
+			k,v = od.popitem(last=False)	# pop from beginning (k1,v1)
+			od.move_to_end(&#x27;k2&#x27;)			# k1, k3, k2 (k2 moves from middle to end)
+			od.move_to_end(&#x27;k2&#x27;, last=False) # k2, k1, k3 (moves to beginning)
+
+	- UserDict/UserList/UserString classes to allow customized Dict/List/String subclass development by user.
+		Content of Dict/List/String is accessible in member attribute .data.
+
+
+Generator: a fn that uses yield.
+	Returns iterable object (once), items are generated lazily so memory efficient when handling large datasets.
+	Generator fn uses &quot;yield&quot; instead of &quot;return&#x27;.
+	For-loop uses iter.next() until StopIteration is hit.
+	for i in (x for x in range(10) if x%2==0):
+		print(f&quot;Geneterated {i}&quot;)
+
+	Use generators to setup processing pipelines where each is fn that starts a for loop and does a yield.
+		def process(sequence):
+			for s in sequence:
+<span class="cmt">				# something with s</span>
+				yield processed_s
+
+	Less known is the fact that yield can also recieve values! e.g. item = yield
+	Need to advance to yield stmt with next(s) first and then send data (s.send(&#x27;x&#x27;))
+		g = generator()							 def generator():
+													try:
+		g.next()		# advance to yield				item = yield   # send() sets item=item
+		g.send(item)	# send data to generator		yield some_value
+		g.close()       # shutting down processing	except GeneratorExit:   # close called/shutdown
+		g.throw(RuntimeError,&#x27;Broken&#x27;)				except RuntimeError as e: # exception thrown
+													return &quot;value&quot;     # raises StopIteration with value=value
+
+	Delegate to sub-generator with &quot;yield from &lt;gen&gt;&quot;. Allows stacking/sequencing of generators.
+
+	A coroutine (enter/exit &amp; resume at many different points with send()) vs subroutine(where entry &amp; exit path is fixed).
+	A coroutine is for consuming data; while generators are for producing data.
+
+    yield from &lt;expr&gt;
+    Coroutine can return to immediate caller only so all logic crammed into one fn. To support refactoring/separate fn call ( e.g. yield from f(x)  within the coroutine).
+    Alternative would have been to create &amp; iterate over a &quot;sub&quot;-generator (for val in gen2: yield val) but can&#x27;t interact with send/throw/close
+
+collections.abc - Abstract base classes for collections
+	issubclass/isinstance works in one of 3 ways:
+	1. inheritance from ABC. e.g. class MyClass(Sequence):...
+	2. registering as virtual subclass. e.g. Sequence.register(MyClass) where MyClass does not inherit from Sequence
+	3. by presense of specific dunder methods
+
+    Preferablly use isinstance with collections.abs interfaces defined below.
+	Avaialble ABC (with abstract methods):
+		Container (__contains__)
+		Hashable  (__hash__)
+		Iterable  (__iter__)
+		Iterator  (__next__)
+		Reversible (__reversed__)
+		Generator | Coroutine (send, throw)
+		Sized	(__len__)
+		*Callable (__call__)
+		*Collection 	(Sized __len__, Iterable __iter__, Container __contains__)
+		*Sequence	(Collection, Reversible __reveresed__)
+			- MutableSequence (addition __get|set|delitem__)
+			- ByteString
+		Set (Collection) | MutableSet (Set)
+		Mapping (Collection) | MutableMapping (Mapping)
+		MappingView (Sized) | KeysView (MappingView, Set) | ValuesView (MappingView, Collection) | ItemsView (MappingView, Set)
+		Awaitable (__await__) | AsyncIterable (__aiter__) | AsyncIterator (__anext__) | AsyncGenerator (asend|athrow)
+
+
+<span class="hdr">Abstract base class (abc):</span>
+	Multiple inheritance may lead to metaclass conflicts
+	1. via inheritance of ABC or ABCMeta (which has additional metho like .mro and .register(some_other_subclass) )
+		from abc import ABC
+		class MyABC(ABC):
+			pass
+	2.register the subclass (note: it won&#x27;t show up in __mro__)
+		MyABC.register(tuple) 	# MyABC is a subclass of tuple
+		assert issubclass(tuple, MyABC)
+		assert isinstance((), MyABC)
+
+	A class that has a metaclass derived from ABCMeta cannot be instantiated unless all of its abstract methods and properties are overridden.
+	class C(ABC):
+<span class="cmt">		# @abstractmethod (simple, @classmethod, @staticmethod)</span>
+		@abstractmethod
+		def my_abstract_method(self, arg1):
+			...
+		@classmethod		# used to define alternate constructors + handle inheritance issues where return by class-name is done instead of using &quot;cls&quot; var
+		@abstractmethod
+		def my_abstract_classmethod(cls, arg2):
+			...
+		@staticmethod		# loosely tied to class methods e.g. validate input before creating object
+		@abstractmethod
+		def my_abstract_staticmethod(arg3):
+			...
+		## property (get/set)
+		@property
+		@abstractmethod
+		def my_abstract_property(self):
+			...
+		@my_abstract_property.setter
+		@abstractmethod
+		def my_abstract_property(self, val):        # same name as setter  @attrib.setter -&gt; def attrib(self, value):
+			...
+		## another way to set (abstract) property
+		@abstractmethod
+		def _get_x(self):
+			...
+		@abstractmethod
+		def _set_x(self, val):
+			...
+		x = property(_get_x, _set_x)
+
+
+contextlib: for invoking tasks &quot;with expr as target: &lt;code block/suite&gt;&quot;
+	Set up runtime context by implementing enter/exit fn for a code suite.
+	contextmanager.__enter__() : returns this object (or related to context) and assigned to target.
+	contextmanager.__exit__(exception_type, exception_value, exception_traceback) : Exit runtime context &amp; return bool flag(true) to indiate if any exception is to be suppressed.
+		Returning true causes any exception to be subpressed. Any exeption that occur in __exit__ will replace the exception raised in with block.
+
+	@contextmanager decorator - to define factory fn that sets up a resource in __enter__, yields a resource (causing code suite to run) and frees at __exit__.
+	with closing(resource) as fh:	# closign will call resource.close() in __exit__ (no setup)
+		...
+
+<span class="cmt">        # example</span>
+        def open_file(filename):
+            fh = open(filename, &#x27;r&#x27;)
+            try:
+                yield fh
+            finally:
+                fh.close()
+
+<span class="cmt">	# context manager with generator (yield) to split fn into 2 parts where each is called at __enter__ and __exit__</span>
+	@contextmanager
+	def time_this(label):							with time_this(&quot;counting&quot;):
+		start = time.time()								n = 1_000_000
+		try:											while n: n -=1
+			yield	# cuts fn into top being called at __enter__ (imagine a next() call)
+<span class="cmt">					# and bottom half is called at __exit__</span>
+		finally
+			end = time.time()
+			print(&quot;Time taken by {} was {:0.4f}s&quot;.format(label, end-start))
+
+	nullcontext(enter_result) - returns enter_result on entry. Standin for optional conext manager (e.g. if/else where one part does proper content management and else part does nullcontext)
+		if isinstance(file_or_path, str):        # If string, open file
+			cm = open(file_or_path)
+		else:        # Caller is responsible for closing file
+			cm = nullcontext(file_or_path)
+		with cm as file:
+<span class="cmt">			# Perform processing on the file</span>
+	suppress(*Exceptions) -
+		with suppress(FileNotFoundError):
+			os.remove(&#x27;somefile.tmp&#x27;)
+	redirect_stdout(new_target): Context manager for temporarily redirecting sys.stdout to another file or file-like object.
+		with open(&#x27;help.txt&#x27;, &#x27;w&#x27;) as f:
+			with redirect_stdout(f):
+				help(pow)
+	redirect_stderr
+	chdir(path): change directory and restore when done. Not thread safe; changing global state of program
+	ContextDecorator: A base class that enables a context manager to also be used as a decorator.
+		Context managers inheriting from ContextDecorator have to implement __enter__ and __exit__ as normal.
+		__exit__ retains its optional exception handling even when used as a decorator.
+			class mycontext(ContextDecorator):
+				def __enter__(self):
+					print(&#x27;Starting&#x27;)
+					return self
+
+				def __exit__(self, *exc):
+					print(&#x27;Finishing&#x27;)
+					return False
+			@mycontext()
+			def function():
+				print(&#x27;The bit in the middle&#x27;)
+<span class="cmt">			# use as below, can test as function()</span>
+			with mycontext as tgt:
+			    print(&quot;something&quot;)
+	ExitStack : A context manager that is designed to make it easy to programmatically combine other context managers and cleanup functions,
+			especially those that are optional or otherwise driven by input data.
+			Similar to having nested with-statement. Maintains stack of callsbacks that are called in LIFO when instance is closed.
+			with ExitStack() as stack:
+    			files = [stack.enter_context(open(fname)) for fname in filenames]
+	Receipe/Usecases:
+		1. Handling multiple context managers
+		2. Handling exception handling in __enter__ as external resource API maybe badly desgined. Note: You want to throw exceptions from with-codesuite.
+
+	Context managers tend to be One-shot (single use) context managers.
+	Re-enterant context managers example suppress(), redirect_stdout(), chdir(). threading.Rlock()
+	Re-usable (but no re-enterant) context managers (example ExitStack, threading.Lock)
+
+
+<span class="hdr">Descriptors:</span>
+	Allow to customize attribute lookup, storage and deletion (by defining methods __get__, __set__, __delete__ and optional __set_name__)
+	Obj.attrib is first looked in dictionary (in order of object dict, class dict, classes dict in MRO, __get__ method).
+	classmethod/staticmethod/property/slots/functools.cached_property/super are examples of descriptors.
+
+	Protocol:
+		descr.__get__(self, obj, type=None) -&gt; value
+		descr.__set__(self, obj, value) -&gt; None
+		descr.__delete__(self, obj) -&gt; None
+
+		Object defining __set__ or __delete__ is called data descriptor. With only __get__ it&#x27;s a non-data descriptor.
+		The difference is that in case of conflict in name between data descriptor vs name in dict, data descriptor takes precedence.
+		For non-data (get) descriptor, the dict value takes precedence.
+		Instance lookup scans through a chain of namespaces giving data descriptors the highest priority, followed by instance variables, then non-data descriptors, then class variables, and lastly __getattr__() if it is provided.
+		a.x is really desc.__get__(a, type(a)).
+
+		To make attribute read-only, define __get__; and for __set__, raise AttributeError
+
+
+	Allows to create dynamic lookups e.g. in case below to &quot;get&quot; size of a directory (as files are added/deleted)
+		import os
+		class DirectorySize:
+			def __get__(self, obj, objType=None):
+				return len(os.listdir(obj.dirname))
+<span class="cmt">			# can have __set__ and __del__ methods as well</span>
+			def __set__(self, obj, value):
+				print(obj, value)
+				obj.size = value		# hard coding of attribute (size)
+		class Directory:
+			size = DirectorySize()		# descriptor instance ... must be class variable (not instance variable)
+			def __init__(self, dirname):
+				self.dirname = dirname
+<span class="cmt">		#</span>
+		g = Directory(&quot;somePath/someDir&quot;)
+		g.size()		# 3			# descriptor is running a computation
+		os.remove(&quot;somePath/someDir/someFile&quot;)
+		g.size() 		# now 2
+
+	Managed Attributes - to manage access to obj data/attributes.
+	Descriptor assigned to an attribute e.g. DirectorySize() in class dict.
+	Actual data stored in object.__dict__ as private _attribute.
+	See link for a more generic example where Descriptor class is not hard-coded to one specific attribute name with __set_name__. See https://docs.python.org/3/howto/descriptor.html#customized-names
+
+	Complete practical example for Descriptors:
+	class Validator:
+		&quot;&quot;&quot;Generic Descriptor &amp; abstract class that requires implementation of validate()&quot;&quot;&quot;
+		def __set_name__(self, owner, name):
+			print(f&quot;__set_name__: {owner}, {name}&quot;)
+			self._owner = owner
+			self.private_name = &quot;_&quot; + name
+
+		def __get__(self, object, objType):
+			print(f&quot;__get__: {object}, {self.private_name}&quot;)
+			return getattr(object, self.private_name)
+
+		def __set__(self, object, value):
+			self.validate(value)
+			print(f&quot;__set__: {object}, {self.private_name}, {value}&quot;)
+			setattr(object, self.private_name, value)
+
+		@abstractmethod
+		def validate(self, value):
+			...
+<span class="cmt">#</span>
+	class OneOf(Validator):
+		def __init__(self, *options) -&gt; None:
+			super().__init__()
+			self._options = set(options)
+		def validate(self, value):
+			if not value in self._options:
+				raise RuntimeError(
+					f&quot;Value {value} is not one of available options {self._options}&quot;
+				)
+<span class="cmt">#</span>
+	class Number(Validator):
+		def __init__(self, min=None, max=None) -&gt; None:
+			print(f&quot;Number init {min} - {max}&quot;)
+			super().__init__()
+			self.min = min
+			self.max = max
+		def validate(self, value):
+<span class="cmt">			# return super().validate(value)</span>
+			print(f&quot;Number validate {value} with range {self.min} - {self.max}&quot;)
+			if not isinstance(value, int | float):
+				raise RuntimeError(&quot;Not int or float&quot;)
+			if self.min and value &lt; self.min:
+				raise RuntimeError(f&quot;Below min value of {self.min} &quot;)
+			if self.max and value &gt; self.max:
+				raise RuntimeError(f&quot;Above max value of {self.max} &quot;)
+<span class="cmt">#</span>
+	class Test:
+		num = Number(1, 10)
+		big_num = Number(100, 1000)
+		opt = OneOf(&quot;plastic&quot;, &quot;wood&quot;)
+
+		def __init__(self, num, big_num, opt) -&gt; None:
+			self.num = num
+			self.big_num = big_num
+			self.opt = opt
+<span class="cmt">#</span>
+	t = Test(1, 400, opt=&quot;w00d&quot;)
+	t.num = -100		# set throws error
+
+
+
+<span class="hdr">Typing:</span>
+
+		from collections.abc import Sequence, Callable, Iterable
+		from typing import NewType, TypeAlias, Protocol
+
+<span class="cmt">		# TypeAlias simple</span>
+		Vector: TypeAlias = list[float]  # type alias
+
+<span class="cmt">		# TypeAlias (complex)</span>
+		ConnectionOptions: TypeAlias = dict[str, str]  # user: password
+		Address: TypeAlias = tuple[str, int]  # host:port
+		Server: TypeAlias = tuple[Address, ConnectionOptions]
+
+
+		def scale(scalar: float, vector: Vector) -&gt; Vector:
+		    return [scalar * x for x in vector]
+
+
+		def broadcast_msg(msg: str, servers: Sequence[Server]) -&gt; None:  # Sequence
+		    for server in servers:
+			print(server, msg)
+
+
+<span class="cmt">		# NewType</span>
+		UserId = NewType(&quot;UserId&quot;, int)  # UserId subclass of int
+		SuperUserId = NewType(&quot;SuperUserId&quot;, UserId)
+		student_id = UserId(123)
+		if 123 == UserId(123):
+		    print(&quot;yes&quot;)
+
+		Base: TypeAlias = int
+		Derived = NewType(&quot;Derived&quot;, Base)
+
+
+<span class="cmt">		# Callable objects</span>
+		def feeder(get_next_item: Callable[[int], None]) -&gt; None:
+<span class="cmt">		    # Callables takes one arg (int) and returns None</span>
+<span class="cmt">		    # Callable with multiple (3) args may look like Callable[[int,str,UserId], UserId]</span>
+<span class="cmt">		    # use ... for arbitary arg list</span>
+<span class="cmt">		    # For keyword args, variable args, or overloaded fn; define using Protocol and __call__() ???</span>
+		    pass
+
+
+io - for working with streams (text/binary/raw generic; file object concrete)
+	Text IO works with str (binary with byes).
+	Text steam : f = open(&quot;somefile&quot;, &quot;r&quot;, encoding=&quot;utf-8&quot;)
+	In-memory text stream : f = io.StringIO(&quot;some data is in here&quot;)
+
+	Binary IO: file open in &quot;rb&quot; mode and in-memory with io.BytesIO
+
+array - compact representation of numeric/char array (same type restriction vs list).
+	Same method as list except itemsize + typecode. Init from list/iterable/bytes
+
+	ar = array.array(&#x27;i&#x27;, [1,2,3,4,5])
+
+	element_size = ar.itemsize	# 4
+	datatype = ar.typecode 		# i
+
+	array.typecodes			# &#x27;bBhHiIlLqQfd&#x27;
+
+
+copy: shallow/deep copy compound objects
+    Shallow copy doesn&#x27;t copy mutable objects while deepcopy does copy mutable objects (list).
+	Deep copy can run into recursion so it maintains a memo dictionary of objects already copied.
+	A class needs to implement __copy__(x) and __deepcopy__(x, memo_dictionary).
+	Stuff that can&#x27;t be copied e.g. stack frame/trace, socket, file
+		from copy import deepcopy
+		x_copy =  deepcopy(x)
+
+
+pprint: pretty print.
+	Dicts are sorted by keys. Option to put _ in numbers, indent_depth, column_width)
+	Recursive objects will print &quot;&lt;Recursion in object with id=..&gt;&quot;.
+	IsReadable if string can be used to eval() and reconstruct the object.
+		from pprint import pprint
+		pprint(some_complex_datastruct)
+
+
+<span class="hdr">pickle:</span>
+        binary serialization/unserialization protocol for python objects (need to share/import class definition).
+        Great if both consumer/producer are python based.
+        Pickle is backward compatible by specifying pickling protocol(1-5).
+        Pickle data can be further compressed with zip/lzm4 etc
+        Caution: never unserialize untrusted pickled data.
+
+        Does not work with and raises PickingError exception:
+        1. Lambda  (relies on being able to pickle fn. name only)
+        2. Classes/fn not at top level of module (i.e nested - only instance data is pickled; not class code/data so such classes/fn should be importable when unpickling)
+        3. Deeply recursive data structs (&gt; sys.setrecursionlimit())
+
+        dumps/loads work with bytes.
+        dump/load work with fh.write or io.BytesIO
+
+		For large data transfer/pickling - out-of-band buffers were added in Protocol v5 and above. This allows provider/consumer to handle PickleBuffers instead of just bytes. Requires provider to implement __reduce__ex__() &amp; consumer provides a buffer for unpickling apart from unpickled byte-stream.
+
+
+<span class="hdr">JSON:</span>
+        strucutred text format; human readable; inter-operable outside python.
+        No support for custom clases; no vulnerability while deserializing JSON.
+        
+        keys must be &quot;string&quot; .. values can be string, number, boolean, array, object or null. Pythons&#x27; int/float are both mapped to number in JSON. 
+        Note: tuples are converted to array i.e. lose their immutablility.
+        
+        Python &lt;-&gt; JSON
+        &#x27;txt&#x27; becomes &quot;txt&quot;
+        1 in key becomes &quot;1&quot;
+        None becomes null
+        False becomes false
+        
+        j_data = json.dumps(&#x27;[&quot;a&quot;: {1: &quot;A&quot;}, &quot;b&quot;: null ]&#x27;)
+        json.load(j_data)
+        
+        to dump user defined types, specify instructions for serializaiton:
+        data = json.dumps(obj, default=lambda x: x.__dict__)    # serialize the python dict for the object.
+        other options for dumps: (1) indent=2 (2) sort_keys=True
+        
+
+keyword: list/test for python&#x27;s keywords
+    &gt;&gt;&gt; import keyword
+    &gt;&gt;&gt; dir(keyword)
+    [&#x27;__all__&#x27;, &#x27;__builtins__&#x27;, &#x27;__cached__&#x27;, &#x27;__doc__&#x27;, &#x27;__file__&#x27;, &#x27;__loader__&#x27;, &#x27;__name__&#x27;, &#x27;__package__&#x27;, &#x27;__spec__&#x27;, &#x27;iskeyword&#x27;, &#x27;issoftkeyword&#x27;, &#x27;kwlist&#x27;, &#x27;softkwlist&#x27;]
+    &gt;&gt;&gt; keyword.kwlist
+    &gt;&gt;&gt; keyword.softkwlist
+    [&#x27;_&#x27;, &#x27;case&#x27;, &#x27;match&#x27;]
+    &gt;&gt;&gt; keyword.iskeyword(&#x27;case&#x27;)
+    False
+    &gt;&gt;&gt; keyword.iskeyword(&#x27;if&#x27;)
+    True
+
+
+<span class="hdr">%format:</span>
+    &quot;format %d %.2f string&quot; % (tuples int, float)
+
+<span class="hdr">str.format():</span>
+        format_str.format(args)
+        &quot;Hello {}! Today is {}&quot;.format(&#x27;friend&#x27;,&#x27;Monday&#x27;)                               # placed based on arg position
+        &quot;Hello {0}! Today is {1} and I last saw you on {1}&quot;.format(&#x27;friend&#x27;,&#x27;Monday&#x27;)   # position based arg reused with #s
+        &quot;Hello {name}, today is {day}&quot;.format(name=&#x27;friend&#x27;, day=&#x27;Monday&#x27;)              # dict based uses keys that is more readable
+        &quot;Point has x={0.x} and y={0.y}&quot;.format(Point)                   # attributes referenced. Similarly for list as 0[1..n]
+        Format spec ...after &#x27;:&#x27;
+            {:f} or {:.4f} or {:2e}  # 4 digit precision float or in scientific notations
+            {:,d}                   # comma separated d:integer, b:binary, o:octal, x:hex
+<span class="cmt">            # alignment &lt; &gt; ^ (left, right, center)</span>
+<span class="cmt">            # numbers align right and strings align left by default</span>
+            &quot;foo{:&gt;7d}bar&quot;      # right align in 7 spaces this integer
+            
+            {name:_&gt;7d}         # *** applies to str.format() and f-string  ***
+<span class="cmt">            # name or positional arg or nothing</span>
+<span class="cmt">            # : format specifier</span>
+<span class="cmt">            # _ padding</span>
+<span class="cmt">            # &gt; right alight</span>
+<span class="cmt">            # 7 width (minimum)</span>
+<span class="cmt">            # d means integer type</span>
+            
+            Note: in logging module expect message as logging(format_str, *args)
+                    do this &quot;logging.info(&#x27;Value is %d and %s&#x27;, int_data, str_data)&quot; 
+                    and NOT this &quot;logging.info(&#x27;Value is %d and %s&#x27;, int_data, str_data)&quot; 
+                  as it leads to unneccesary string computation if logging level is set higher
+
+f-string (f&quot;...{var}...&quot;
+        f&quot;{var=}&quot;	# var=10
+        f&quot;{var%2=}&quot;	# var%2=0
+        f&quot;{now=:%y-%m-%d}&quot;
+        f&quot;{float_number=:.2f}&quot;
+        f&quot;{var!a}&quot;	# !a -&gt; ascii (converts non-ascii e.g. unicode into \U)
+        f&quot;{var!r}&quot;	# !r -&gt; print repr equivalent
+        f&quot;{var!s}&quot;	# !s -&gt; print str (default)
+
+
+<span class="hdr">string:</span>
+        string.ascii_letters | ascii_lowercase | ascii_uppercase
+        string.digits | hexdigits | octdigits
+        string.punctuation
+        string.whitespace
+        string.printable (letters + digits + punctuation + whitespace)
+        string.capwords(s, sep=None)  # capitalize each word (unlike str.capitalize which does first char only) .. also removes lead/trail/multiple whitespaces.
+
+
+        conversion flags: &quot;More {var!r}&quot;   # &#x27;!s&#x27; str(), &#x27;!r&#x27; repr() and &#x27;!a&#x27; ascii().
+<span class="cmt">        # format &#x27;:...&#x27; is [[fill]align][sign][&quot;z&quot;][&quot;#&quot;][&quot;0&quot;][width][grouping_option][&quot;.&quot; precision][type]</span>
+
+        alignment: &#x27;{:&lt;10}&#x27;.format(&#x27;left&#x27;)      # default for str
+                   &#x27;{:&gt;10}&#x27;.format(&#x27;right&#x27;)     # default for numbers
+                   &#x27;{:*^10}&#x27;.format(&#x27;center *fill rest&#x27;)   # &#x27;{:{fill}{align}WIDTH}&#x27;
+        sign: &#x27;{:+f} {: f} {:-f}&#x27;.format(no1, no2, no3)
+<span class="cmt">              # show +/- sign; space if +; only - for last (default).</span>
+        dec/oct/hex: &#x27;{:0d} {:0o} {:0x} {:0e} {:.2f} {:0c}&#x27;.format(...)  # dec, oct, hex, float, scientific, char
+        separator : &#x27;{:,} {:_}&#x27;.format(bigno1, bigno2) # use , or _ separator
+        percentage: &#x27;{:.2f%}&#x27;   # 2 decimal places with % at end
+        datetime: : &#x27;{:%Y-%m-%d %H:%M:%S}&#x27;.format(d)
+
+        Template strings: Does $var substitution. Also has safe_substitute in case a var is not supplied (in which case it displays &#x27;$var&#x27; as-is.
+        from strings import Template
+        template_str = &#x27;$name is $age years old&#x27;
+        template_str.substitute(name=&#x27;Adi&#x27;, age=44)     # Adi is 44 years old
+        template_str.safe_substitute(name=&#x27;Adi&#x27;)        # Adi is $age years old
+
+
+re: for regular expression
+        import re
+<span class="cmt">        # pattern r&#x27;..&#x27; doesn&#x27;t interpret special charcters so no need to escape without which escaping \ as \\ in pattern needs to be written as \\\\. Better off with r&#x27;\\&#x27;</span>
+<span class="cmt">        # both pattern &amp; text need to be str or bytes</span>
+        match = re.search(pattern, text)
+        if match:
+                match.group()
+
+
+<span class="cmt">        # special</span>
+        \d (digit)
+        \w (word char that covers digits)
+        \s (whitespace)  \S non-whitespace
+        Greedy vs Non-greedy matches :: &lt;.*&gt; vs &lt;.*?&gt;
+        Range : a{2,6}  aa to aaaaaa. Non-greedy a{2,6}? will match only aa if aaa to aaaaaa.
+        Possesive Quantifiers (new v3.11): *+, ++, ?+ and {m,n}+
+                unlike their greedy counterparts, they don&#x27;t allow backtracking
+                so a*a will match a* with all string &#x27;aaaa&#x27; and final a will fail to match and regex match fail. Same as (?&gt;a*)
+        (...) remember the matched string and access via \1 in rest of pattern
+        (?P&lt;name&gt;...) &amp; (?P=&lt;name&gt;)  instead of using \1 use python variable name &lt;name&gt; and reuse with P= in pattern. e.g. (?P&lt;quote&gt;[&#x27;&quot;]).*?(?P=quote)
+            e.g. parsing $143.56  r&#x27;^\$(?P&lt;dollars&gt;\d+)\.((?P&lt;cents&gt;)\d\d)$&#x27; ... accessed by match.group(&#x27;dollars&#x27;)
+        (?=...) or (?!...) : matches if ... matches next. e.g. &#x27;Isaac (?=Asimov)&#x27; will pass only for &#x27;Isaac Asimov&#x27; but not for &#x27;Isaac A&#x27;
+        (?&lt;=...) Positive Lookbehind Assertion. .e.g (?&lt;=abc)def will match abcdef as it will match deg and then lookback to ensure last 3 char are abc.
+        (?iMaS...) match pattern but ignore-case multi-line ascii dot-all(S)
+        (?#comment)
+
+        \A \Z - start/end of string
+        \b - boundary between \w and \W (word boundary)
+        \d \w \s (\w is alhpanum; \s is whitespace)
+
+        re.X or re.VERBOSE allows writing patterns with comments and improve readability.
+<span class="cmt">        # b = re.compile(r&quot;\d+\.\d*&quot;)</span>
+        a = re.compile(r&quot;&quot;&quot;\d +  # the integral part
+                           \.    # the decimal point
+                           \d *  # some fractional digits&quot;&quot;&quot;,
+                           re.X)
+
+        re.compile saves the pattern that can be used in match or search
+        result = re.match(pattern, text)
+        vs
+        pattern_compiled = re.compile(pattern, flags)
+        result = pattern_compiled.search(text)
+        if result:
+                results.
+
+        re.match - match from beginning for text (faster but pattern needs to match from first letter)
+        *re.search* - more general but slower than match. Both search &amp; match have start &amp; end pos args to limit the search to specific sub-string
+        re.fullmatch - pattern must match entire string
+        re.split(pattern, text, maxsplits=0)
+        re.findall or re.finditer - return list/iter of Match objects
+        re.sub(patter, replace, text, count=0, flags=0)  # replace can be str (with \1) or fn(match_obj)
+        re.escape(text) - escape special characters
+
+        match object: evaluates to true if a match if found
+        match.group()   # value matched (once)
+        match.span()    # index range
+        match.start() and match.end()   # index values of match
+        
+        Match returns multiple groups then match.groups() evals to True and each match item in match.group(0)/group(1)... 
+        match.group() or match.group(0) gives whole string matched
+        match.group(1) or match.group([1,2]) gives the groups matched as \1 \2
+        
+<span class="cmt">        # groups</span>
+        match.groups()   # gives all groups as a tuple of string
+        match.start() | .end() | .span() returns the indicies of match in input text.
+<span class="cmt">        # group-names (?P&lt;group_name&gt;pattern)</span>
+        match = re.match(r&quot;(?P&lt;first_name&gt;\w+) (?P&lt;last_name&gt;\w+)&quot;, &quot;Malcolm Reynolds&quot;)
+        match.group(&#x27;first_name&#x27;)
+        match.groupdict()       # for group-named based with (?P&lt;name&gt;)
+
+        match.expand(&quot;a\g&lt;1&gt;c&quot;)    # abc where b was group1
+        match.lastindex # gives the max group so you know how many group(N) to search for
+
+
+logging: flexible and thread-safe
+    used via basic interface or via logger objects
+    Basic Interface:
+        import logging                      # default logging level set to warning and above (warning | error | critical); default to StreamHandler to stderr; default Formatter
+        logging.basicConfig(level=logging.INFO)         # called once from main thread; so one place to control logging level to manage signal-to-noise ration
+<span class="cmt">                                            # other basicConfig options: format | filename | filemode   (default to stderr in &#x27;w&#x27; mode; use &#x27;a&#x27; with files to be safer)</span>
+<span class="cmt">                                            # format=&quot;Level:%(levelname)s, time:%(asctime)s, msg:%(message)s&quot;</span>
+        logging.warn(&quot;Warning msg&quot;)         # gives &quot;WARNING:root:Warning msg&quot;  root refers to root logger ... determined by &quot;format&quot; with options for levelname, messae, pathname, funcName, lineno, asctime, name (of logger)
+<span class="cmt">        # log levels: debug | info | warning | error | critical  (e.g. logging.DEBUG)</span>
+        logging.debug(&quot;X=%d, input was=%s&quot;, x, input_str)       # format_str, *args   ... don&#x27;t do format_str % args
+        
+    Loggers: logging objects &amp; handlers &amp; streams
+            default stream to stderr buy can wrtie to files/streams like stdout/multiple files|streams/log remotely via REST API...by managing different handlers)
+            
+        logger = logging.getLogger()        # logger.name = root
+        logger.setlevel(logging.DEBUG)      # set to lowest level so that handlers can select higher levels
+        logger.hasHandlers()                # False
+<span class="cmt">        # handler</span>
+        log_file_handler = logging.FileHandler(&quot;log.txt&quot;)       # or logging.StreamHandler(sys.stdout)  for stream should support write() and flush()  # others RotatingFileHandler, SocketHandler# HTTPHandler, QueueLister &amp; Hnadler for across thread/process logging
+        log_file_handler.setLevel(logging.INFO)     # inherits from root handler otherwise and has to be tighter/stricter level than root.
+        logger.addHandler(log_file_handler)         # ..create and add more handlers with more specific setups
+<span class="cmt">        # formatter</span>
+        fmt = logging.Formatter(&quot;%(asctime)s:%(levelname)s:%(funcName)s:%(lineno)d::%(message)s&quot;)
+        log_file_handler.setFormatter(fmt)
+
+<span class="hdr">socket:</span>
+    Domains/Family: AF_INET (IPv4), AF_INET6 (IPv6) and  AF_UNIX (unix sockets - uses OS instead of network so for IPC only)
+    Type: SOCK_STREAM (TCP), SOCK_DGRAM (Datagram), SOCK_SEQPACKET, SOCK_RAW (atop network layer)
+    Protocol: TCP, UDP, DCCP, SCTP
+
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+<span class="cmt">    # client</span>
+    s.connect( (host, port) )
+<span class="cmt">    # server</span>
+    s.bind(host, port)  # host can be &#x27;&#x27; to associate any IP
+    s.listen(4)     # max 4 connect request
+
+<span class="hdr">round():</span>
+    round(123_456.789) # 123456
+    round(123_456.789, 2) # 123456.79
+    round(123_456.789, -3) # 123000
+    
+Packaging options: PyPI, setup.py, wheel
+	Code that uses only std.library can be distributed as .tar.gz (called &quot;sdist&quot; package for Source Distribution Package). Typically, adds requirement.txt for other packages needed.
+
+	If any C/C++ library is needed then use Wheel to package these binary dependencies with code.
+
+	When making modules, you oraganize your code in tree directroy structure where each directory has a __init__.py that can gie directions on what to import automatically.
+	E.g. 	import mymodule.submodule.somepycode
+	invokes mymodule/__init__.py then mymodule/submodule/__init__.py then mymodule/submodule/somepycode
+
+
+Python project on Github (2016) - https://github.com/karpathy/sqlitedict
+ - README.rst : What project does (features, code sample, install, doc, bug/comments), License, CI status (Travis)
+- MANIFEST.in : Files to include (README, Makefile, License, setup.py, code.py, recurive-include tests
+- License - Apache v2
+- Makefile: test-all &amp; test-all-with-coverage
+- tox.ini: tox gives enviroment managed and test command for each environment.
+    [environment]
+    KEY = VALUE
+  -- outdated travis.yml : python versions supported, install steps (python install setup.py; python -c &quot;import code; code.__version__()&quot;) with script &quot;make test-all&quot; (invokes Makefile)
+- Git Workflows : run on which OS/Python versions (matrix), steps (checkout, install packages, fleak8, python setup.py install (install your code), pytest, benchmarks.
+- setup.py : subprocess (pip install required packages); setup (name, version, descriptio, author, email, URL, License, Platform)
+- test cases with unittest.TestCase (can define setUp() &amp; tearDown() and test_&lt;usecase&gt;() methods that do self.assertEqual/assertTrue/assertIn
+-- New change requires update ChangeLog.md, bump up version (setup.py, code.py), test (pytest tests), git tag v{version} &amp;&amp; git push origin --tags
+
+
+Black | mypy | pytest | flake8 | isort
+From https://github.com/realpython/codetiming/blob/main/CONTRIBUTING.md
+1. Code style with black :: python -m black src/ tests/
+2. Static type hint with mypy :: mypy --strict src/ tests
+3. testing with pytest :: pytest
+4. code issues with linter like flake8 :: python -m flake8 src/ tests/
+5. imports sorted with isort :: python -m isort src/ tests/
+
+
+
+<span class="hdr">TDD/testing:</span>
+    Start by writing test case first and ensure it fails. Then change code to fix it. Make sure you are not breaking any previous test cases.
+    Populat modules unittest (builtin) &amp; pytest.
+
+<span class="cmt">    # python -m unittest test_code.py     ... order in which tests run is ad-hoc. Fixture (setUp/tearDown called for each testcase). Substests improve reporting on which value in list gives error</span>
+    import unittest
+    from mymodule import MyClass
+    class TestMyClass(unittest.TestCase):       # must start with Test&lt;..&gt; and inherit from unittest.TestCase
+        def test_somefn(self):                  # methods start with test_
+            self.assertEqual(10, MyClass().foo(100))
+            self.assertTrue(MyClass().value)    # assertIs, assertIn, assetIsInstance  (also methods ending in ...Not
+        def test_other_fn(self):                # each test method should be self-contained ... test fixture aka setUp &amp; tearDown executed before &amp; after each test method...even if test fails, tearDown is called; error in setup/teardown cause
+            with self.assertRaises(ValueError): # Exceptions captured in &quot;with self.assertRaises&quot;
+                MyClass().convert2int(&quot;P&quot;)       test to fail
+            ...
+        def test_listValues():
+            check_inputs = [ (1,2,3), (4,5,&#x27;a&#x27;), (&#x27;a&#x27;,&#x27;b&#x27;,&#x27;c&#x27;) ]
+            for inp in check_inputs:
+                with self.subTest(value_checked=inp)            # output logs will show failed test saying &quot;valued_checked=(4,5,&#x27;a&#x27;) failed&quot;
+                    self.assertTrue(MyClass().init(inpt))
+
+
+Pyre : static type-checker from Facebook; pysa for security focussed tool
+<span class="cmd">    $ pyre init         # sets up .pyre_configuration &amp; .watchmanconfog</span>
+
+
+Python binding with C (Python API), C++ (pybind11, SWIG), Rust (py03)
+
+
+<span class="hdr">Python verisons:</span>
+2024: 3.13 coming out in Sept
+2023: 3.12
+        https://docs.python.org/3.12/whatsnew/3.12.html
+        C-API change to support (per interpreter GIL)
+        f-string (quote reuse, span multiple lines with comments)
+        comprehensions (list/dict/set) inlined (used to be fn calls)
+&gt;&gt;      generic classes (C++ templates like e.g. class myList[T]:  def foo(self) -&gt; [T]:)
+&gt;&gt;      @overide decorator where subclass overrides base class method (method name checked)
+        type (soft-keyword) aliases (type Point = tuple[float, float])
+         
+2022: 3.11
+        Faster CPython (25% improvement)
+&gt;&gt;      ExceptionGroups &amp; except* - group &amp; raise and handle multiple exceptions simultaneously
+&gt;&gt;      tomllib module
+        TypeVar variadic generics in typing
+        types added: Self (classmethod returns self); LiteralString
+        Error highlighting
+        
+2021: 3.10
+        match (e.g. match http_status case 200|201: &quot;ok&quot; case 404: &quot;Not founf&quot; case _: &quot;All else&quot;)
+        typing X|Y (union of types)
+        type aliases
+
+2020: 3.09
+        dict merge: dict1 | dict2 
+        str.removeprefix/removesuffix(&#x27;suffix)
+        typing: list/dict/set list[str] 
+
+2019: 3.08  :: end of life 2024
+        f-string &quot;{var=}&quot;
+        walrus operator := 
+        position args (pos_only, /, pos_or_kw, *, kw_only )
+            def fn(positional_only_args, /, positional_or_keyword, *, keyword_only)
+        
+<span class="hdr">VSCode settings:</span>
+ - install Python from market place (also installs 
+            pylint(static code anaylsis for errors/conventions)
+            pylance(pyright based for static typing checks)
+ - python.analysis.typeCheckingMode: off/basic/strict   *If you follow typing hints*
+ - editor.formateOnSave + editor.codeActionsOnSave (source.organiseImports=true)
+
+Coding exercises in various languages (incl Python) with solutions:
+    https://rosettacode.org/wiki/Category:Python
+David Beazley - https://github.com/dabeaz/blog</pre>
+</main>
+</body>
+</html>

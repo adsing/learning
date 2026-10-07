@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Speeds Cpu Mem Disk Nw</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: #1a1a2e;
+    color: #e0e0e0;
+    min-height: 100vh;
+}
+header {
+    background: #16213e;
+    border-bottom: 2px solid #0f3460;
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+header a {
+    color: #e94560;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+}
+header a:hover { text-decoration: underline; }
+h1 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #53d8fb;
+    letter-spacing: 0.03em;
+}
+main {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 24px;
+}
+pre {
+    background: #0d1117;
+    border: 1px solid #21262d;
+    border-radius: 8px;
+    padding: 20px 24px;
+    overflow-x: auto;
+    font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+    font-size: 0.85rem;
+    line-height: 1.65;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+.cmd  { color: #7ee787; }          /* $ shell commands */
+.cmt  { color: #8b949e; }          /* # comments */
+.hdr  { color: #f0c040; font-weight: bold; }  /* section headers */
+.url  { color: #79c0ff; }
+</style>
+</head>
+<body>
+<header>
+  <a href="../html/index.html">&#8592; Index</a>
+  <h1>Speeds Cpu Mem Disk Nw</h1>
+</header>
+<main>
+  <pre>See https://gist.github.com/jboner/2841832
+
+L1/Register     :  1 ns
+L2              : 10 ns
+L3/RAM          :100 ns   or    0.1  us
+
+C system call to kernel  : 1000ns or 1 us
+Context switch between user and kernel or memcpy : 10us
+HTTP request processing by ngix : 20us
+1MB memory sequential read      : 50us
+8k page read from SSD                : 100us
+8k page write to  SSD (10x read)     : 1000us or 1ms
+
+N/W (1K on 1Gbs)                     : 100 x N   us (Network congestion often delivers slower speed and 2019 network is slower than SSD)
+Redis read (including n/w latency of few 100 us) : 1 ms
+
+HDD Disk seek                       : 5-10ms
+NW across zones                     : 1-5ms
+NW across US/EU                     : 10-100ms
+1GB memory sequential read          : 50ms
+TLS handshake (multiple nw trips)   : upto 500ms
+1GB from SSD                        : 500ms
+</pre>
+</main>
+</body>
+</html>

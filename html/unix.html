@@ -1,0 +1,1159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Unix</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: #1a1a2e;
+    color: #e0e0e0;
+    min-height: 100vh;
+}
+header {
+    background: #16213e;
+    border-bottom: 2px solid #0f3460;
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+header a {
+    color: #e94560;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+}
+header a:hover { text-decoration: underline; }
+h1 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #53d8fb;
+    letter-spacing: 0.03em;
+}
+main {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 24px;
+}
+pre {
+    background: #0d1117;
+    border: 1px solid #21262d;
+    border-radius: 8px;
+    padding: 20px 24px;
+    overflow-x: auto;
+    font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+    font-size: 0.85rem;
+    line-height: 1.65;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+.cmd  { color: #7ee787; }          /* $ shell commands */
+.cmt  { color: #8b949e; }          /* # comments */
+.hdr  { color: #f0c040; font-weight: bold; }  /* section headers */
+.url  { color: #79c0ff; }
+</style>
+</head>
+<body>
+<header>
+  <a href="../html/index.html">&#8592; Index</a>
+  <h1>Unix</h1>
+</header>
+<main>
+  <pre>UNIX DIR
+===========
+OS device tree (/dev)
+OS configuration (/etc)
+executeables (/bin, /sbin)
+shared libraries (/lib, /usr/lib, /lib64, /usr/lib64)
+optional packages (/opt)
+
+kernel (/sys)
+kernel boot (/boot)
+
+running process tree (/proc)
+temporary files (/tmp)
+log files (/var)
+
+/usr -- which is used to hold executables (/usr/bin), libraries (/usr/lib), and shared support files (/usr/share)
+
+home directories (/home) .
+
+From &lt;https://wiki/display/ADST/Linux+101&gt; 
+
+Boot sequence: load kernel into memory; init OS; system service apps come up (LDAP, NTP, DNS); other apps (web server &amp; database server; networking; firewall; X display manager etc) &amp; final - display login prompt.
+Logon on box or remotely - launches a shell (env, PATH for binaries &amp; LD_LIBRARY_PATH for libraries)
+
+
+SET options
+=============
+#!/bin/bash
+set -u     #error on unbound users (set -o nounset)
+set -e     #exit on. lose $? (set -o errexit)
+set -o pipefail  # false | true returns false no
+
+GoodCommand
+BadCommand  #stops here
+GoodCommand
+GoodCommand
+
+
+rsynch
+==========
+Efficient local/remote copy mechanism: # rsync options source destination
+
+• -v : verbose
+• -r : copies data recursively (but don’t preserve timestamps and permission while transferring data
+• -a : archive mode, archive mode allows copying files recursively and it also preserves symbolic links, file permissions, user &amp; group ownerships and timestamps
+• -z : compress file data
+• -h : human-readable, output numbers in a human-readable format
+
+Copy/Sync a File locally : rsync -zvh backup.tar /tmp/backups/
+Copy/Sync a Dir locally : rsync -azvh somedir/folder /tmp/backups/
+Copy/Sync a Dir Remotely: rsync -avz rpmpkgs/ root@192.168.0.101:/home/
+Copy/Sync a Dir from remote: rsync -avz root@192.168.0.101:/home/ rpmpkgs/ 
+Copy/Sync a Dir from remote over SSH: rsync -avzhe ssh root@192.168.0.100:/root/install.log /tmp/
+
+include/exclude files:rsync -avze ssh --include &#x27;R*&#x27; --exclude &#x27;*&#x27; root@192.168.0.101:/var/lib/rpm/ /root/rpm
+
+Delete destination dir/file if not in source : rsync -avz --delete root@192.168.0.100:/var/lib/rpm/ .
+
+Delete source file when sync is done: rsync -avz --remove-source-files root@192.168.0.100:/var/lib/rpm/ .
+
+From &lt;https://www.tecmint.com/rsync-local-remote-file-synchronization-commands/&gt; 
+
+
+
+UNIX PROFILES
+===============
+System wide
+	• /etc/environment: specifically meant for environment variables
+	• /etc/env.d/*: environment variables, split in multiple files
+	• /etc/profile: all types of initialization scripts
+	• /etc/profile.d/*: initialization scripts
+	• /etc/bashrc, /etc/bash.bashrc: meant for functions and aliases
+User specific
+	• ~/.bash_profile: initialization for login (bash-)shells
+	• ~/.bashrc: initialization for all interactive (bash-)shells
+	• ~/.profile: used for all shells
+	• ~/.cshrc, ~/.zshrc, ~/.tcshrc: similar for non-bash shells
+
+From &lt;https://unix.stackexchange.com/questions/813/how-to-determine-where-an-environment-variable-came-from/154971#154971&gt; 
+
+
+CPU Affinity with &quot;taskset&quot;
+==========================
+<span class="cmd">$ tasket -p &lt;PID&gt;</span>
+Current affinity : f  (any of the 4 processors indicated by bits)
+<span class="cmd">$ tasket -cp &lt;PID&gt;</span>
+Current affinity : 0-3 (4 CPU core machine - default to let all processors be used)
+
+<span class="cmt"># setting affinity</span>
+<span class="cmd">$ taskset -p 0x3 &lt;PID&gt;   # use core 0 and 1</span>
+<span class="cmd">$ taskset -cp --cpu-list 0,1 &lt;PID&gt; </span>
+
+<span class="cmt"># launch with predefined affinity</span>
+<span class="cmd">$ taskset 0x3 &lt;command&gt;</span>
+
+
+PS
+===
+See processes under a PID (groups of processes from fork)
+#&gt; ps f -g 0  
+PID TTY      STAT   TIME COMMAND
+2 ?        S      0:00 [kthreadd]
+3 ?        S      0:01  \_ [ksoftirqd/0]
+7 ?        S      0:19  \_ [rcu_sched]
+
+From &lt;https://unix.stackexchange.com/questions/264522/how-can-i-show-a-terminal-shells-process-tree-including-children&gt; 
+
+#Detach a process
+Cntrl+Z to detach
+bg to set it running on background
+
+<span class="cmd">$ some_long_running_cmd_running_on_terminal</span>
+<span class="cmd">$</span>
+^Z
+[1]+  Stopped                 ./1.sh
+
+<span class="cmd">$ jobs</span>
+[1]+  Stopped                 ./1.sh
+
+<span class="cmd">$ bg 1</span>
+[1]+ ./1.sh &amp;
+
+<span class="cmd">$ jobs</span>
+[1]+  Running                 ./1.sh &amp;
+
+
+
+KILL
+======
+<span class="hdr">Kill smart way:</span>
+kill -HUP &lt;application_pid&gt;
+<span class="cmt"># check if application is still running</span>
+kill -INT &lt;application_pid&gt;
+<span class="cmt"># check if application is still running</span>
+kill -KILL &lt;application_pid&gt;
+From &lt;https://unix.stackexchange.com/questions/19474/how-to-soft-kill-gui-applications-via-terminal&gt; 
+
+
+Kill all spawned children.
+
+kill -TERM &lt;parent pid&gt;
+
+pgrep -f  test.py
+pkill -f  test.py
+
+
+
+X11 forwarding
+==============
+Install VcXsrv
+Enable X11 forwarding in the SSH setup through Putty/Mobiterm.
+Test by starting xterm in bg. (% xterm bg)
+
+Xterm configs in ~/.Xresources
+xterm*Background: black
+xterm*Foreground: white
+
+xrdb -merge ~/.Xresources
+From &lt;https://www.linuxquestions.org/questions/debian-26/how-to-change-background-and-fonts-color-in-xterm-156290/page2.html&gt; 
+
+
+
+SSH SCP
+========
+	1. Generate public/private (id_rsa.pub/id_rsa) key files ()
+	2. Copy the public key to another&#x27;s host ssh authorised file ($ ssh-copy-id asingh5@host2)\
+	3. Copy around files ($ scp local_file asingh5@host2:/tmp  -or $ scp asingh5@host1:/tmp/file asingh5@host2:/tmp/file)
+
+
+<span class="hdr">Test ssh server with telnet (port 22):</span>
+<span class="cmd"> $ telnet oats-sftp.finra.org 22</span>
+Trying 75.98.61.43...
+Connected to oats-sftp.finra.org.
+Escape character is &#x27;^]&#x27;.
+^]
+telnet&gt; close
+
+<span class="hdr">Generating sequence of numbers:</span>
+-------------------------------
+<span class="cmd">$ seq first increment last</span>
+<span class="cmd">$ seq last</span>
+<span class="cmd">$ seq -s&#x27;,&#x27; 3 2 10       # 3,5,7,9</span>
+
+
+FILE / READELF / OBJDUMP 
+========================
+<span class="cmd">$ file &lt;binary/file&gt;	# reads file headers to determine file type (Code/Binary/Text) based on magic numbers, architecture supported. Importantly, the starting address that this code will jump to when running it from terminal</span>
+
+
+readelf &amp; objdump are part of &quot;binutils&quot;
+<span class="cmt"># To determine the ELF (Unix executable like windows.exe) properties like starting address, architecture built for</span>
+<span class="cmd">$ readelf -h &lt;binary&gt;</span>
+<span class="cmd">$ readelf -d &lt;binary&gt;   # show dynamic section</span>
+
+
+<span class="cmt"># assembly code in binary</span>
+$objdump -D &lt;binary&gt;
+<span class="cmd">$ objdump -D -M intel file.bin | grep main.: -A20</span>
+<span class="cmt"># This performs disassembly on the file «file.bin», with the assembly code shown in Intel syntax. We then redirect it to grep, which searches the main function and displays 20 lines of its code. </span>
+
+GNU Parallel
+===============
+parallel --dryrun -j32 -k --nice 20 --load 50% --noswap --resume-failed --joblog /tmp/parallel.log --results outdir -a input_dates.dat echo  #remove /tmp/parallel.log when done
+
+seq 3 | parallel --dryrun &quot;echo {} {.}&quot;
+
+{} -- input
+{.} -- input without filename ext
+{#} -- input # (1,2,3…)
+{/} -- removes the path; keeps filename only
+{//} -- keeps the path; removes filename 
+{/.} -- keeps the filename without extension; removes path &amp; extension
+
+
+parallel --dryrun -a input_dates.dat echo  #reach date one-by-one in file and run cmd echo .. Can read mutiple -a file … cross product
+
+parallel echo ::: arg1 arg2 arg3  #run echo for each arg
+parallel echo prefix-{} ::: arg1 arg2 arg3  #run echo for each arg with prefix &quot;prefix-&quot;
+cat data.dat | parallel echo  #run echo for each line in file  .. Or cat data.dat | parallel -a echo
+
+parallel --colsep &#x27;\t&#x27; echo 1={1} 2={2} :::: tsv-file.tsv  #From &lt;https://www.gnu.org/software/parallel/parallel_tutorial.html&gt; 
+
+
+#keep order in output, (j) jobs to run in parallel (here 2)
+parallel -j2 -k &#x27;printf &quot;%s-start\n%s&quot; {} {};
+    sleep {};printf &quot;%s\n&quot; -middle;echo {}-end&#x27; ::: 4 2 1    
+
+#save output to files in /var/tmp
+ parallel --tmpdir /var/tmp --files echo ::: A B C
+
+#save stdout, stderr in outdir
+parallel --results outdir echo ::: A B C   #outdir/1/A/stderr + stdout + seq (input)… outdir/2/B/stderr + stdout + seq (input)
+
+#delay starting each job (IO or CPU intensive)
+parallel --delay 2.5 echo Starting {}\;date ::: 1 2 3
+
+#progress
+parallel --progress sleep ::: 1 3 2 2 1 3 3 2 1
+
+
+#joblog &amp; reumse failed jobs
+  parallel --joblog /tmp/log exit  ::: 1 2 3 0
+  cat /tmp/log
+  parallel --resume --joblog /tmp/log exit  ::: 1 2 3 0 0 0  #parallel stopped and resume again from point of break
+  parallel --resume-failed --joblog /tmp/log exit  ::: 1 2 3 0 0 0 #restart failed jobs
+
+#limit resource (CPU/mem/swap/nice)
+parallel --load 100% echo load is less than {} job per cpu ::: 1
+parallel --noswap echo the system is not swapping ::: now
+parallel --memfree 1G echo will run if more than 1 GB is ::: free   #jobs killed due to mem-limit are put back in queue
+parallel --nice 17 echo this is being run with nice -n ::: 17
+
+
+#running on another server
+parallel -S username@$SERVER1 echo running on ::: username@$SERVER1
+
+
+
+PGP encryption
+===============
+USER-ID : Aditya Singh (asingh5) &lt;aditya.singh@citadel.com&gt;
+Passphrase: Citadel!
+
+#generate public-private RSA key (does not expire, Name, Email, Comment)
+#keys are created in ~/.gnupg
+<span class="cmd">$ gpg --gen-key</span>
+
+<span class="cmd">$ gpg --list-secret-keys --keyid-format LONGC</span>
+/home/asingh5/.gnupg/secring.gpg
+--------------------------------
+sec   2048R/3EE70D2AB4CEF2D8 2019-03-25
+uid                          Aditya Singh (asingh5) &lt;aditya.singh@citadel.com&gt;
+ssb   2048R/7A227001895FA33D 2019-03-25
+
+<span class="cmd">$ gpg --gen-revoke (store hard copies of your keys &amp; certificate)</span>
+
+#encrypt a file
+<span class="cmd">$ gpg -e -r &quot;Aditya Singh &lt;aditya.singh@citadelsecurities.com&gt;&quot; &lt;some file&gt;</span>
+<span class="cmd">$ gpg -e -r &quot;Aditya Singh (asingh5) &lt;aditya.singh@citadel.com&gt;&quot; &lt;some file&gt;</span>
+
+#decrypt a file
+<span class="cmd">$ gpg -o &lt;decrypted file&gt; -d &lt;encrypted filename&gt;</span>
+
+#generate your certificate pub-key that you can share with others
+<span class="cmd">$ gpg --armor --export &quot;Aditya Singh (asingh5) &lt;aditya.singh@citadel.com&gt;&quot;  public_key.asc </span>
+
+#share key with others (email public_key.asc or upload to keyserver in gpg.conf)
+<span class="cmd">$ gpg --send-key &quot;Aditya Singh (asingh5) &lt;aditya.singh@citadel.com&gt;&quot;</span>
+
+#receive key from file
+<span class="cmd">$ gpg --import users.pubkey.gpg</span>
+
+#receive key from key-server ($gpg search &quot;Aditya Singh (asingh5) &lt;aditya.singh@citadel.com&gt;&quot; on key server)
+<span class="cmd">$ gpg --recev-keys &lt;8-hex ID&gt;</span>
+
+#after receiving, check if key is authentic by checking fingerprint and out-of-band (email/phone) to confirm it matches
+<span class="cmd">$ gpg --fingerprint &lt;their UID&gt;</span>
+
+#delete a key
+<span class="cmd">$ gpg --delete-key &lt;UID&gt;</span>
+gggggggg
+~/.gnupg
+ - gpg.conf
+ - secring.gpg (secure key-ring)
+ - pubring.gpg (public key-ring)
+ 
+
+
+APACHE Authentication
+=====================
+https://httpd.apache.org/docs/2.2/howto/auth.html
+Basic auth - https://wiki.apache.org/httpd/PasswordBasicAuth
+Kerberos - https://kb.iu.edu/d/aumh
+Degang - http://cqs-wiki/display/DM/Set+up+Kerberos+authentication+to+connect+to+SQL+Server
+
+APACHE WWW- Access logs
+=======================
+cut -f1 -d&#x27;-&#x27; ~/apache_httpd/logs/access_log | sort | uniq -c | awk -F&#x27; &#x27; &#x27;{print $2, $1}&#x27; 
+
+TTY MULTIPLEX
+==============
+TMUX
+----
+<span class="cmt"># session management</span>
+tmux ls (or tmux list-sessions)
+tmux new -s session-name
+Ctrl-b d Detach from session
+tmux attach -t [session name]
+tmux kill-session -t session-name
+tmux detach-client -s [session name]
+
+
+Ctrl-b s (List all sessions)
+Ctrl-b $ (rename session)
+Ctrl-b d (detach session)
+
+Ctrl-b c Create new window
+Ctrl-b &amp; Kill the current window
+Ctrl-b , Rename the current window
+Ctrl-b ? List all keybindings
+Ctrl-b w Tree of all windows and each pane in those windows
+
+
+<span class="cmt"># moving between windows</span>
+Ctrl-b n (Move to the next window)
+Ctrl-b p (Move to the previous window)
+Ctrl-b l (Move to the previously selected window)
+Ctrl-b w (List all windows / window numbers)
+Ctrl-b window number (Move to the specified window number, the
+default bindings are from 0 -- 9)
+
+<span class="cmt"># Tiling commands</span>
+Ctrl-b % (Split the window vertically)  Ctrl-b + |
+Ctrl-b &quot; (Split window horizontally)  Ctrl-b + -
+Ctrl-b x (close pane)
+Ctrl-b ! (make pane into a new window)
+Ctrl-b z zoom into pane (full window now; toggle with z)
+Ctrl-b q (Show pane numbers, when the numbers show up type the key to go to that pane)
+Ctrl-b (arrow-key)  Move between panes
+Ctrl-b o Switch to the next pane (or Ctrl+B and arrow keys)
+Ctrl+b O -- move all panes clock-wise
+Ctrl-b { (Move the current pane left)
+Ctrl-b } (Move the current pane right)
+
+#restart a dead pane (select the dead pane)
+CTRL+b   : respawn-pane -k
+From &lt;https://unix.stackexchange.com/questions/88392/is-there-an-easy-way-to-restart-a-tmux-pane&gt; 
+
+<span class="cmt"># Make a pane its own window</span>
+Ctrl-b : &quot;break-pane&quot;
+
+#copy-paste
+Enter copy mode with (Ctrl-b + [). Cntrl+Space to start highlight and Alt+W to end highlight.
+Cntrl-b + ] to paste
+
+<span class="cmt"># ~/.tmux.conf</span>
+  bind | split-window -h -c &quot;#{pane_current_path}&quot;
+  bind _ split-window -v -c &quot;#{pane_current_path}&quot;
+  set -g mouse on
+<span class="cmt">  # List of plugins</span>
+  set -g @plugin &#x27;tmux-plugins/tpm&#x27;
+  set -g @plugin &#x27;tmux-plugins/tmux-sensible&#x27;
+<span class="cmt">  # Other examples:</span>
+<span class="cmt">  # set -g @plugin &#x27;github_username/plugin_name&#x27;</span>
+<span class="cmt">  # set -g @plugin &#x27;github_username/plugin_name#branch&#x27;</span>
+<span class="cmt">  # set -g @plugin &#x27;git@github.com:user/plugin&#x27;</span>
+<span class="cmt">  # set -g @plugin &#x27;git@bitbucket.com:user/plugin&#x27;</span>
+<span class="cmt">  # Initialize TMUX plugin manager (keep this line at the very bottom of tmux.conf)</span>
+  run &#x27;~/.tmux/plugins/tpm/tpm&#x27;
+
+
+From &lt;https://www.youtube.com/watch?v=BHhA_ZKjyxo&gt; 
+
+
+SCREEN
+-------
+<span class="cmd">$ screen</span>
+
+Ctrl^A + c -- create
+Ctrl^A + n -- next
+Ctrl^A + S -- split screen horizontally
+Ctrl^A + TAB -- move between split screen (start new session Ctrl^A+c --or-- go to other session with Ctrl^A +n)
+
+Ctrl^A + | -- split screen veritcally
+
+
+
+LSOF - list open files
+======================
+<span class="hdr">Files currently being used:</span>
+
+lsof +r 3 -f --&#x27;/home/asingh5/docs/temp/ping.txt&#x27;
+#returns -1 if file is not in use
+
+RENAME MANY FILES
+=================
+for f in *xlsx; do echo mv $f &quot;$(basename $f .xlsx).xls&quot;; done
+
+
+
+DELETE OLD FILEs
+=================
+find / -name .DS_Store -print0 | xargs -0 rm
+
+find / -name .DS_Store -exec rm {} +
+
+#better than
+find / -name &quot;.DS_Store&quot;  -exec rm {} \;
+
+From &lt;http://unix.stackexchange.com/questions/167823/find-exec-rm-vs-delete&gt; 
+
+
+
+find /home/a -mtime +15 -exec ls -l {} \;
+
+From &lt;http://www.guguncube.com/957/unix-delete-files-older-than-a-certain-number-of-days&gt; 
+
+
+
+find . -name &quot;*.txt&quot; -print0 | while read -d $&#x27;\0&#x27; file
+do
+   blah, blah, blah
+done
+From &lt;http://stackoverflow.com/questions/9612090/how-to-loop-through-file-names-returned-by-find&gt; 
+NEVER do this:  for file in $(find . -name &quot;*.txt&quot;)
+BECAUSE: 1. loop must first complete. 2. white space in filename will treat is as 2 separate names.
+
+
+<span class="hdr">Files older than 2 mins:</span>
+find /home/asingh5/docs/temp/ping.txt -newermt &#x27;2 mins ago&#x27; | wc -l
+
+
+
+STAT file
+=========
+Change access/modified time of a file
+<span class="cmd">$ touch -a -m -t 201801012359.59 /auto/cesiqload/README.txt</span>
+
+<span class="cmd">$ ls -l /auto/cesiqload/README.txt</span>
+-rw-r--r-- 1 s_cesrpt development 369 Jan  1  2018 /auto/cesiqload/README.txt
+
+<span class="cmd">$ stat /auto/cesiqload/README.txt</span>
+  File: `/auto/cesiqload/README.txt&#x27;
+  Size: 369             Blocks: 16         IO Block: 262144 regular file
+Device: 33h/51d Inode: 1686665     Links: 1
+Access: (0644/-rw-r--r--)  Uid: ( 1540/s_cesrpt)   Gid: (   11/development)
+Access: 2018-01-01 23:59:59.000000000 -0600
+Modify: 2018-01-01 23:59:59.000000000 -0600
+Change: 2016-08-24 09:33:29.000010000 -0500
+
+
+
+ARP - Address resolution protocol
+===================================
+#shows the cached MAC address
+<span class="cmd">$ arp -a</span>
+ld-chces15.citadelgroup.com (10.15.119.49) at a0:48:1c:b9:c5:f0 [ether] on bond0
+ld-chces14.citadelgroup.com (10.15.119.48) at a0:48:1c:b9:ca:70 [ether] on bond0
+chi-dbn-qr-acc19-vl119.citadelgroup.com (10.15.119.1) at 00:2a:6a:fa:3e:bc [ether] on bond0
+
+
+
+NETSTAT
+=======
+List all network statistics (all socket connections tcp/udp/unix - active/listening)
+
+<span class="cmd">$ netstat -at</span>
+Active Internet connections (servers and established)
+Proto Recv-Q Send-Q Local Address           Foreign Address         State      
+tcp        0      0 enlightened:domain      *:*                     LISTEN     
+tcp        0      0 localhost:ipp           *:*                     LISTEN     
+tcp        0      0 enlightened.local:36310 del01s07-in-f24.1:https ESTABLISHED
+tcp        0      0 enlightened.local:45038 a96-17-181-10.depl:http ESTABLISHED
+tcp        0      0 enlightened.local:37892 ABTS-North-Static-:http ESTABLISHED
+.....
+
+#(a)ll, (t)cp, (u)dp, (l)istening, (p)rocess name/id, (e)xtended info like user/inode
+Grep for LISTEN/ESTABLISHED/http/ntp
+
+Print statistics (-st for tcp specific)
+<span class="cmd">$ netstat -s</span>
+<span class="hdr">Ip:</span>
+    32797 total packets received
+    0 forwarded
+    0 incoming packets discarded
+    32795 incoming packets delivered
+    29115 requests sent out
+    60 outgoing packets dropped
+<span class="hdr">Icmp:</span>
+    125 ICMP messages received
+    0 input ICMP message failed.
+    ICMP input histogram:
+        destination unreachable: 125
+    125 ICMP messages sent
+    0 ICMP messages failed
+    ICMP output histogram:
+        destination unreachable: 125
+... OUTPUT TRUNCATED ...
+
+Display (kernel) routing info
+<span class="cmd">$ netstat -rn</span>
+Kernel IP routing table
+Destination     Gateway         Genmask         Flags   MSS Window  irtt Iface
+0.0.0.0         192.168.1.1     0.0.0.0         UG        0 0          0 eth0
+192.168.1.0     0.0.0.0         255.255.255.0   U         0 0          0 eth0
+$netstat -rn
+Kernel IP routing table
+Destination     Gateway         Genmask         Flags   MSS Window  irtt Iface
+10.32.242.0     0.0.0.0         255.255.255.0   U         0 0          0 bond0
+0.0.0.0         10.32.242.1     0.0.0.0         UG        0 0          0 bond0
+
+<span class="hdr">Network Interfaces:</span>
+<span class="cmd">$ netstat -i</span>
+Kernel Interface table
+Iface       MTU Met    RX-OK RX-ERR RX-DRP RX-OVR    TX-OK TX-ERR TX-DRP TX-OVR Flg
+bond0      1500   0 219215904      0      0      0 230840408      0      0      0 BMmRU
+eth0       1500   0 218950263      0      0      0 230840408      0      0      0 BMsRU
+eth1       1500   0   265641      0      0      0        0      0      0      0 BMsRU
+lo        16436   0 51354919      0      0      0 51354919      0      0      0 LRU
+
+<span class="hdr">Group info for IPv4/v6:</span>
+<span class="cmd">$ netstat -g</span>
+IPv6/IPv4 Group Memberships
+Interface       RefCnt Group
+--------------- ------ ---------------------
+lo              1      all-systems.mcast.net
+bond0           1      239.0.26.114
+bond0           2      239.0.2.60
+bond0           1      239.0.4.22
+bond0           1      all-systems.mcast.net
+
+<span class="hdr">Continuous update:</span>
+$netstat -ct          #tcp only
+
+<span class="hdr">Watch list of active TCP connections:</span>
+$watch -d -n0 &quot;netstat -atnp | grep ESTABLISH&quot;
+
+
+<span class="hdr">TCP processes:</span>
+
+<span class="cmd">$ netstat -apn | grep tcp | grep LISTEN | grep Per</span>
+(Not all processes could be identified, non-owned process info
+ will not be shown, you would have to be root to see it all.)
+tcp        0      0 0.0.0.0:20201               0.0.0.0:*                   LISTEN      14724/./Persistence
+
+
+<span class="hdr">UDP processes:</span>
+
+<span class="cmd">$ netstat -apn | grep udp | grep LISTEN </span>
+(Not all processes could be identified, non-owned process info
+ will not be shown, you would have to be root to see it all.)
+udp        0      0 0.0.0.0:12352               0.0.0.0:*                               -
+udp        0      0 0.0.0.0:708                 0.0.0.0:*                               -
+
+
+Network Card capacity
+====================
+<span class="cmd">$ ifconfig    # shows 2 network card bonded to single interface (backup n/w card)</span>
+bond0 ..
+eth 4 ..
+eth 5 ...
+lo  (loopback)
+
+<span class="cmd">$ ethtool bond0</span>
+<span class="cmt"># Speed = 10000Mb/s = 10Gb/s</span>
+<span class="cmd">$ ethtool eth4</span>
+<span class="cmt"># Speed 10000Mb/s = 10Gb/s</span>
+<span class="cmt"># Supported Link modes: 100baseT/Full, 1000baseT/Full (1Gb capacity) so real capacity is limited to eth card of 1GB (end-of-life 2020)</span>
+
+AWK
+===
+
+<span class="hdr">Count fields in line &amp; print line #:</span>
+awk &#x27;{ FS = &quot;,&quot;; } ; { print NF, count; count=count+1;}&#x27;
+awk &#x27;{ FS = &quot;|&quot;; } ; { print NF, count; count=count+1;}&#x27; /home/s_cesprd/prod/temp/new_CESTransactions.dat | grep -v &quot;^81&quot;
+
+awk &#x27;{ FS = &quot;%&quot;; } ; { print NF, count; }&#x27; /home/s_cesrpt/prod/temp/20160627.otc_prop_trades| sort | uniq -c
+awk &#x27;{ FS = &quot;%&quot;; } ; { print NF, count; count=count+1; }&#x27; /home/s_cesrpt/prod/temp/20160627.otc_prop_trades| grep -v 38
+
+head -2 CDRG_EQT_20160219_Orders.txt.sample | awk -F &quot;|&quot; &#x27;{print NF-1}
+ ....useful for bcp data transfer check etc.
+
+<span class="hdr">Sum of a column:</span>
+awk -F&#x27;,&#x27; &#x27;{ sum+=$1} END {print sum}&#x27;
+
+<span class="hdr">Sum of column 2, group by column 1:</span>
+awk -F, &#x27;{a[$1]+=$2;}END{for(i in a)print i&quot;,&quot;a[i];}&#x27; 
+
+http://www.theunixschool.com/2012/06/awk-10-examples-to-group-data-in-csv-or.html
+
+
+
+RESOURCE MONITORING
+=====================
+<span class="hdr">ulimit -- Account limits on memory/files:</span>
+
+lx-njnasd-hfpo02:/logs/rrts $ id
+uid=5728(s_fixuser) gid=111(star) groups=111(star),11(development),706(qls_e)
+
+lx-njnasd-hfpo02:/logs/rrts $ ulimit -a |grep mem
+max locked memory       (kbytes, -l) 64
+max memory size         (kbytes, -m) unlimited
+virtual memory          (kbytes, -v) unlimited
+
+Tools for monitoring:: Zabbix, Prometheus &amp; Graphana, Datadog, sar
+Zabbix
+Prometheus &amp; Graphana :: Prometheus mainly collects the Linux hardware and OS metrics exposed by *nix kernel and then stores as time-series data, using a pull model over HTTP. Grafana dashboards for data visualization with your Prometheus server.
+Datadog :: SaaS for monitoring unix hosts. Requires agent setup on box.
+sar:to monitor memory/swap space
+1. $ sar -r -s 10:24:00          #monitor memory from 10:24 today
+2. $ sar -S -s 10:24:00          #monitor swap space from 10:24 today
+3. $sar -r -s 23:24:00 -f /var/log/sa/sa09     #monitor memory from 23:24 for a historical date (11/09)
+4. /usr/local/bin/pdctop 10:24   #get a top-like interface at 10:24am
+
+
+<span class="hdr">CPU monitoring:</span>
+<span class="cmd">$ top (CPU%, Memory, Swap), host time up, nice, state, per process (id, cmd, cpu, memory (total, virtual)</span>
+	Output
+	top - 15:14:40 up 46 min,  1 user,  load average: 0.00, 0.01, 0.05
+	Tasks:  56 total,   1 running,  55 sleeping,   0 stopped,   0 zombie
+	Cpu(s):  0.0%us,  0.0%sy,  0.0%ni,100.0%id,  0.0%wa,  0.0%hi,  0.0%si,  0.0%st
+	Mem:   1019600k total,   316576k used,   703024k free,     7652k buffers
+	Swap:        0k total,        0k used,        0k free,   258976k cached
+
+	  PID USER      PR  NI  VIRT  RES  SHR S %CPU %MEM    TIME+  COMMAND           
+	    1 root      20   0 24188 2120 1300 S  0.0  0.2   0:00.56 init               
+	    2 root      20   0     0    0    0 S  0.0  0.0   0:00.00 kthreadd 
+
+<span class="cmd">$ htop (better CPU thread utilization)</span>
+
+
+<span class="hdr">Network monitoring:</span>
+<span class="cmd">$ ifconfig   -- list all network interfaces (card/wifi/local/docker) with IP/mask &amp; RX/TX packets sent/received/dropped</span>
+
+<span class="cmd">$ netstat -- list open sockets TCP/UDP (-tu) (-a listening &amp; sending) (-s for summary shows per protcol (TCP/UDP recevied/sent/reset/dropped/buffer errors)</span>
+
+<span class="cmd">$ nethogs -- PID, process, network card, sent/received in real-time (Active processes)</span>
+	  PID USER     PROGRAM                      DEV        SENT      RECEIVED       
+	3379  root     /usr/sbin/sshd               eth0       0.485       0.182 KB/sec
+	820   root     sshd: root@pts/0             eth0       0.427       0.052 KB/sec
+	?     root     unknown TCP                             0.000       0.000 KB/sec
+
+	  TOTAL                                                0.912       0.233 KB/sec
+
+
+<span class="hdr">Memory monitoring:</span>
+<span class="cmd">$ free		# total/used/free/shared/buffer</span>
+<span class="cmd">$ vmstat	# </span>
+	procs -----------memory---------- ---swap-- -----io---- -system-- ------cpu-----
+	 r  b   swpd   free   buff  cache   si   so    bi    bo   in   cs us sy id wa st
+ 	0  0    256 3298216 476696 6782212    0    0     2    11   24    5  4  1 95  0  0
+<span class="cmd">	$ vmstat -w</span>
+	--procs-- -----------------------memory---------------------- ---swap-- -----io---- -system-- --------cpu--------
+	   r    b         swpd         free         buff        cache   si   so    bi    bo   in   cs  us  sy  id  wa  st
+	   0    0          256      3340888       476732      6739560    0    0     2    11   24    5   4   1  95   0   0
+
+<span class="hdr">Disk monitoring:</span>
+<span class="cmd">$ df -h		# filesystem mounts used/avail/mounted on</span>
+<span class="cmd">$ du -h		# disk used</span>
+<span class="cmd">$ ncdu		# ncurses du -- scans dir and gives text-graphical interface highlighint which sub-dir uses most space.</span>
+
+LDD missing .so file
+=======================
+&lt; ~ &gt;ldd /tp64/r-project/3.1.2/lib64/R/bin/exec/R
+        linux-vdso.so.1 =&gt;  (0x00007fff61ffd000)
+        libR.so =&gt; not found
+        libRblas.so =&gt; not found
+        libgomp.so.1 =&gt; /usr/lib64/libgomp.so.1 (0x0000003581e00000)
+        libpthread.so.0 =&gt; /lib64/libpthread.so.0 (0x0000003582200000)
+        libc.so.6 =&gt; /lib64/libc.so.6 (0x0000003581200000)
+        librt.so.1 =&gt; /lib64/librt.so.1 (0x0000003585e00000)
+        /lib64/ld-linux-x86-64.so.2 (0x0000003580e00000)
+
+
+CRONTAB
+=======
+MAILTO=asingh5
+#minute hour dom month dow command                                                                                                                                                                                  
+59 23 * * 1-5 DT=`date +\%y\%m\%d` &amp;&amp;  grep &#x27;addBorrow &#x27; file
+
+
+UNIX VERSION
+=============
+Redhat version 6.4 for 64-bit architecture is installed on ld-chces10 machine
+&lt; ~ &gt;uname -a  
+Linux ld-chces10 2.6.32-358.18.1.el6.x86_64 #1 SMP Fri Aug 2 17:04:38 EDT 2013 x86_64 x86_64 x86_64 GNU/Linux
+
+&lt; ~ &gt;cat /etc/redhat-release
+Red Hat Enterprise Linux Server release 6.4 (Santiago)
+&lt; ~ &gt;hostname
+ld-chces10
+
+VI
+===
+<span class="hdr">TABS:</span>
+expand tabs to space(4 char)
+:set expandtab ts=4 sw=4 ai
+
+You can replace all the tabs with spaces in the entire file with
+:%retab
+
+set autoindent noexpandtab tabstop=4 shiftwidth=4
+From &lt;https://stackoverflow.com/questions/3682582/how-to-use-only-tab-not-space-in-vim&gt; 
+
+
+#to see special chars
+:set list
+
+<span class="hdr">Tab multiple lines:</span>
+Esc+V (visual mode)
+Select lines with arrow kets
+Esc+. (dot) to tab
+
+
+Insert tab into a vi selection by line-number
+:10,200:s/^/\t/
+
+<span class="hdr">Indentation:</span>
+ right :: 5&gt;&gt;
+ left   :: 5&lt;&lt;
+
+
+Split screen
+:sp       (hortz split)
+:vsplit (vertical split)
+Ctrl-w + arrow to move around
+
+
+
+
+
+vimdiff
+=========
+
+do - Get changes from other window into the current window.
+dp - Put the changes from current window into the other window.
+]c - Jump to the next change.
+[c - Jump to the previous change.
+Ctrl W + w - Switch to the other split window (CTRL-W CTRL-W does the same
+thing, in case you let go of the CTRL key a bit later)
+
+Pasted from &lt;http://stackoverflow.com/questions/5288875/vimdiff-what-are-the-most-frequently-used-commands-shortcuts-that-could-get-a-n&gt; 
+
+:set diffopt+=icase - ignore casedo]c
+
+:diffupdate - recompute diff
+
+:colorscheme slate   #to get around the yucky color diffs
+
+
+:syntax off  #turn off syntax highlight will let you see through the pink lines
+
+<span class="hdr">Other options:</span>
+	1. ~/.vimrc
+	if &amp;diff
+    colorscheme evening
+endif
+	
+	From &lt;https://stackoverflow.com/questions/2019281/load-different-colorscheme-when-using-vimdiff&gt; 
+	
+	2. 
+~/.vim/colors/mycolorsheme
+From &lt;https://stackoverflow.com/questions/2019281/load-different-colorscheme-when-using-vimdiff&gt; 
+
+
+CURL -- WGET
+=============
+curl --trace-ascii debug.txt --trace-time http://example.com/ -o output.html
+curl: (18) transfer closed with outstanding read data remaining
+<span class="cmd">$ echo $? # 18</span>
+
+
+DISK USAGE
+===========
+<span class="cmd">$ du -khsc  TB_EQUITY_CESE/TB_EQUITY_CESE.20180301.*</span>
+
+#larges files/directories
+cd $HOME; du -x . | sort -n | tail -30
+
+#du  &amp; df can be off if open files are deleated (inodes still in use by process) or if you are on a quota file where others have exhausted the filesystem (contact storage if this happens)
+ 10485760      1082368     9403392  11% /home/s_cesrpt
+1057293312    333362688   723930624  32% /auto/ces_reports
+259176704    124054272   135122432  48% /auto/cesrpt
+524288000     14207488   510080512   3% /auto/mm_scratch_s_cesrpt
+1.1G	/home/s_cesrpt
+From &lt;http://lx-ilch4-cesrep01:47771/jobinspect?cmd=Output&amp;id=SpaceCheck&amp;purl=%2Fjob%3Fid%3DSpaceCheck&amp;user=asingh5&amp;token=284293&amp;pid=6469&gt; 
+
+
+<span class="cmd">$ du -khs /home/s_cesrpt</span>
+<span class="cmd">$ df -kh | grep cesrpt </span>
+
+
+
+PORT FORWARDING
+================
+LocalForward (when you want to connect to a remote service):
+#connect to jupyter on ld-chces15:12345 when jupyter service runs on ld-chces16:12345
+ld-chces15$ ssh -L ld-chces15:12345:ld-chces16:12345 asingh5@ld-chces16  (local is ld-chces15 12345 -&gt; remote is ld-chces16 12345)
+
+<span class="hdr">To confirm this:</span>
+$netstat -apn | grep 12345
+
+RemoteForward (when you run a service and want to appear to run on a remote server:9090 port)
+ld-chces15$ ssh -R ld-chces15:12345:remote_server:9090 user@remote_server (when people connnect to remote_server:9090 -&gt; request fwd to ld-chces15:12345
+
+
+SHELL SCRIPTING
+=================
+Config control :: define variables in separate .sh file and do (. .myconf.sh) to have those variables in existing script.
+
+Quoting = &#x27;Hello $VAR&#x27; #single quote not interpretted
+&quot;Hello $VAR&quot; #VAR interpretted
+`ls -l $VAR`    #execute
+
+read VAR  #get user input
+echo $VAR
+
+#read only var  (like $1, $2, $#)
+declare -r READONLY=Y
+echo $READONLY
+READONLY=N    #can&#x27;t do this
+
+echo $?  #return code of last command … useful for error checking
+
+Command line args: $1, $2… ${10}, ${11} … $0 is scriptname…shift causes args to shift-left
+$#       #number of arg variables excluding $0. So if $# = 2 then we have $1 and $2 
+$@     #treat input args as list  ($@ or &quot;$@&quot; produce a list)
+$*       #treat input args as string  &quot;$*&quot; is single string
+Recommend to use &quot;$@&quot; .. Safe to pass variables around esp if they contain * or space like &#x27;a b&#x27;
+
+for x in &quot;$*&quot;
+do
+  echo $x
+done
+
+Command substitution :: $(cmd)  or `cmd`
+ls -l $(which vim)   #$() can be nested
+ls -l `which vim`
+
+Calculator :: (( .. ))
+COUNTER = $(( COUNTER * 10 ))
+while true             #while [ $counter -gt 0 ]
+do
+   COUNTER = $(( COUNTER - 1 ))
+   echo &quot;$COUNTER  seconds remaining&quot;
+done
+
+test expression or [ expression ]: test any expression, file types or compare values
+EXPRESSION1 -a EXPRESSION2 (and, -o or, ! EXPR)
+STRING #non-zero (- n)
+-z STRING #zero length tring
+STR1 = STR2 (=, !=)
+INT1 -eq INT2 (-le, -ge, -lt, -gt)
+FILE1 -nt FILE2 (newer than, -ot)
+-d FILE (is dir, -b, -c, -e , -f , -h, 
+
+Logical (&amp;&amp; and, || or)
+[ -d /etc ] &amp;&amp; echo &quot;dir exists&quot;
+[ -d /fake ] || echo &quot;dir NOT exists&quot;
+
+Pattern matching:   #regex should be in single quotes to avoid escaping
+* - entire string
+? - single char
+[a-z] - small char … [^a-z] or [! a-z] :: not a-z
+[[:class:]] - where class can be alpha, alnum, ascii, diigt, xdigit, blank, punct, space, word, lower, upper
+[.SYMBOL.] where SYMBOL like backslash, vertical-line, exclamation-mark
+filename =${1##*/}      #ignore anything in front of /, ## means the longest, # means shortest
+dirname =${1%/*}        #% first from right to left…ignore anything till you encounter /
+
+Function
+foo() {
+  COUNTER = $(( COUNTER - 1 ))
+   sleep 1
+}
+
+while [ $COUNTER -gt 0 ]; do
+  echo &quot;Time left: $COUNTER&quot;
+  foo()
+done
+
+[ $COUNTER = 0 ] &amp;&amp; echo &quot;time is up&quot;
+[ $COUNTER = &quot;-1&quot; ] &amp;&amp; echo &quot;time is negative&quot;
+
+while true 
+do 
+  echo &quot;you now are ${COUNTER#*-} seconds late&quot;  #pattern match with ${COUNTER#*-} to remove -ive sign
+  minusone 
+done
+
+<span class="hdr">Debug scripts:</span>
+bash -x myscript.sh arg1 arg2  #prints variables
+
+<span class="hdr">Loop examples:</span>
+if  cmd  like cut -d: -f1 /etc/passwrd | grep &quot;^$1$&quot; &gt; /dev/null 
+then 
+  …
+else
+   …
+fi
+
+if [[ $# -eq 2 ]]; then  #-eq for numbers, &quot;$a&quot; == &quot;$b&quot; for strings
+    oatsDesk=$2
+    echo &quot;Loading OATS for $oatsDesk only&quot;
+    if [[ &quot;$oatsDesk&quot; != &quot;CCMX&quot; ]] &amp;&amp; [[ &quot;$oatsDesk&quot; != &quot;CEMM&quot; ]] &amp;&amp; [[ &quot;$oatsDesk&quot; != &quot;CDGO&quot; ]] &amp;&amp; [[ &quot;$oatsDesk&quot; != &quot;APOG&quot; ]]; then
+        echo &quot;Desk $oatsDesk Invalid.&quot;
+        exit 1
+    fi
+fi
+
+if [ &quot;$oatsDesk&quot; == &quot;CEMM&quot; -o &quot;$oatsDesk&quot; == &quot;ALL&quot; ]; then
+    ### Wait for CEMM completion file flag ###
+    upper=$(date +%s --date=&quot;20:05&quot;)
+    while true; do
+	    if [ -f &quot;$cemm_oats_complete&quot; ]; then
+	        echo &quot;$cemm_oats_complete found!&quot;
+	        /bin/date
+	        break
+	    else
+	        echo &quot;Waiting for CEMM file&quot;
+	        curr_time=$(date +%s)
+	        if [ &quot;$curr_time&quot; -gt &quot;$upper&quot; ]; then
+	            echo &quot;File $cemm_oats_complete still not ready after 8:05pm. Time: $(date)&quot; | mailx -s &quot;Firmwide OATS Files Late&quot; $recips
+	        fi
+	    fi
+	    sleep 300
+	done
+
+
+function log_msg {
+  echo `/bin/date +&quot;%Y-%m-%d %H:%M:%S&quot;` &quot;: &quot; $1
+}
+log_msg &quot;Running for trade date : $date&quot;
+
+USAGE=&quot;:d:cnrax&quot;
+hostname=`/bin/hostname`
+the_date=&quot;&quot;
+copyhost=&quot;lp-dbn-boval006&quot;
+regen_coes=0
+regen_nscc=0
+regen_recon=0
+just_print_date_and_exit=0
+while getopts &quot;$USAGE&quot; opt
+do
+    case $opt in
+    d)
+        the_date=$OPTARG
+    ;;
+
+    c)
+        regen_coes=1
+    ;;
+
+    n)
+        regen_nscc=1
+    ;;
+
+    r)
+        regen_recon=1
+    ;;
+
+    a)
+        regen_coes=1
+        regen_nscc=1
+        regen_recon=1
+    ;;
+
+    x)
+        just_print_date_and_exit=1
+    ;;
+
+    esac
+done
+
+
+
+EXPECT
+========
+Expect  is  a program that &quot;talks&quot; to other interactive programs according to a script. 
+
+Following the script, Expect knows what can be expected from a program and what the correct response should be.  An interpreted language provides branching and high-level control structures to direct the dialogue.  In addition, the user can take control and interact directly when desired, afterward returning control to the script.
+
+
+/usr/bin/expect&lt;&lt;EOD
+set timeout -1
+spawn sftp $uploadUser@$host
+
+expect &quot;Password:&quot;
+send &quot;$uploadPass\n&quot;
+
+expect &quot;sftp&gt;&quot;
+send &quot;mput oats_$oatsDesk*.$today*.gz\n&quot;
+
+expect {
+    &quot;sftp&gt;&quot; {
+        send &quot;bye\n&quot;
+    }
+    -re &quot;(.*)disconnect&quot; {
+        puts &quot;Disconnected from server, exiting and retrying\n&quot;
+        exit
+    }
+}
+exit
+EOD
+
+
+
+#!/usr/bin/expect
+set timeout 9
+set username [lindex $argv 0]
+set password [lindex $argv 1]
+set hostname [lindex $argv 2]
+log_user 0
+if {[llength $argv] == 0} {
+  send_user &quot;Usage: scriptname username \&#x27;password\&#x27; hostname\n&quot;
+  exit 1
+}
+send_user &quot;\n#####\n# $hostname\n#####\n&quot;
+spawn ssh -q -o StrictHostKeyChecking=no $username@$hostname
+expect {
+  timeout { send_user &quot;\nFailed to get password prompt\n&quot;; exit 1 }
+  eof { send_user &quot;\nSSH failure for $hostname\n&quot;; exit 1 }
+  &quot;*assword&quot;
+}
+send &quot;$password\r&quot;
+expect {
+  timeout { send_user &quot;\nLogin failed. Password incorrect.\n&quot;; exit 1}
+  &quot;*\$ &quot;
+}
+send_user &quot;\nPassword is correct\n&quot;
+send &quot;exit\r&quot;
+close
+
+From &lt;https://www.pantz.org/software/expect/expect_examples_and_tips.html&gt; 
+
+
+#!/usr/bin/expect --
+#Notify you when mkdvd needs another DVD inserted and when completed.   
+#Specify mkdvd command line as argument to this script.
+#For example, ./mkdvdnotify mkdvd -d /dev/cd0 -m /mksysb .....
+set timeout -1
+puts &quot;Running command:  $argv&quot;
+eval spawn $argv
+
+while true {
+    expect {
+        &quot;The backup will require an additional CD or DVD&quot; {
+            exec ##Put command line here to email you/page you that we need another DVD
+            puts &quot;Need to insert additional CD/DVD&quot;
+            interact &quot;\r&quot; return
+            send &quot;\r&quot;
+        }
+        eof {
+            exec ##Put command line here to email you/page you that mksysb is done
+            puts &quot;mksysb command completed&quot;
+            break
+        }
+    }
+} 
+
+From &lt;https://www.ibm.com/developerworks/community/blogs/brian/entry/when_to_use_expect_scripting_and_when_to_avoid_it10?lang=en&gt; 
+
+
+Named pipe 
+<span class="cmt"># (dump data from one process and load into another)</span>
+<span class="cmd">$ mknod /tmp/my_named_pipe p</span>
+<span class="cmd">$ echo &quot;Test&quot; &gt; /tmp/my_named_pipe</span>
+<span class="cmt"># in another session</span>
+<span class="cmd">$ cat /tmp/my_named_pipe</span></pre>
+</main>
+</body>
+</html>
