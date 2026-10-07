@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vs Code</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: #1a1a2e;
+    color: #e0e0e0;
+    min-height: 100vh;
+}
+header {
+    background: #16213e;
+    border-bottom: 2px solid #0f3460;
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+header a {
+    color: #e94560;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+}
+header a:hover { text-decoration: underline; }
+h1 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #53d8fb;
+    letter-spacing: 0.03em;
+}
+main {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 24px;
+}
+pre {
+    background: #0d1117;
+    border: 1px solid #21262d;
+    border-radius: 8px;
+    padding: 20px 24px;
+    overflow-x: auto;
+    font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+    font-size: 0.85rem;
+    line-height: 1.65;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+.cmd  { color: #7ee787; }          /* $ shell commands */
+.cmt  { color: #8b949e; }          /* # comments */
+.hdr  { color: #f0c040; font-weight: bold; }  /* section headers */
+.url  { color: #79c0ff; }
+</style>
+</head>
+<body>
+<header>
+  <a href="../html/index.html">&#8592; Index</a>
+  <h1>Vs Code</h1>
+</header>
+<main>
+  <pre>F1 - help
+Cntrl+B - side explorer bar
+Cntrl+, - settings (JSON)
+Cntrl+` - terminal
+F5 - debug
+ - tasks (compile/build)
+
+Remote Dev - connect to remote hosts for environment
+
+Setup python env: Create Environment (venv)
+<span class="cmd">$ python3 -m venv .venv  &amp;&amp; source .venv/bin/activate</span>
+<span class="cmd">$ python3 -m pip install --upgrade pip</span>
+<span class="cmd">$ python3 -m pip install -r requirements.txt</span>
+<span class="cmd">$ </span>
+
+Code refactor: given code as variable; chunks of code as method or just renaming.
+
+Organize Imports (Ctrl+Shift+P). Shift+Alt+O
+Go over problems reported in code (e.g. missing semi-colon; linting errors). F8.
+
+Debugging: https://code.visualstudio.com/docs/python/debugging
+Run &amp; Debug :: debug options managed through a launch.json file (not visible as defaults being used).
+Can run/debug as python script/module (including attaching debugger to a running process).
+Debugger process/module is called &#x27;debugpy&#x27; - uses TCP/IP server/client model to access current/remote/docker host. 
+
+launch.json - configs for run/debug. Can have multiple one e.g. for dev/prod.
+parameters
+ - name (display)
+ - program (change $file to ${workspaceFolder}/src/mycode.py) to always debug the main code instead of classes/modules.
+ - env (setup environment for debugger)
+ - envFile (file containing VAR=VALUE for env setup)
+ - args (cmd-line args as list of strings e.g. [&quot;--port&quot;,&quot;8080&quot;]
+ - justMyCode (only debug my code; not stdlib/3rd party modules)
+ - request (&quot;launch&quot; typically but can be &quot;attach&quot; with &quot;processId&quot;. For existing host process, see ${command:pickProcess}. For remote host/docker, see &quot;connect&quot; with &quot;host&quot;/&quot;port&quot; options.
+ 
+ 
+Testing (unit test with pytest)
+TDD - build tests before code
+Run unit tests before merging.
+CI systems run tests after each build.
+Issues faced: (1) project structure/folder had a &quot;src&quot; folder for source code + &quot;test&quot; folder. Needed __init__.py in test folder. Source code needed reference to modules as &quot;from src.grid import Grid&quot;.
+(2) Installed pytest-env and setup pytest.ini to specify environment variables like ENVIRONMENT. Alternatively, .env in workspaceFolder should have worked as well.
+
+ 
+ .vscode/settings.json
+ {
+    &quot;python.analysis.typeCheckingMode&quot;: &quot;basic&quot;,
+    &quot;python.envFile&quot;: &quot;${workspaceFolder}/.env&quot;,
+    &quot;[python]&quot;: {
+        &quot;editor.defaultFormatter&quot;: &quot;ms-python.autopep8&quot;
+    },
+    &quot;python.formatting.provider&quot;: &quot;autopep8&quot;,
+    &quot;python.testing.pytestArgs&quot;: [
+        &quot;.&quot;
+    ],
+    &quot;python.testing.unittestEnabled&quot;: false,
+    &quot;python.testing.pytestEnabled&quot;: true,
+    &quot;python.testing.autoTestDiscoverOnSaveEnabled&quot;: true
+}
+ 
+TODO: Attach process to debugger + process on remote box
+
+
+
+launch.json - having config for TEST vs PROD; running pytest only; attaching debugger on localhost to existing running process; attaching to process running on remote host (requires SSH port tunnelling &quot;ssh -v -2 -L port:current_host:port user@remote_host&quot;)
+See https://code.visualstudio.com/docs/python/debugging
+
+
+```
+&quot;configurations&quot;: [
+        {
+            &quot;name&quot;: &quot;Python: Tetris (Debug)&quot;,
+            &quot;type&quot;: &quot;python&quot;,
+            &quot;request&quot;: &quot;launch&quot;, // or &quot;attach&quot; running process
+            &quot;program&quot;: &quot;${workspaceFolder}/src/tetris.py&quot;, // &quot;${file}&quot;,
+            &quot;console&quot;: &quot;integratedTerminal&quot;,
+            &quot;justMyCode&quot;: true,
+            &quot;env&quot;: {&quot;ENVIRONMENT&quot;:&quot;TEST&quot;,&quot;PYTHONPATH&quot;:&quot;/home/user/Desktop/job/drw/src&quot;},
+
+            &quot;args&quot;: [
+                &quot;--debug&quot;,
+                &quot;--port&quot;,
+                &quot;8081&quot;
+            ],
+            //&quot;python.envFile&quot;: &quot;${workspaceFolder}/.env&quot;
+        },
+        {
+            &quot;name&quot;: &quot;Python: Tetris (Prod)&quot;,
+            &quot;type&quot;: &quot;python&quot;,
+            &quot;request&quot;: &quot;launch&quot;, // or &quot;attach&quot; running process
+            &quot;program&quot;: &quot;${workspaceFolder}/src/tetris.py&quot;, // &quot;${file}&quot;,
+            &quot;console&quot;: &quot;integratedTerminal&quot;,
+            &quot;justMyCode&quot;: true,
+            &quot;env&quot;: {&quot;ENVIRONMENT&quot;:&quot;PROD&quot;,&quot;PYTHONPATH&quot;:&quot;/home/user/Desktop/job/drw/src&quot;},
+            &quot;args&quot;: [
+                &quot;--port&quot;,
+                &quot;8080&quot;
+            ],
+            //&quot;python.envFile&quot;: &quot;${workspaceFolder}/.env.prod&quot;
+        },
+        {
+            &quot;name&quot;: &quot;Python: Debug Tests&quot;,
+            &quot;type&quot;: &quot;python&quot;,
+            &quot;request&quot;: &quot;launch&quot;,
+            &quot;program&quot;: &quot;${file}&quot;,
+            &quot;purpose&quot;: [&quot;debug-test&quot;],
+            &quot;console&quot;: &quot;integratedTerminal&quot;,
+            &quot;justMyCode&quot;: false,
+            &quot;env&quot;: {&quot;ENVIRONMENT&quot;:&quot;TEST&quot;,&quot;PYTHONPATH&quot;:&quot;/home/user/Desktop/job/drw/src&quot;},
+            &quot;args&quot;: [
+                &quot;--port&quot;,
+                &quot;8081&quot;
+            ],
+          },
+          {
+            &quot;name&quot;: &quot;Python: Attach Localhost&quot;,
+            &quot;type&quot;: &quot;python&quot;,
+            &quot;request&quot;: &quot;attach&quot;,
+            &quot;connect&quot;: {
+              &quot;host&quot;: &quot;localhost&quot;,
+              &quot;port&quot;: 5678
+            }
+          },
+          {
+            &quot;name&quot;: &quot;Python: Attach RemoteHost&quot;,
+            &quot;type&quot;: &quot;python&quot;,
+            &quot;request&quot;: &quot;attach&quot;,
+            &quot;host&quot;: &quot;localhost&quot;,
+            &quot;port&quot;: 5678,
+            &quot;pathMappings&quot;: [
+                {&quot;localRoot&quot;: &quot;${workspaceFolder}&quot;, &quot;remoteRoot&quot;: &quot;.&quot;}
+            ]
+          }
+          
+    ]
+}
+```
+ 
+ </pre>
+</main>
+</body>
+</html>
