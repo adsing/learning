@@ -1,0 +1,134 @@
+Duck DB - In process, columnan, OLAP DB with ACID compliance for analytical workloads. Written in C++ as self-contained binary.
+Compared to SQLLite for OLTP in-process workloads.
+Compare to Pandas which takes 5x memory and is unable to handle datasets > memory of box and also is single threaded due to GIL. DuckDB has no such issues. It's Columnar, Vectorized and Multi-threaded... and handles data > memory size.
+
+CLI install: curl https://install.duckdb.org | sh
+
+
+
+
+Python installation:
+# pip install duckdb
+import duckdb
+conn = duckdb.connect()  # in-memory or use duckdb.connect('file.db') to persist
+
+# query the DF as a table with 'register'
+conn.register("my_table", somePandasDataFrame)   -- cool: register DF as a table and then use as table
+conn.sql("select * from my_df").show()                  -- query DF directly as a table
+
+# statistics df.info/describe equivalent is DESCRIBE/SUMMARIZE on table
+conn.sql("DESCRIBE <table>").show()
+conn.sql("DESCRIBE select * from '<file or files *.csv>'").show()
+# describe ducks;    -- similar to df.info()
+# ┌─────────────┬─────────────┬──────┬──────┬─────────┬───────┐
+# │ column_name │ column_type │ null │ key  │ default │ extra │
+# ├─────────────┼─────────────┼──────┼──────┼─────────┼───────┤
+# │ age         │ INTEGER     │ YES  │ NULL │ NULL    │ NULL  │
+# │ breed       │ VARCHAR     │ YES  │ NULL │ NULL    │ NULL  │
+# └─────────────┴─────────────┴──────┴──────┴─────────┴───────┘
+# summarize ducks;  -- similar to df.describe()
+# ┌─────────────┬─────────────┬─────────┬─────────┬───────────────┬──────┬──────┬──────┬──────┬──────┬───────┬─────────────────┐
+# │ column_name │ column_type │   min   │   max   │ approx_unique │ avg  │ std  │ q25  │ q50  │ q75  │ count │ null_percentage │
+# ├─────────────┼─────────────┼─────────┼─────────┼───────────────┼──────┼──────┼──────┼──────┼──────┼───────┼─────────────────┤
+# │ age         │ INTEGER     │ 2       │ 2       │ 1             │ 2.0  │ NULL │ 2    │ 2    │ 2    │ 1     │ 0.00            │
+# │ breed       │ VARCHAR     │ mallard │ mallard │ 1             │ NULL │ NULL │ NULL │ NULL │ NULL │ 1     │ 0.00            │
+# └─────────────┴─────────────┴─────────┴─────────┴───────────────┴──────┴──────┴──────┴──────┴──────┴───────┴─────────────────┘
+
+# read CSV as table
+con.execute("""
+    CREATE OR REPLACE TABLE raw AS
+    SELECT * FROM read_csv('data.csv',
+        header = true,
+        nullstr = ['', 'NA', 'N/A', '-999'],   -- missing-value codes from the spec
+        types = {'customer_id': 'BIGINT', 'signup_date': 'DATE'}
+    )
+""")
+
+# column selection/exclusion
+select * exclude(update_timestamp) from table;
+select COLUMNS('.*_date') from table; -- show all columns ending in _date
+
+# use information_schame.columns to check for column_name or data_type not matching
+
+# Nulls/Duplicate/Bad Values check
+select
+    sum(case when cust_id is null then 1 else 0 end) as Null_Cust_IDs,
+    count(1) - count(distinct cust_id) as Duplicate_Cust_IDs,
+    sum(case when balance < 0 then 1 else 0 end) as Invalid_Balance
+from my_tbl;
+
+# Nulls from SUMMARIZE tbl
+select column_name, null_percentage
+from (SUMMARIZE tbl)
+where null_percentage > 0;
+
+# duplicate rows
+select (select count(1) from tbl) - (select count(1) from (select distinct * from tbl)) as duplicate_rows
+
+# time patterns
+query = "select date_trunc('month', signup_date) as month, count(*) as signups, avg(balance) as avg_balance from tbl group by month";
+conn.sql(query).df()   # as dataframe for plotting
+
+# Do heavy lifting in duckdb and then convert to dataframe with
+
+
+
+Install and start with:
+$ duckdb
+
+Note - In process means data is volatile, so unless associated with a duckdb prop file format, data is lost at end of session.
+$ duckdb mydb.duckdb
+-or-
+$ duckdb
+.open mydb.duckdb  -- attach this storage file (remove any old one)
+ATTACH DATABASE '/path/to/your/database.db' AS mydb;
+
+# file -> table
+create table <table_name> as select * from read_csv_auto('<relative_path_to_csv'>);   -- auto detect schema or else use read_csv
+create table <table_name> as select * from read_parquet('<relative_path_to_parquet'>);
+
+show all tables;
+show databases;
+
+# select from table
+from <table_name>;       -- shorter format to select *
+select * from <table_name>;
+-- auto detect fileformat and return contents
+from '<file_csv>';
+from '<file_parquet>';
+
+# copy data from table to file
+COPY <table_name> TO '<relative_path_to_csv>' (HEADER, DELIMITER ',');
+COPY <table_name> TO '<relative_path_to_parquet>' (FORMAT PARQUET);
+
+# appearance of data
+.mode csv  # json jsonlines markdown line duckbox
+
+# dump output to file
+output <relative_path_to_file>
+-- query (select * from table)
+outout   # revert back to not sent output to file any more
+
+# run query from command line with -c
+$ duckdb mydb.duckdb -c 'select * from my_table'
+
+# fine tuning/settings
+FROM duckdb_settings();
+
+# run SQL command from CLI e.g. to read local parquet file
+$ duckdb -c "SELECT * FROM read_parquet('path/to/your/file.parquet');"
+
+# extensions that you can install e.g. DeltaLake/Iceberg; mysql/postgres/sqlite; HTTPFS, TOC-DS/TPC-H datasets
+FROM duckdb_extensions();
+INSTALL HTTPFS;         -- INSTALL <extension> FROM community; -- for open source extensions
+LOAD HTTPFS;
+set region = 'us-east-1';
+create table netflix as select * from read_parquet('s3://bucket/file.parquet');  -- public s3 bucket
+
+MotherDuck: Server hosted in cloud; multiplayer setup; compute maybe local or remote cloud or both; see "explain <query>"
+attach 'md:';       # all databases & tables now accessible locally from motherduck
+explain <query>;    -- plan shows L(local) or R(remote)
+
+# shares from cloud MotherDuck
+create share <my_share> from <my_db>;               -- MotherDuck can create DB shares
+attach 'md:_share/<my_db>/<encrypted_link>';       -- tables from a user's local/remote share

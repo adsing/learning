@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Duckdb</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: #1a1a2e;
+    color: #e0e0e0;
+    min-height: 100vh;
+}
+header {
+    background: #16213e;
+    border-bottom: 2px solid #0f3460;
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+header a {
+    color: #e94560;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+}
+header a:hover { text-decoration: underline; }
+h1 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #53d8fb;
+    letter-spacing: 0.03em;
+}
+main {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 24px;
+}
+pre {
+    background: #0d1117;
+    border: 1px solid #21262d;
+    border-radius: 8px;
+    padding: 20px 24px;
+    overflow-x: auto;
+    font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+    font-size: 0.85rem;
+    line-height: 1.65;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+.cmd  { color: #7ee787; }          /* $ shell commands */
+.cmt  { color: #8b949e; }          /* # comments */
+.hdr  { color: #f0c040; font-weight: bold; }  /* section headers */
+.url  { color: #79c0ff; }
+</style>
+</head>
+<body>
+<header>
+  <a href="../html/index.html">&#8592; Index</a>
+  <h1>Duckdb</h1>
+</header>
+<main>
+  <pre>Duck DB - In process, columnan, OLAP DB with ACID compliance for analytical workloads. Written in C++ as self-contained binary.
+Compared to SQLLite for OLTP in-process workloads.
+Compare to Pandas which takes 5x memory and is unable to handle datasets &gt; memory of box and also is single threaded due to GIL. DuckDB has no such issues. It&#x27;s Columnar, Vectorized and Multi-threaded... and handles data &gt; memory size.
+
+CLI install: curl https://install.duckdb.org | sh
+
+
+
+
+<span class="hdr">Python installation:</span>
+<span class="cmt"># pip install duckdb</span>
+import duckdb
+conn = duckdb.connect()  # in-memory or use duckdb.connect(&#x27;file.db&#x27;) to persist
+
+<span class="cmt"># query the DF as a table with &#x27;register&#x27;</span>
+conn.register(&quot;my_table&quot;, somePandasDataFrame)   -- cool: register DF as a table and then use as table
+conn.sql(&quot;select * from my_df&quot;).show()                  -- query DF directly as a table
+
+<span class="cmt"># statistics df.info/describe equivalent is DESCRIBE/SUMMARIZE on table</span>
+conn.sql(&quot;DESCRIBE &lt;table&gt;&quot;).show()
+conn.sql(&quot;DESCRIBE select * from &#x27;&lt;file or files *.csv&gt;&#x27;&quot;).show()
+<span class="cmt"># describe ducks;    -- similar to df.info()</span>
+<span class="cmt"># ┌─────────────┬─────────────┬──────┬──────┬─────────┬───────┐</span>
+<span class="cmt"># │ column_name │ column_type │ null │ key  │ default │ extra │</span>
+<span class="cmt"># ├─────────────┼─────────────┼──────┼──────┼─────────┼───────┤</span>
+<span class="cmt"># │ age         │ INTEGER     │ YES  │ NULL │ NULL    │ NULL  │</span>
+<span class="cmt"># │ breed       │ VARCHAR     │ YES  │ NULL │ NULL    │ NULL  │</span>
+<span class="cmt"># └─────────────┴─────────────┴──────┴──────┴─────────┴───────┘</span>
+<span class="cmt"># summarize ducks;  -- similar to df.describe()</span>
+<span class="cmt"># ┌─────────────┬─────────────┬─────────┬─────────┬───────────────┬──────┬──────┬──────┬──────┬──────┬───────┬─────────────────┐</span>
+<span class="cmt"># │ column_name │ column_type │   min   │   max   │ approx_unique │ avg  │ std  │ q25  │ q50  │ q75  │ count │ null_percentage │</span>
+<span class="cmt"># ├─────────────┼─────────────┼─────────┼─────────┼───────────────┼──────┼──────┼──────┼──────┼──────┼───────┼─────────────────┤</span>
+<span class="cmt"># │ age         │ INTEGER     │ 2       │ 2       │ 1             │ 2.0  │ NULL │ 2    │ 2    │ 2    │ 1     │ 0.00            │</span>
+<span class="cmt"># │ breed       │ VARCHAR     │ mallard │ mallard │ 1             │ NULL │ NULL │ NULL │ NULL │ NULL │ 1     │ 0.00            │</span>
+<span class="cmt"># └─────────────┴─────────────┴─────────┴─────────┴───────────────┴──────┴──────┴──────┴──────┴──────┴───────┴─────────────────┘</span>
+
+<span class="cmt"># read CSV as table</span>
+con.execute(&quot;&quot;&quot;
+    CREATE OR REPLACE TABLE raw AS
+    SELECT * FROM read_csv(&#x27;data.csv&#x27;,
+        header = true,
+        nullstr = [&#x27;&#x27;, &#x27;NA&#x27;, &#x27;N/A&#x27;, &#x27;-999&#x27;],   -- missing-value codes from the spec
+        types = {&#x27;customer_id&#x27;: &#x27;BIGINT&#x27;, &#x27;signup_date&#x27;: &#x27;DATE&#x27;}
+    )
+&quot;&quot;&quot;)
+
+<span class="cmt"># column selection/exclusion</span>
+select * exclude(update_timestamp) from table;
+select COLUMNS(&#x27;.*_date&#x27;) from table; -- show all columns ending in _date
+
+<span class="cmt"># use information_schame.columns to check for column_name or data_type not matching</span>
+
+<span class="cmt"># Nulls/Duplicate/Bad Values check</span>
+select
+    sum(case when cust_id is null then 1 else 0 end) as Null_Cust_IDs,
+    count(1) - count(distinct cust_id) as Duplicate_Cust_IDs,
+    sum(case when balance &lt; 0 then 1 else 0 end) as Invalid_Balance
+from my_tbl;
+
+<span class="cmt"># Nulls from SUMMARIZE tbl</span>
+select column_name, null_percentage
+from (SUMMARIZE tbl)
+where null_percentage &gt; 0;
+
+<span class="cmt"># duplicate rows</span>
+select (select count(1) from tbl) - (select count(1) from (select distinct * from tbl)) as duplicate_rows
+
+<span class="cmt"># time patterns</span>
+query = &quot;select date_trunc(&#x27;month&#x27;, signup_date) as month, count(*) as signups, avg(balance) as avg_balance from tbl group by month&quot;;
+conn.sql(query).df()   # as dataframe for plotting
+
+<span class="cmt"># Do heavy lifting in duckdb and then convert to dataframe with</span>
+
+
+
+<span class="hdr">Install and start with:</span>
+<span class="cmd">$ duckdb</span>
+
+Note - In process means data is volatile, so unless associated with a duckdb prop file format, data is lost at end of session.
+<span class="cmd">$ duckdb mydb.duckdb</span>
+-or-
+<span class="cmd">$ duckdb</span>
+.open mydb.duckdb  -- attach this storage file (remove any old one)
+ATTACH DATABASE &#x27;/path/to/your/database.db&#x27; AS mydb;
+
+<span class="cmt"># file -&gt; table</span>
+create table &lt;table_name&gt; as select * from read_csv_auto(&#x27;&lt;relative_path_to_csv&#x27;&gt;);   -- auto detect schema or else use read_csv
+create table &lt;table_name&gt; as select * from read_parquet(&#x27;&lt;relative_path_to_parquet&#x27;&gt;);
+
+show all tables;
+show databases;
+
+<span class="cmt"># select from table</span>
+from &lt;table_name&gt;;       -- shorter format to select *
+select * from &lt;table_name&gt;;
+-- auto detect fileformat and return contents
+from &#x27;&lt;file_csv&gt;&#x27;;
+from &#x27;&lt;file_parquet&gt;&#x27;;
+
+<span class="cmt"># copy data from table to file</span>
+COPY &lt;table_name&gt; TO &#x27;&lt;relative_path_to_csv&gt;&#x27; (HEADER, DELIMITER &#x27;,&#x27;);
+COPY &lt;table_name&gt; TO &#x27;&lt;relative_path_to_parquet&gt;&#x27; (FORMAT PARQUET);
+
+<span class="cmt"># appearance of data</span>
+.mode csv  # json jsonlines markdown line duckbox
+
+<span class="cmt"># dump output to file</span>
+output &lt;relative_path_to_file&gt;
+-- query (select * from table)
+outout   # revert back to not sent output to file any more
+
+<span class="cmt"># run query from command line with -c</span>
+<span class="cmd">$ duckdb mydb.duckdb -c &#x27;select * from my_table&#x27;</span>
+
+<span class="cmt"># fine tuning/settings</span>
+FROM duckdb_settings();
+
+<span class="cmt"># run SQL command from CLI e.g. to read local parquet file</span>
+<span class="cmd">$ duckdb -c &quot;SELECT * FROM read_parquet(&#x27;path/to/your/file.parquet&#x27;);&quot;</span>
+
+<span class="cmt"># extensions that you can install e.g. DeltaLake/Iceberg; mysql/postgres/sqlite; HTTPFS, TOC-DS/TPC-H datasets</span>
+FROM duckdb_extensions();
+INSTALL HTTPFS;         -- INSTALL &lt;extension&gt; FROM community; -- for open source extensions
+LOAD HTTPFS;
+set region = &#x27;us-east-1&#x27;;
+create table netflix as select * from read_parquet(&#x27;s3://bucket/file.parquet&#x27;);  -- public s3 bucket
+
+MotherDuck: Server hosted in cloud; multiplayer setup; compute maybe local or remote cloud or both; see &quot;explain &lt;query&gt;&quot;
+attach &#x27;md:&#x27;;       # all databases &amp; tables now accessible locally from motherduck
+explain &lt;query&gt;;    -- plan shows L(local) or R(remote)
+
+<span class="cmt"># shares from cloud MotherDuck</span>
+create share &lt;my_share&gt; from &lt;my_db&gt;;               -- MotherDuck can create DB shares
+attach &#x27;md:_share/&lt;my_db&gt;/&lt;encrypted_link&gt;&#x27;;       -- tables from a user&#x27;s local/remote share</pre>
+</main>
+</body>
+</html>
